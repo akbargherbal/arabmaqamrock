@@ -1,0 +1,8 @@
+# downloaded / built at install time — not tracked
+/audio.cpp/
+/bin/
+/models/
+/loras/
+/out/
+__pycache__/
+*.pyc

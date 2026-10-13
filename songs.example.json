@@ -1,0 +1,18 @@
+{
+  "defaults": {
+    "style_file": "prompts/Hijaz_style.txt",
+    "quantile": 0.95
+  },
+  "songs": [
+    {
+      "name": "quick_smoke",
+      "lyrics": "[Verse 1]\nيا لَيلُ هُدْ هُدْ ... يا لَيلُ ...",
+      "seed": 7,
+      "cap": 750
+    },
+    {
+      "name": "hijaz_example",
+      "lyrics_file": "prompts/example_lyrics.txt"
+    }
+  ]
+}
