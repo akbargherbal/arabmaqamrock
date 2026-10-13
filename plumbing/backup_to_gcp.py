@@ -4,7 +4,7 @@
 Ported from the parent project's `backup_to_gcp.py` (same loop, manifest
 logic, and CLI), narrowed to what this repo produces:
 
-    <base>/arabmaqamrock/
+    gs://akbar-december-2024-backup/arabmaqamrock/
       runs/   <-  ./out/     (one folder per generation run, from generate.py)
       logs/   <-  ./logs/    (setup + this daemon's own log)
 
@@ -43,10 +43,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent      # plumbing/ -> repo root
 
-# Runtime-supplied, like the API keys: the launching notebook exports
-# GCP_BACKUP_BASE, so no bucket-specific value is hardcoded here. Override
-# per invocation with --base. Format: gs://<bucket>/<project-prefix>.
-DEFAULT_BASE = os.environ.get("GCP_BACKUP_BASE", "")
+# Runtime-supplied, like the API keys. Format: a bucket ROOT
+# (gs://<bucket>); the prefix is <base>/<run-name> (= gs://…/arabmaqamrock).
+# Read from GCP_ROOT (this repo's own variable) — deliberately NOT the parent
+# project's GCP_BACKUP_BASE, which is a project prefix, so exporting one never
+# silently relocates the other. Override per invocation with --base.
+DEFAULT_BASE = os.environ.get("GCP_ROOT", "gs://akbar-december-2024-backup")
 DEFAULT_RUN_NAME = "arabmaqamrock"
 RESERVED_SUBFOLDERS = {"binaries"}          # never usable as a --run-name
 DEFAULT_LOG = REPO_ROOT / "logs" / "gcp_backup.log"
@@ -109,8 +111,8 @@ def parse_args() -> argparse.Namespace:
     )
     p.add_argument(
         "--base", default=None,
-        help="GCS root to mirror into (gs://<bucket>/<project-prefix>). Defaults "
-             "to $GCP_BACKUP_BASE; required if that is unset.",
+        help="GCS bucket root to mirror into (gs://<bucket>); the prefix is "
+             "<base>/<run-name>. Defaults to $GCP_ROOT; required if that is unset.",
     )
     p.add_argument("--interval-minutes", type=float, default=5.0,
                    help="Minutes between passes (default: 5).")

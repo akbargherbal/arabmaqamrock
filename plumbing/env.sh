@@ -3,20 +3,23 @@
 #
 #   . plumbing/env.sh
 #
-# Sets REPO_ROOT / PLUMBING_DIR, GCP_BACKUP_BASE (unless already exported) and
-# GCP_PREFIX (this repo's prefix under it), plus gcs_cp / gcs_cat / gcs_ls /
-# gcs_rsync wrappers. Prefers `gcloud storage` (Google's recommended CLI) and
-# falls back to `gsutil`.
+# Sets REPO_ROOT / PLUMBING_DIR, GCP_ROOT (the bucket root, unless already
+# exported) and GCP_PREFIX (this repo's prefix under it), plus gcs_cp / gcs_cat
+# / gcs_ls / gcs_rsync wrappers. Prefers `gcloud storage` (Google's recommended
+# CLI) and falls back to `gsutil`.
 
 PLUMBING_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$PLUMBING_DIR/.." && pwd)"
 export PLUMBING_DIR REPO_ROOT
 
-# One generic root; the arabmaqamrock/ prefix underneath belongs to this repo.
-# Override with GCP_BACKUP_BASE in the environment (e.g. a different bucket).
-: "${GCP_BACKUP_BASE:=gs://akbar-december-2024-backup/OSTRIS_Arabic_Suno_Finetuning}"
-export GCP_BACKUP_BASE
-export GCP_PREFIX="${GCP_BACKUP_BASE%/}/arabmaqamrock"
+# This repo's prefix lives at the BUCKET ROOT, not under the parent project's
+# prefix: gs://akbar-december-2024-backup/arabmaqamrock/. Kept in its own
+# variable (GCP_ROOT) on purpose, so the parent's GCP_BACKUP_BASE — which is a
+# *project prefix* (.../OSTRIS_Arabic_Suno_Finetuning), not a bucket root —
+# never silently relocates this one. Override GCP_ROOT for a different bucket.
+: "${GCP_ROOT:=gs://akbar-december-2024-backup}"
+export GCP_ROOT
+export GCP_PREFIX="${GCP_ROOT%/}/arabmaqamrock"
 
 if command -v gcloud >/dev/null 2>&1; then
   gcs_cp()    { gcloud storage cp "$@"; }

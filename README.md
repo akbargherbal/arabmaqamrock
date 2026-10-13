@@ -60,8 +60,9 @@ python3 generate.py songs.example.json
 ```
 
 `setup_colab.sh` wants `gcloud auth login` (to read the prebuilt binary and write
-backups) and `HF_TOKEN`. Outputs mirror to `gs://…/arabmaqamrock/runs/`. The helpers
-live in [`plumbing/`](plumbing/) — you do not need any of them to just generate.
+backups) and `HF_TOKEN`. Outputs mirror to
+`gs://akbar-december-2024-backup/arabmaqamrock/runs/`. The helpers live in
+[`plumbing/`](plumbing/) — you do not need any of them to just generate.
 
 Expect **~6–7 minutes per track** on a T4. Generation is **sequential** (two
 concurrent runs can run out of memory), so a batch of N songs takes roughly N × that.

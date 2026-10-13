@@ -5,12 +5,15 @@ Not part of the generation path itself (`run_one.sh` / `generate.py` need none o
 
 ## GCS prefix
 
-Everything lives under one prefix, set by `GCP_BACKUP_BASE`
-(default `gs://akbar-december-2024-backup/OSTRIS_Arabic_Suno_Finetuning`, so the
-prefix is `…/arabmaqamrock/`):
+Everything lives under one prefix at the **bucket root**:
+`gs://akbar-december-2024-backup/arabmaqamrock/`. The bucket root is `GCP_ROOT`
+(overridable); the prefix is `$GCP_ROOT/arabmaqamrock` (`GCP_PREFIX`). It is kept in
+its own variable on purpose — the parent project's `GCP_BACKUP_BASE` is a *project
+prefix*, so exporting one never silently relocates the other.
 
 ```
-arabmaqamrock/
+gs://akbar-december-2024-backup/arabmaqamrock/
+  README.md                                                    what this prefix is
   binaries/<arch-tag>/audiocpp_cli + .sha256 + manifest.json   prebuilt, arch-selected
   runs/<timestamp>_<label>/                                    mirrored from ./out/
   logs/                                                        mirrored from ./logs/
@@ -58,5 +61,5 @@ pgrep -af backup_to_gcp.py
   --publish` rebuilds and re-records it.
 - **Building needs no GPU** (`nvcc` cross-compiles for `--cuda-arch`); it needs the
   CUDA toolkit + cmake + ccache and takes ~21 min cold.
-- `GCP_BACKUP_BASE` is runtime-supplied, never hardcoded in the scripts (the
-  default in `env.sh` is a convenience, overridable).
+- `GCP_ROOT` (bucket root) is runtime-supplied, never hardcoded in the scripts beyond a
+  convenience default in `env.sh`; it is overridable.
