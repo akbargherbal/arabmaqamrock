@@ -4,5 +4,6 @@
 /models/
 /loras/
 /out/
+/logs/
 __pycache__/
 *.pyc

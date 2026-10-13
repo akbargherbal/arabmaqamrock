@@ -1,0 +1,10 @@
+# audio.cpp commit to build the prebuilt binaries from.
+#
+# One commit sha (or leave empty/only-comments to track audio.cpp main).
+# `plumbing/fetch_binary.sh --build` checks this out before building, so a
+# prebuilt binary can be rebuilt reproducibly later.
+#
+# The 2026-09-22 T4/L4 prebuilts were built before this pin existed, so their
+# commit is unknown (their GCS manifest.json records audio.cpp_commit=unknown
+# and ggml eb8e21b). Fill this in the next time a build is verified, and the
+# manifest written by `--publish` will record it.

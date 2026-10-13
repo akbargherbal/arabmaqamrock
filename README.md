@@ -33,19 +33,35 @@ On Debian/Ubuntu: `apt-get install git cmake g++ ccache time python3` plus the
 git clone https://github.com/akbargherbal/arabmaqamrock.git
 cd arabmaqamrock
 
-./install.sh                        # clones+builds audio.cpp (~20+ min cold), fetches model + LoRA
+./install.sh                        # stage the binary + fetch the model & LoRA
 
 python3 generate.py songs.example.json --dry-run   # validate + print the plan (no GPU, writes nothing)
 python3 generate.py songs.example.json             # the real run  → out/<timestamp>_.../  (a .wav)
 ```
 
-`install.sh` detects your GPU's compute capability and builds `audiocpp_cli` for it.
-To force one, or to use a matching prebuilt binary instead of building:
+`install.sh` stages `audiocpp_cli` for your GPU's arch — from this project's GCS
+prefix when reachable (fast), otherwise by building from source (~20 min cold; no GPU
+needed to build). Force either path:
 
 ```bash
-./install.sh --cuda-arch 75         # build for sm_75 yourself
-./install.sh --prebuilt             # fetch a prebuilt binary if one exists for your arch
+./plumbing/fetch_binary.sh --cuda-arch 75   # build for sm_75 yourself
+./plumbing/fetch_binary.sh --build          # force a source build
 ```
+
+### On Colab (ephemeral VM)
+
+Colab wipes `/content` on VM loss, so this repo fetches fast and backs up its output:
+
+```bash
+git clone https://github.com/akbargherbal/arabmaqamrock.git /content/arabmaqamrock
+cd /content/arabmaqamrock
+./setup_colab.sh    # binary (prebuilt, arch-selected) + model + LoRA + backup sidecar
+python3 generate.py songs.example.json
+```
+
+`setup_colab.sh` wants `gcloud auth login` (to read the prebuilt binary and write
+backups) and `HF_TOKEN`. Outputs mirror to `gs://…/arabmaqamrock/runs/`. The helpers
+live in [`plumbing/`](plumbing/) — you do not need any of them to just generate.
 
 Expect **~6–7 minutes per track** on a T4. Generation is **sequential** (two
 concurrent runs can run out of memory), so a batch of N songs takes roughly N × that.
