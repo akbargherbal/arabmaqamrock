@@ -46,7 +46,7 @@ else echo "MISSING: the 'hf' CLI — pip install -U 'huggingface_hub[cli]'"; exi
 [ -x /usr/bin/time ] || echo "WARN: /usr/bin/time (GNU time) missing — run_one.sh needs it (apt-get install time)"
 
 echo "== 1. binary =="
-./plumbing/fetch_binary.sh "${BIN_ARGS[@]:-}"
+./plumbing/fetch_binary.sh "${BIN_ARGS[@]}"
 [ -x bin/audiocpp_cli ] || { echo "no bin/audiocpp_cli after fetch_binary.sh" >&2; exit 1; }
 
 echo "== 2. YuE2 GGUF model (bf16 + f16 VAE + sidecars) =="
