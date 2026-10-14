@@ -5,7 +5,8 @@
 #   ./setup_colab.sh
 #
 # Does, in order:
-#   1. sanity-check tooling (nvidia-smi, gcloud/gsutil auth, hf, python3)
+#   1. sanity-check tooling (nvidia-smi, gcloud/gsutil auth, hf, python3) and
+#      install GNU time if absent (run_one.sh wraps the binary in /usr/bin/time)
 #   2. stage the prebuilt audiocpp_cli for this GPU's arch (./plumbing/fetch_binary.sh)
 #   3. download the YuE2 GGUF model + LoRA from Hugging Face
 #   4. start the GCS backup sidecar (detached)
@@ -36,6 +37,22 @@ command -v nvidia-smi >/dev/null 2>&1 && ok "nvidia-smi: $(nvidia-smi --query-gp
 command -v hf >/dev/null 2>&1 && ok "hf cli present" || die "hf missing: pip install -U 'huggingface_hub[cli]'"
 [ -n "${HF_TOKEN:-}" ] && ok "HF_TOKEN set" || warn "HF_TOKEN not set in this shell (public repos only)"
 command -v gsutil >/dev/null 2>&1 && ok "gsutil present (backup daemon)" || warn "gsutil missing — backup daemon will not run"
+
+# run_one.sh wraps the binary in /usr/bin/time -v -o for its wall/RSS metrics; the
+# bash builtin cannot do that. Colab images don't always ship the time package, and
+# when it is missing every track fails as an instant exit=127 before any model loads.
+if [ -x /usr/bin/time ]; then
+  ok "GNU time present"
+else
+  warn "GNU time missing — installing (run_one.sh needs it)"
+  if [ "$(id -u)" -eq 0 ]; then APT=(apt-get); else APT=(sudo apt-get); fi
+  "${APT[@]}" update -qq || true
+  "${APT[@]}" install -y -qq time >/dev/null 2>&1 || true
+  # Verify the file, not apt's exit code: `apt-get install time` returns 0 even
+  # when the package is registered but /usr/bin/time is actually absent.
+  [ -x /usr/bin/time ] && ok "GNU time installed" \
+    || die "could not install GNU time (apt-get install time)"
+fi
 
 echo "== 2. binary =="
 ./plumbing/fetch_binary.sh

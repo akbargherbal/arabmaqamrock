@@ -556,6 +556,7 @@ def preflight(lora_ar: Path, lora_nar: Path,
     checks = [
         (RUN_ONE, "runner"),
         (BIN, "audiocpp_cli binary"),
+        (Path("/usr/bin/time"), "GNU time (apt-get install time)"),
         (MODEL_DIR / MODEL_GGUF, "main GGUF"),
         (MODEL_DIR / VAE_GGUF, "VAE GGUF"),
         (lora_ar, "AR LoRA adapter"),
