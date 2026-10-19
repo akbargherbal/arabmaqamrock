@@ -7,3 +7,6 @@
 /logs/
 __pycache__/
 *.pyc
+
+# local happy-accident working tree (WAVs, stems, tokens, backups)
+/happy_accident/
