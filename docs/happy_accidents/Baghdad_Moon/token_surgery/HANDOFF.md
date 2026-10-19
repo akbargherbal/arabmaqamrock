@@ -22,14 +22,22 @@ Last updated: 2026-10-19 ~21:45 UTC (Colab session may be ephemeral).
 - The original prebuilt binary (`bin/audiocpp_cli`, audio.cpp `eb8e21bd`) **does
   not support `semantic_prefix` / `semantic_prefix_file`**. It silently ignores
   the option and re-runs the AR. Token surgery requires a patched binary.
-- Current work: rebuilding `eb8e21bd` + cherry-picked `d32a6a01` (prefix support)
-  in `/tmp/opencode/audio.cpp`. Build was ~24% at last check; it is CPU-bound
-  (2 vCPU) and takes ~30–45 min cold. **If the VM is wiped, fetch the backed-up
-  binary from GCS if present, otherwise rebuild from the instructions in §6.**
-- Next concrete step after the build: run the baseline render with `min=max=5397`
-  and the original token stream, and check the WAV is bit-identical to
+- **Build status: PAUSED ON PURPOSE (2026-10-19 ~21:50 UTC).** The GPU build was
+  killed at ~26% and the T4 was released. The build is CPU-only; running it on a
+  GPU VM wastes GPU time. Next session: **finish the build on a CPU-only Colab
+  runtime** using `CPU_BUILD.md`, save the binary, then move back to a T4 GPU
+  runtime for baseline + renders. See §6.6.
+- The partially built tree `/tmp/opencode/audio.cpp` and its `build/` dir are
+  ephemeral and can be discarded. The patch is saved in
+  `happy_accident/backup/patches/` and on GCS; the source is public, so the build
+  is fully reproducible.
+- Next concrete step: **do not start with the GPU.** On a CPU runtime, build
+  `eb8e21bd` + `d32a6a01` for `sm75`, verify `--version`/`strings`, save the
+  binary + sha256, then move to the T4 and run §7.1.
+- After the binary is staged: run the baseline render with `min=max=5397` and the
+  original token stream, and check the WAV is bit-identical to
   `dbc00722534d5ee763ae54a048cd704eaa4c927e37834cd54542eaf379e0de42`.
-  If it is not, stop and investigate the toolchain (CUDA 13 vs 12; see §6.4).
+  If it is not, stop and investigate the toolchain (CUDA version; see §6.4).
 - No repaired candidate WAV has been rendered yet (as of this writing).
 
 ---
@@ -193,8 +201,9 @@ for e1. Always demucs first.
 | 0 | baseline semantic, original binary | **success**: 5397 tokens, exact match, fingerprints 1079/12 |
 | 1 | original binary + `semantic_prefix_file` + `min=max=5397` | **failed/aborted**: option silently ignored; binary re-ran the AR. `strings` shows no `semantic_prefix`; `--version` says `git eb8e21b 2026-09-21`. |
 | 2 | A/C semantic exports (`stop_after=semantic`) | **success**: A 5874 frames, C 6192 frames; request wall 275 s each. |
-| 3 | rebuild `eb8e21bd` + cherry-pick `d32a6a01` | **in progress** at last update; build ~17%, CPU-bound. |
-| 4 | baseline audio render with new binary | **pending** |
+| 3 | rebuild `eb8e21bd` + cherry-pick `d32a6a01` | **paused/killed at ~26%** on the GPU VM (2026-10-19 21:50 UTC); move to CPU build per §6.6. |
+| 4 | local baseline audio with original binary (GPU) | **aborted** before WAV (killed with the build); use the GCS `repro/reproB` WAV or re-run later. |
+| 4b | baseline audio render with new binary | **pending** |
 | 5 | token splices (e1 note/word; e2 onset/word) | **pending** |
 | 6 | error-2 tail resample seed sweep | **pending** |
 
@@ -257,6 +266,45 @@ If the baseline WAV is not bit-identical:
    re-run the baseline or A/C exports.
 5. If a built sm75 token-surgery binary was backed up, prefer it and verify its
    sha256 before use.
+
+### 6.6 CPU build runbook (next session, no GPU)
+
+The build is **CPU-only** (`nvcc` cross-compiles for `sm75`). Do this on a
+CPU-only Colab runtime; do not occupy a T4 for it. Full copy-paste runbook:
+`CPU_BUILD.md` in this folder.
+
+Summary:
+1. Install `git cmake g++ ccache wget` and a CUDA toolkit. Prefer **CUDA 12.5**
+   (or 12.0 if you can get it) over 13.0, because the original prebuilt used
+   CUDA 12.0.140 and bit-identity is the goal. `nvcc --version` must work; no GPU
+   is required.
+2. Clone `https://github.com/0xShug0/audio.cpp`, check out `eb8e21bd`, and
+   cherry-pick `d32a6a01` (or apply the saved patch from GCS). This yields local
+   commit `42bb0a88`.
+3. Build:
+   ```bash
+   scripts/build_linux.sh --backend cuda --cuda-arch 75 --ccache \
+     --model-set custom --models yue2 --target audiocpp_cli
+   ```
+4. Verify the binary:
+   ```bash
+   ./build/linux-cuda-release/bin/audiocpp_cli --version
+   strings ./build/linux-cuda-release/bin/audiocpp_cli | grep semantic_prefix
+   ```
+   It must show `semantic_prefix`/`semantic_prefix_file`.
+5. Save it outside the ephemeral VM:
+   ```bash
+   cp build/linux-cuda-release/bin/audiocpp_cli /content/audiocpp_cli_prefix
+   sha256sum /content/audiocpp_cli_prefix
+   tar -czf /content/audiocpp_cli_prefix_sm75.tar.gz -C /content audiocpp_cli_prefix
+   ```
+   Upload the binary + sha256 + a small manifest to GCS (or Google Drive) before
+   the CPU runtime dies.
+6. On the T4 runtime, fetch that binary, `chmod +x`, verify sha256, and run
+   §7.1. Do **not** rebuild on the GPU VM.
+
+If CUDA 12.5 is unavailable, try 12.0; if neither works on the CPU image, build
+with 13.0 and explicitly test baseline bit-identity before claiming success.
 
 ---
 

@@ -36,12 +36,14 @@ The same two words are sung correctly elsewhere in the same take:
 |---|---|---|---|---|---|---|---|
 | 0 | baseline semantic (`stop_after=semantic`) | `runs/baseline_semantic/` | — | — | token stream identical to original (5397 frames, sha256 `1b1aa3e...`) | 332 s | fingerprints 1079/12, 5397, not truncated |
 | 1 | attempt with original binary + `semantic_prefix_file` | `runs/token_surgery/v1/` | — | — | — | aborted | original binary silently ignored the option and re-ran the AR; prefix support landed after the binary was built |
-| 2 | rebuild audio.cpp `eb8e21bd` + cherry-pick `d32a6a01` (semantic prefix) | `/tmp/opencode/audio.cpp` | — | — | — | build | needed for token injection; baseline re-check pending |
+| 2 | rebuild audio.cpp `eb8e21bd` + cherry-pick `d32a6a01` (semantic prefix) | `CPU_BUILD.md` | — | — | — | paused | GPU build killed at ~26% to free the T4; rebuild on CPU-only runtime per `CPU_BUILD.md` |
 | 3 | error-1 final-note splice (8 frames from Outro) | `runs/token_surgery/v2/` | pending | unchanged | pending | pending | |
 | 4 | error-1 whole-word splice (31 frames from Outro) | `runs/token_surgery/v2/` | pending | unchanged | pending | pending | |
 | 5 | error-1 + error-2 onset splice (13 frames from Verse 2) | `runs/token_surgery/v2/` | pending | pending | pending | pending | |
 | 6 | error-1 + error-2 whole-word splice (26 frames from Verse 2) | `runs/token_surgery/v2/` | pending | pending | pending | pending | |
 | 7 | tail resample from `tokens[:5056]`, seed sweep | `runs/tail/` | pending | pending | pending | pending | last ~13.6 s redrawn; likely the cleanest error-2 fix |
+
+> 2026-10-19 ~21:50 UTC: GPU build stopped at ~26%; local baseline audio (original binary) killed before producing a WAV. Next session starts on a **CPU-only** runtime with `CPU_BUILD.md`, then returns to a T4 for `HANDOFF.md` §7.1.
 
 ## Evaluation
 

@@ -6,6 +6,7 @@
 - `HANDOFF.md` — state, findings, rebuild, plan, gotchas, resume checklist.
 - `evidence.md` — CTC/ASR/F0 evidence for the two words and the donors.
 - `experiments.md` — experiment table (updated as renders finish).
+- `CPU_BUILD.md` — build the prefix-capable binary on a CPU-only machine.
 - `render_tokens.sh` — render an exact semantic token stream with the
   prefix-capable binary.
 
