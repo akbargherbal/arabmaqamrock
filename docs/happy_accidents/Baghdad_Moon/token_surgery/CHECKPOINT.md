@@ -25,8 +25,8 @@ Original WAV (never modified):
 | human listening evaluation, round 1 | **done** — 0/4 accepted (`rating_20261020-1223.md`) |
 | delivery bug: comp grafted only changed frames | **found + fixed** (`--word-ranges`) |
 | word 1 — **fixed** by AR re-sing (seed s03) | **done**, passes by ear |
-| word 2 — donor splice rejected; AR tail sweep | **running** (16 seeds) |
-| final assembly (`FINAL_*.wav`) | pending word 2 |
+| word 2 — donor splice rejected; AR tail sweep | **done** (16 seeds); 5 audition seeds in `listen_v4/` |
+| final assembly (`FINAL_*.wav`) | pending the user's e2 pick |
 | final report polish / GitHub update | pending after selection |
 
 Nothing is lost if Colab disconnects: every WAV, token file, log, metric and
@@ -199,8 +199,9 @@ the correct consonant is available to it.
 - Word 1 (`prefix 3933 → max 3964`, 16 seeds): 4 diverse seeds got full
   5397-frame renders; **s01, s03, s04 pass by ear**, s15 fails. Chosen: **s03**.
   Comp region 156.995–158.855 s, `identical_outside_regions: true`.
-- Word 2 (`prefix 5056 → max 5397`, 16 seeds): rendering now; audition the raw
-  tails first, comp only the winner (region 201.835–204.775 s).
+- Word 2 (`prefix 5056 → max 5397`, 16 seeds): **done**. Five tails chosen by
+  rhythmic alignment (s08, s13, s11, s14, s07) are in `deliverables/listen_v4/`;
+  comp only the winner (region 201.835–204.775 s).
 
 Artifacts: `deliverables/listen_v3/` (round 2, e1 + e2) and `listen_v4/`
 (round 3, e2 only), `runs/e1_resample/`, `runs/e2_resample/`.

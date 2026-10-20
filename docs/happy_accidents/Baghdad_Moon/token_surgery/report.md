@@ -207,6 +207,26 @@ resample — prefix = first **5056** frames, `semantic_max_tokens = 5397`, seeds
 `1712905618 + 0..15`. 16 tails are rendered; the four most diverse will be
 auditioned before any comp.
 
+### 6.3 Result — 16 tails, five auditioned
+
+All 16 renders are valid: 5397 frames, first 5056 tokens identical to the
+baseline, 338–341 regenerated tail frames. The takes are mutually unrelated
+(55–58 of the word's 58 tokens differ between any two), so the shortlist was
+chosen for **rhythmic alignment** — how closely the 202–205 s energy envelope
+matches the original (a shifted or dropped word shows up as a 15–20 dB dip):
+
+| seed | max 50 ms level Δ | verdict |
+|---|---:|---|
+| s08 | 5.5 dB | auditioned |
+| s13 | 5.8 dB | auditioned |
+| s11 | 6.2 dB | auditioned |
+| s14 | 6.2 dB | auditioned |
+| s07 | 6.4 dB | auditioned |
+| s00, s04, s10 | 14–20 dB | rejected before audition (word displaced/dropped) |
+
+Pack: `deliverables/listen_v4/` (original + 5 seeds, window 199.8–206.8 s).
+Only the chosen seed gets comped (region 201.835–204.775 s).
+
 ## 7. Files
 
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`
