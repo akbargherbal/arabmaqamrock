@@ -1,3 +1,8 @@
+> **DONE — 2026-10-20 14:50 UTC.** This prompt has been executed to completion.
+> Both words are fixed and the final track is delivered:
+> `$B/final/FINAL_e1_ar_s03_s08.wav` (`51c6e238…`). Do not rerun the steps below;
+> see `CHECKPOINT.md` (status COMPLETE) and `report.md` §6.4–§6.5.
+
 We are resuming the Baghdad Moon B two-word repair. The previous Colab VM is gone,
 so nothing from `/content` survives except GitHub and GCS.
 

@@ -1,14 +1,19 @@
 # CHECKPOINT — Baghdad Moon B two-word repair
 
-**Last updated:** 2026-10-20 ~11:20 UTC
+**Status: COMPLETE** — both words fixed, final track assembled and QC'd.
+**Last updated:** 2026-10-20 14:50 UTC
 **Read this first on a fresh runtime.** It supersedes the "pending" wording in
-`RESTORE.md` §5 and `HANDOFF.md` §0/§7.
+`RESTORE.md` §5, `HANDOFF.md` §0/§7 and the earlier revision of this file.
 
 GCS root:
 `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/`
 
 Original WAV (never modified):
 `dbc00722534d5ee763ae54a048cd704eaa4c927e37834cd54542eaf379e0de42`
+
+Final track:
+`$B/final/FINAL_e1_ar_s03_s08.wav`
+`51c6e238dfaad123779e32b113786df651b4c7053771f6f7dfc4970e2fb2a8e1`
 
 ---
 
@@ -24,10 +29,11 @@ Original WAV (never modified):
 | listening pack + Arabic scorecard | **done**, handed to the user |
 | human listening evaluation, round 1 | **done** — 0/4 accepted (`rating_20261020-1223.md`) |
 | delivery bug: comp grafted only changed frames | **found + fixed** (`--word-ranges`) |
-| word 1 — **fixed** by AR re-sing (seed s03) | **done**, passes by ear |
-| word 2 — donor splice rejected; AR tail sweep | **done** (16 seeds); 5 audition seeds in `listen_v4/` |
-| final assembly (`FINAL_*.wav`) | pending the user's e2 pick |
-| final report polish / GitHub update | pending after selection |
+| word 1 — **fixed** by AR re-sing (seed s03) | **done**, accepted by ear |
+| word 2 — donor splice rejected; AR tail sweep | **done** (16 seeds); 5 auditioned |
+| word 2 — human verdict (`s08`, `s13` both pass) | **done** — `s08` chosen |
+| final assembly (`FINAL_e1_ar_s03_s08.wav`) | **done**, QC passed |
+| final report / GitHub / GCS delivery | **done** |
 
 Nothing is lost if Colab disconnects: every WAV, token file, log, metric and
 script is in GCS and/or GitHub (see §4).
@@ -116,7 +122,10 @@ Arabic scorecard (12 questions, plain-language, validated against the rating app
 | `candidates/v2/requests.json`, `run.log` | batch request + log |
 | `deliverables/listen/` | 10 A/B clips (original + H1–H4 × e1/e2) |
 | `deliverables/tracks/` | H1–H4 full tracks |
+| `deliverables/listen_v4/` | round-3 word-2 pack (original + 5 seeds) |
+| `deliverables/listen_final/` | final A/B clips (original vs FINAL, e1/e2) |
 | `deliverables/rating_app/` | 5 montages + `_meta.json` + scorecard + README |
+| `final/FINAL_e1_ar_s03_s08.wav` | **delivered final track** |
 | `reports/` | `report.md`, `APPROACH.md`, `findings.md`, `experiments.md` |
 | `scripts/` | `evaluate.py`, `align.py`, `audio_splice.py`, `donor_sim.py`, `ctc_score.py`, `rank.py`, `token_surgery.py` |
 | `tokens/` | 13 splice token files + baseline + manifest |
@@ -134,6 +143,10 @@ docs/happy_accidents/Baghdad_Moon/token_surgery/
   CPU_BUILD.md
   scripts/           ← copies of the working scripts
   scorecard_baghdad_moon_two_word.json
+  scorecard_baghdad_moon_e2_round3.json
+  rating_20261020-1223.md     ← round 1 (rejected)
+  rating_20261020-1557.md     ← round 3 verdict (word 2)
+  results_20261020_e2_round3.json
 ```
 
 `happy_accident/` is **gitignored** (WAVs/stems); its durable copy is the GCS
@@ -208,20 +221,40 @@ Artifacts: `deliverables/listen_v3/` (round 2, e1 + e2) and `listen_v4/`
 `runs/e2_resample/`, `candidates/v3_e1_ar/`, `candidates/v3_e2_ar/` (all 16
 renders, so extra takes need no GPU).
 
-### 6.4 What happens next session
+### 6.4 Final result (2026-10-20 14:50 UTC) — complete
 
-1. Read the user's rating (`results.json` / `report.json`), record it in
-   `report.md` §6.4.
-2. Pick the word-2 take. If none of the five works, audition the other 11 already
-   rendered (`candidates/v3_e2_ar/`); `s00/s04/s10` were skipped only for
-   rhythmic drift, not for the phoneme.
-3. `python3 happy_accident/runs/assemble_final.py <e2.wav> <e2 semantic.json>
-   deliverables/tracks/FINAL_e1_ar_s03_<seed>.wav` — **tested end-to-end**
-   (2026-10-20 12:15 UTC with s08): 215.879 s, changes only 156.996–204.775 s,
-   `identical_outside_regions: true`, original still `dbc00722…`.
-4. Upload `$B/final/`, update `report.md`/`CHECKPOINT.md` to complete, push.
+Round-3 rating: `rating_20261020-1557.md`, run
+`scorecard_baghdad_moon_e2_round3`, 6 tracks, not blind.
 
-## 7. What remains — decision tree (historical, round 1)
+| take | `ف` onset | diction | melody | seam | overall | keep |
+|---|---|---:|---:|---|---:|---|
+| `00_ORIGINAL` | still `ب` | 1 | 1 | bad | 1 | no |
+| **`s08`** | **fixed** | **5** | **5** | **none** | **5** | **yes** |
+| **`s13`** | **fixed** | **5** | **5** | **none** | **5** | **yes** |
+| `s14` | unclear (`v`) | 4 | 4 | none | 4 | maybe |
+| `s11` | fixed | 5 | 1 | bad | 1 | no |
+| `s07` | still `ب` | 1 | 1 | bad | 1 | no |
+
+`s08` and `s13` tie; **`s08` chosen** for the best rhythmic alignment (5.5 dB
+vs 5.8 dB). The listener's caveat — the 7 s clips end inside `ينزعه`, which was
+not judged — is moot for delivery: only 201.835–204.775 s is comped, so
+`ينزعه` and the rest of the outro stay bit-identical to the original.
+
+Final assembly (no GPU): `runs/assemble_final.py` comps the `s08` word onto the
+accepted `e1_ar_s03` hybrid.
+
+- `FINAL_e1_ar_s03_s08.wav`, sha256 `51c6e238…`, 215.879 s, 48 kHz stereo.
+- Changed span exactly 156.9964–158.8546 s and 201.8353–204.7747 s
+  (230,261 samples); max abs diff outside = 0; original still `dbc00722…`.
+- Boundary sample steps equal the original at all four cuts → no click.
+- Final A/B clips: `deliverables/listen_final/`.
+
+Uploaded to `$B/final/` (track) and `$B/reports/` (docs); GitHub docs updated.
+
+## 7. What remains — decision tree (historical, superseded)
+
+> **Superseded 2026-10-20 14:50 UTC.** All steps below were executed with the
+> AR re-sing route; kept only as a record of the round-1 plan. Do not re-run.
 
 ### Step A — read the user's evaluation (blocking)
 

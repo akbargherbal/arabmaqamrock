@@ -20,6 +20,10 @@ Last updated: 2026-10-20 ~11:25 UTC (Colab session may be ephemeral).
 
 ## 0.5 Round 2 — the state that matters now (2026-10-20 11:25 UTC)
 
+> **COMPLETE 2026-10-20 14:50 UTC.** Word 2 verdict: `s08` and `s13` both pass;
+> `s08` chosen. Final track `$B/final/FINAL_e1_ar_s03_s08.wav` (`51c6e238…`).
+> See `CHECKPOINT.md` and `report.md` §6.4–§6.5.
+
 **Round-1 verdict (user, rating app `rating_20261020-1223.md`): 0/4 accepted.**
 Note this file was written before round 1; §7's "remaining plan" is the
 historical decision tree. The live truth is here.
@@ -28,9 +32,9 @@ historical decision tree. The live truth is here.
 |---|---|
 | round-1 listening evaluation | **done**: H1–H4 all rejected; e2 clips had bad seams |
 | comp bug (changed frames only) | **fixed**: `audio_splice.py --word-ranges` |
-| word 1 `عَلَيْهِ` | **FIXED by AR re-sing** — `e1_ar_s03`, passes by ear |
-| word 2 `فَإِنَّ` | donor splice still wrong; 16 AR tails rendered, **5 in `listen_v4/` awaiting your pick** |
-| final assembly | script tested end-to-end; pending the word-2 winner (no GPU) |
+| word 1 `عَلَيْهِ` | **FIXED by AR re-sing** — `e1_ar_s03`, accepted by ear |
+| word 2 `فَإِنَّ` | **FIXED by AR tail `s08`** (s13 equal alternate), 5/5 by ear |
+| final assembly | **DONE** — `FINAL_e1_ar_s03_s08.wav`, QC'd, uploaded to `$B/final/` |
 
 ### What was learned (do not re-litigate)
 

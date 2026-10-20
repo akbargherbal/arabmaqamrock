@@ -227,7 +227,7 @@ matches the original (a shifted or dropped word shows up as a 15–20 dB dip):
 Pack: `deliverables/listen_v4/` (original + 5 seeds, window 199.8–206.8 s).
 Only the chosen seed gets comped (region 201.835–204.775 s).
 
-### 6.4 Round-3 listening pack and scorecard (pending)
+### 6.4 Round-3 listening pack, scorecard and verdict
 
 `deliverables/listen_v4/` contains `00_ORIGINAL` plus `e2_ar_s08`, `s13`, `s11`,
 `s14`, `s07`, all cut 199.8–206.8 s. The rating-app scorecard is
@@ -248,8 +248,56 @@ the comp would replace the entire 13.6 s outro. Verified: the assembled track
 changes only 156.996–204.775 s in two regions and the original stays
 `dbc00722…`.
 
+**Verdict (2026-10-20 12:57 UTC, `rating_20261020-1557.md`).** Six tracks rated,
+not blind, run `scorecard_baghdad_moon_e2_round3`:
+
+| take | `ف` onset | diction | melody | seam | naturalness | overall | keep |
+|---|---|---:|---:|---|---:|---:|---|
+| `00_ORIGINAL` | still `ب` | 1 | 1 | bad | 1 | 1 | no |
+| **`e2_ar_s08`** | **fixed** | **5** | **5** | **none** | **5** | **5** | **yes** |
+| **`e2_ar_s13`** | **fixed** | **5** | **5** | **none** | **5** | **5** | **yes** |
+| `e2_ar_s14` | unclear | 4 | 4 | none | 5 | 4 | maybe (`ف` heard as `v`) |
+| `e2_ar_s11` | fixed | 5 | 1 | bad | 1 | 1 | no |
+| `e2_ar_s07` | still `ب` | 1 | 1 | bad | 1 | 1 | no |
+
+- **`s08` and `s13` both fix `فَإِنَّ`** and are rated equal (5/5, keep). `s08`
+  is chosen because it also had the best rhythmic alignment with the original
+  (5.5 dB vs 5.8 dB); `s13` remains an equally-rated alternate.
+- `s11` proves the phoneme was right but the *tail* collapsed after the word
+  (`الله` mangled into `ينزعه`); `s07` re-sang `عَلَيْهِ` twice and kept `ب`.
+- The listener flagged one limitation: the 7 s clips end inside `ينزعه`, so the
+  final syllable of the outro could not be judged. **This does not affect the
+  delivery**: only 201.835–204.775 s is taken from `s08`, and everything after
+  204.775 s — including `ينزعه` — remains bit-identical to the original, so a
+  tail collapse like `s11`'s cannot propagate into the final track.
+
+### 6.5 Final assembly and QC
+
+`FINAL_e1_ar_s03_s08.wav` = word-1 hybrid `e1_ar_s03` (already accepted) +
+whole-word `s08` comp for `فَإِنَّ`, assembled by `runs/assemble_final.py`:
+
+| check | value |
+|---|---|
+| final sha256 | `51c6e238dfaad123779e32b113786df651b4c7053771f6f7dfc4970e2fb2a8e1` |
+| format | 48 kHz, stereo, PCM_16, 215.879 s (10,362,176 frames, 41,448,748 bytes) |
+| original sha256 | `dbc00722…` — unchanged, never overwritten |
+| comp regions | 156.995–158.855 s and 201.835–204.775 s (`identical_outside_regions: true`) |
+| measured changed span | 156.9964–158.8546 s and 201.8353–204.7747 s (230,261 samples) |
+| max abs diff outside regions | **0** |
+| e1 region vs `e1_ar_s03` | max diff **0** |
+| e2 region vs `e2_ar_s08` | identical except the 40 ms cosine fades at each edge (1905 / 1903 samples) |
+| splice continuity | sample step at all four cuts equals the original (391.5, 2127.5, 482.0, 1089.5) → no click/DC step |
+
+A final A/B pack of the *delivered* audio is in `deliverables/listen_final/`
+(`00_ORIGINAL__e1/e2` vs `FINAL__e1/e2`) for last-mile confirmation; the full
+track is `deliverables/tracks/FINAL_e1_ar_s03_s08.wav`.
+
 ## 7. Files
 
+- Final track: `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav`
+- Final A/B clips: `happy_accident/deliverables/listen_final/`
+- Round-3 raw results: `docs/.../results_20261020_e2_round3.json`,
+  `docs/.../rating_20261020-1557.md`
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`
 - Local comps: `happy_accident/runs/token_surgery/v2/hybrid/<id>.wav`
 - Audition clips (original + H1–H4, e1 and e2 windows):
