@@ -276,11 +276,21 @@ GPU re-render with an earlier prefix. Full rationale in `PROGRESS.md` §4.
 **Round-4 execution (2026-10-20 15:xx UTC).** A phrase comp was built on the
 accepted word-1 hybrid: region **202.21–207.90 s**, 50 ms in / 120 ms out
 fades, level ramp, **vocal stem only** (original instrumental kept). `s13` was
-best of the 16 existing tails at phrase level (corr 0.50, 0 ms), while `s08`
-was 0.30 at +190 ms. Edge level steps 0.0/−0.4 dB (v1: +3.5 dB), outside max
-diff 0, sha256 `19343646…`. Candidate `23` is in `deliverables/listen_v5/`.
-16 new tails are rendering (prefix 5056 +16..+27, prefix 5040 +16..+19); final
-pick pending. Details: `report.md` §6.7.
+best of the 16 existing tails at phrase level (full-mix corr 0.50/0 ms;
+vocal-stem 0.907/+110 ms), while `s08` was 0.30 at +190 ms. Edge level steps
+0.0/−0.4 dB (v1: +3.5 dB), outside max diff 0, sha256 `19343646…`. Candidate
+`23` is in `deliverables/listen_v5/`.
+
+**New-seed sweep (2026-10-20 16:05 UTC).** All 16 new tails rendered and were
+Demucs-separated and scored on the vocal stem. `s13` still leads on overall
+phrase correlation (0.907), but `p5056_s18` is a near-tie (0.905) and is better
+on the first word (`فَإِنَّ` 0.964 vs 0.946) with a −20 ms lag instead of
++110 ms; its trade-off is a quieter vocal and weaker `الله`/`ينزعه` envelope
+correlation. Two vocal-only comps of `p5056_s18` (aligned +20 ms and native
+timing) are in `listen_v5/` as `30`/`31`; both pass the bit-identity check and
+have edge steps 0.0/−0.4 dB. No other new seed beats `s13`. Final pick awaits
+the ear. Details: `report.md` §6.7; scores:
+`happy_accident/runs/e2_phrase/new_vocal_scores.json`.
 
 ## 7. What remains — decision tree (historical, superseded)
 
