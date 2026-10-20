@@ -5,6 +5,8 @@ multi-session summary (what was tried, what was proven, what is still open).
 
 - `CHECKPOINT.md` — current state, artifacts, next steps.
 - `PROGRESS.md` — 4-session progress summary and the open S2-join issue.
+- `WORKFLOW_VS_SUNO.md` — how this repair differs from Suno cover influence and
+  Studio section regeneration.
 - `report.md` — measurements for every round, including the final track.
 - `HANDOFF.md` — earlier handoff (historical; §0.5 is annotated).
 - `evidence.md` — CTC/ASR/F0 evidence for the two words and the donors.
