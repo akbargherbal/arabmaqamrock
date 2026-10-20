@@ -61,12 +61,15 @@ Task workspace: `/content/arabmaqamrock/happy_accident`
 | variant WAVs | `happy_accident/variants/` | A and C original WAVs |
 | variant stems | `happy_accident/stems/variants/` | demucs vocals |
 | B stems | `happy_accident/stems/htdemucs/...` | demucs vocals / no_vocals |
-| evaluation script | `happy_accident/evaluate.py` | demucs + CTC + similarity |
-| alignment script | `happy_accident/align.py` | CTC forced alignment |
-| ASR helper | `happy_accident/asr2.py` | faster-whisper |
-| patched audio.cpp | `/tmp/opencode/audio.cpp` (ephemeral!) | base `eb8e21bd`, patch `d32a6a01`, local commit `42bb0a88` |
-| build log | `/tmp/opencode/build_audio_cpp.log` | ephemeral! |
-| new binary (when built) | `/tmp/opencode/audio.cpp/build/linux-cuda-release/bin/audiocpp_cli` | stage separately; do **not** overwrite original until baseline verified |
+| evaluation script | `happy_accident/evaluate.py` | demucs + CTC + similarity (**reconstructed 2026-10-20**, see RESTORE.md §5) |
+| alignment script | `happy_accident/align.py` | CTC forced alignment (**reconstructed**) |
+| ASR helper | `happy_accident/asr2.py` | faster-whisper (**reconstructed**) |
+| splice generator | `happy_accident/token_surgery.py` | writes the length-preserving token variants |
+| patched audio.cpp | clone of `eb8e21bd` + `d32a6a01` | local commit `58caf774`; patches in GCS `patches/` |
+| build log | GCS `.../bin/build_audio_cpp_20261020.log` | durable (the `/tmp/opencode` one is gone) |
+| prefix-capable binary | GCS `.../bin/audiocpp_cli_prefix_sm75` | sha256 `4e1534f3…`; stage as `bin/audiocpp_cli_prefix` |
+| pre-computed splices | `happy_accident/runs/token_surgery/tokens/` | 13 variants + baseline, all 5397 frames, + `manifest.json` |
+| restore runbook | `docs/.../token_surgery/RESTORE.md` | **read this first on a fresh runtime** |
 | docs | `docs/happy_accidents/Baghdad_Moon/token_surgery/` | this file, experiments, report, scripts |
 
 GCS originals:
@@ -199,7 +202,7 @@ for e1. Always demucs first.
 | 0 | baseline semantic, original binary | **success**: 5397 tokens, exact match, fingerprints 1079/12 |
 | 1 | original binary + `semantic_prefix_file` + `min=max=5397` | **failed/aborted**: option silently ignored; binary re-ran the AR. `strings` shows no `semantic_prefix`; `--version` says `git eb8e21b 2026-09-21`. |
 | 2 | A/C semantic exports (`stop_after=semantic`) | **success**: A 5874 frames, C 6192 frames; request wall 275 s each. |
-| 3 | rebuild `eb8e21bd` + cherry-pick `d32a6a01` | **paused/killed at ~26%** on the GPU VM (2026-10-19 21:50 UTC); move to CPU build per §6.6. |
+| 3 | rebuild `eb8e21bd` + cherry-pick `d32a6a01` | **done 2026-10-20** on a CPU-only runtime: CUDA 12.0.140, gcc 12.4.0, sm75, sha256 `4e1534f3…`, `semantic_prefix` present, staged to GCS. GPU smoke test + §7.1 still pending. |
 | 4 | local baseline audio with original binary (GPU) | **aborted** before WAV (killed with the build); use the GCS `repro/reproB` WAV or re-run later. |
 | 4b | baseline audio render with new binary | **pending** |
 | 5 | token splices (e1 note/word; e2 onset/word) | **pending** |
@@ -224,7 +227,9 @@ returns nothing. Passing the option does not error; it is ignored.
 - Base: `eb8e21bd7b71dc104d6be7a88f5641bcd5373617` (the original prebuilt’s source).
 - Cherry-picked: `d32a6a0186a47f783b7415e3e48ebb1d917df742`
   (“yue2: continue a song from given semantic tokens”).
-- Local commit: `42bb0a88` on branch `prefix-on-orig`.
+- Local commit: `42bb0a88` on branch `prefix-on-orig` in the 2026-10-19 attempt;
+  the 2026-10-20 CPU rebuild is **`58caf774`** (same tree, different committer
+  identity/time — verified byte-identical code diff).
 - Only YuE2 files changed by the cherry-pick: `ar_runtime.cpp/h`, `pipeline.cpp`,
   `request.cpp`, `types.h`, `model_specs/yue2.json` (+ docs/examples). Normal
   requests without a prefix should render as before.
@@ -245,8 +250,14 @@ new one as `bin/audiocpp_cli_prefix` or `happy_accident/bin/audiocpp_cli_prefix`
 
 ### 6.4 Toolchain caveat
 
-Original prebuilt: CUDA **12.0.140**, gcc 13.3.0. This image: CUDA **13.0.88**,
-gcc 13.3.0. The build may change float numerics. Test baseline first (§7.1).
+**Resolved in the 2026-10-20 CPU build:** the build used CUDA **12.0.140** — the
+same toolkit as the original prebuilt — with gcc 12.4.0 on Ubuntu 24.04, so the
+CUDA-13 numerics concern below no longer applies. Bit-identity of the *rendered
+WAV* is still unproven until §7.1 is run on the T4.
+
+Original prebuilt: CUDA **12.0.140**, gcc 13.3.0. The 2026-10-19 GPU image had
+CUDA **13.0.88**, gcc 13.3.0, which would have risked changing float numerics.
+Test baseline first (§7.1) regardless.
 If the baseline WAV is not bit-identical:
 - try `apt-get install cuda-toolkit-12-5` and rebuild with `/usr/local/cuda-12.5`
   on `PATH`/`CUDA_HOME` (12.5 is available from the configured NVIDIA repo);
@@ -479,20 +490,32 @@ For exact given tokens, `min=max=N` skips the AR stage (per `d32a6a01`).
 
 ## 10. Backups (Colab safety)
 
-Mirror at least these to a new GCS prefix, e.g.
-`gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/`:
+**Status 2026-10-20: complete.** Everything needed to resume on a fresh runtime is
+under
+`gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/`.
+Full restore steps: `RESTORE.md` in this folder.
 
-- `HANDOFF.md`, `experiments.md`, `report.md`, scripts (`evaluate.py`,
-  `align.py`, `asr2.py`, `rebuild_best.sh`)
-- `prompts/02B_lyrics.txt`, `prompts/02B_style.txt`
-- `runs/baseline_semantic/semantic.json` + `run.log`
-- `runs/variants_semantic/A_.../semantic.json`, `C_.../semantic.json` + logs
-- `runs/token_surgery/tokens/*.json` (baseline and splice candidates)
-- the patched source diff (`git diff eb8e21bd..42bb0a88`)
-- the built binary (if the build finishes), plus sha256 and a manifest
-- final candidate WAVs and `report.md`
+Inventory (verified present):
 
-Check for an existing token-surgery prefix first; append, do not overwrite.
+| path | contents |
+|---|---|
+| `bin/audiocpp_cli_prefix_sm75` (+ `.sha256`, `.tar.gz`, `.manifest.json`) | prefix-capable sm75 binary |
+| `bin/build_audio_cpp_20261020.log` | build log |
+| `patches/` | `semantic_prefix_on_eb8e21bd_{code,full}.patch`, `rebuild_58caf774_{code,full}.patch` |
+| `prompts/` | `02B_lyrics.txt`, `02B_style.txt` |
+| `baseline/` | `semantic.json` (5397), `run.log` |
+| `variants/` | `A_semantic.json` (5874), `C_semantic.json` (6192), `run.log` |
+| `tokens/` | 13 splice variants + `tokens_baseline.json` + `manifest.json` |
+| `scripts/` | `evaluate.py`, `align.py`, `asr2.py`, `token_surgery.py`, `render_tokens.sh` |
+| `workspace/` | `happy_accident_workspace.tar.gz` (prompts + tokens + semantic, no audio) |
+| root | `HANDOFF.md`, `CPU_BUILD.md`, `RESTORE.md`, `experiments.md`, `evidence.md`, `state.json`, `README.md` |
+
+Not in this prefix, by design: the original/variant WAVs (in
+`runs/20261018-162827_batch_12_variants_backing_vocals/`), model/VAE/LoRA
+(re-downloaded by `setup_colab.sh`), demucs stems (regenerable).
+
+When you produce something new, append to this prefix; do not overwrite the
+binary or the baseline.
 
 ---
 
@@ -526,14 +549,18 @@ Check for an existing token-surgery prefix first; append, do not overwrite.
 ## 13. Minimal “future agent” prompt
 
 > Work in `/content/arabmaqamrock`. Read
-> `docs/happy_accidents/Baghdad_Moon/token_surgery/HANDOFF.md` first; it supersedes
-> the old `happy_accident.zip` prompt. The goal is to fix exactly two sung words
-> in the B take (`عَلَيْهِ` at 157.3–158.55 s, `فَإِنَّ` at 202.26–204.54 s) by
-> token-level surgery on the original 5397-frame semantic stream, using the
-> rebuilt prefix-capable binary. Do not change style/lyrics/seed/LoRA/sampler/GPU.
-> Baseline semantic is exact at `happy_accident/runs/baseline_semantic/semantic.json`.
-> Donors: B Outro `[5025,5056)` for e1; B Verse 2 `[3962,3988)` for e2; A/C tokens
-> in `runs/variants_semantic/`. Verify with `evaluate.py` (demucs + Arabic CTC) and
-> waveform/mel similarity. Back up to GCS before long runs. Report honestly if the
-> rebuilt baseline is not bit-identical.
+> `docs/happy_accidents/Baghdad_Moon/token_surgery/RESTORE.md` and then
+> `HANDOFF.md`; they supersede the old `happy_accident.zip` prompt and record the
+> finished CPU build. The goal is to fix exactly two sung words in the B take
+> (`عَلَيْهِ` at 157.3–158.55 s, `فَإِنَّ` at 202.26–204.54 s) by token-level
+> surgery on the original 5397-frame semantic stream, using the prefix-capable
+> binary at GCS `.../bin/audiocpp_cli_prefix_sm75` (sha256 `4e1534f3…`).
+> Do not change style/lyrics/seed/LoRA/sampler/GPU, and do not rebuild on the T4.
+> Baseline semantic is exact at `happy_accident/runs/baseline_semantic/semantic.json`;
+> baseline WAV must be `dbc00722…` before any surgery. Donors: B Outro
+> `[5025,5056)` for e1; B Verse 2 `[3962,3988)` for e2; A/C tokens in
+> `runs/variants_semantic/`. The length-preserving splices are already generated in
+> `runs/token_surgery/tokens/` — render them first. Verify with `evaluate.py`
+> (demucs + Arabic CTC) and waveform/mel similarity. Back up to GCS before long
+> runs. Report honestly if the rebuilt baseline is not bit-identical.
 
