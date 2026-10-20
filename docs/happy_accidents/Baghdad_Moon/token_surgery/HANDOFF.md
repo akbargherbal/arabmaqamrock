@@ -4,14 +4,98 @@
 It was written after working the problem on the actual T4 environment. Read this
 first; use the Claude prompt only as background.
 
-> **STATUS 2026-10-20 ~06:55 UTC — read `CHECKPOINT.md` for the live state.**
-> The T4 session restored everything, passed both §7.1 gates **exactly**
-> (semantic `1b1aa3e2…`, WAV `dbc00722…`), rendered all 13 splices, built the
-> local-comp hybrids, and delivered a listening pack + Arabic scorecard. The
-> remaining step is the user's listening verdict, then final assembly. This
-> handoff remains the background/case file; §5 and §7 are no longer "pending".
+> **STATUS 2026-10-20 ~11:25 UTC — read `CHECKPOINT.md` first; it is the live state.**
+> Round 1 (the 13 token splices) was **rejected 0/4 by ear**. Two causes were
+> found: (a) the comp grafted only the *changed* frames, cutting back to the
+> original inside word 2 — fixed with `--word-ranges`; (b) donor tokens do not
+> transfer the correct consonant, even whole-word, even as raw audio. The fix
+> that works is an **AR re-sing**: prefix the tokens before the word, let the AR
+> continue with the real lyric, seed-sweep, then comp. Word 1 is **fixed**
+> (`e1_ar_s03`, passes by ear). Word 2 is in the same 16-seed sweep now.
+> See §0.5 below and `report.md` §5–§6.
 
-Last updated: 2026-10-19 ~21:45 UTC (Colab session may be ephemeral).
+Last updated: 2026-10-20 ~11:25 UTC (Colab session may be ephemeral).
+
+---
+
+## 0.5 Round 2 — the state that matters now (2026-10-20 11:25 UTC)
+
+**Round-1 verdict (user, rating app `rating_20261020-1223.md`): 0/4 accepted.**
+Note this file was written before round 1; §7's "remaining plan" is the
+historical decision tree. The live truth is here.
+
+| stage | state |
+|---|---|
+| round-1 listening evaluation | **done**: H1–H4 all rejected; e2 clips had bad seams |
+| comp bug (changed frames only) | **fixed**: `audio_splice.py --word-ranges` |
+| word 1 `عَلَيْهِ` | **FIXED by AR re-sing** — `e1_ar_s03`, passes by ear |
+| word 2 `فَإِنَّ` | donor splice still wrong; **AR tail sweep running** (16 seeds) |
+| final assembly | pending the word-2 winner |
+
+### What was learned (do not re-litigate)
+
+1. **A comp must cover the whole word, not the changed tokens.** For a
+   partial-word edit the changed frames are a sub-range (e2: 13 or 26 of 58).
+   Grafting only those cut back to the original at 203.5 s, so the corrected
+   `ف` was followed by the original `…بِأَنَّ`. That is the "ف + نصف نون" the
+   user heard. `--word-ranges 3933:3964,5056:5114` fixes it; the output is still
+   bit-identical outside the (wider) regions.
+2. **Donor tokens do not transfer the consonant.** Whole-word donor comps
+   (`e1_B_word`) were heard as unchanged. Two *audio* grafts of the Outro word
+   (last note 0.32 s; whole word 1.24 s) were also rejected. This rules out the
+   "wrong timbre" explanation: the donor simply does not deliver a convincing
+   `ه` in Verse 2.
+3. **AR re-sing works.** `semantic_prefix_file = tokens[:frame]`,
+   `semantic_max_tokens = word_end`, seed sweep. The AR sees the real lyric, so
+   the correct phoneme is available. Word 1: 3 of 4 shortlisted seeds pass
+   (s01, s03, s04; s15 fails).
+4. **AR sampling is causal**: tokens for `[start, end)` are the same whether
+   `semantic_max_tokens` is the word end or the end of the song, so a short
+   render is enough to pick a seed; only the winner needs a full 5397 render.
+
+### Commands (exactly what was run)
+
+Word 1 sweep (`runs/e1_resample/`), 16 seeds, prefix 3933 → max 3964:
+
+```bash
+python3 - <<'PY'   # build requests.json
+# prefix = tokens_baseline[:3933]; min=max=3964; seed 1712905618+i; export_semantic=true
+PY
+./bin/audiocpp_cli_prefix ... --request-sequence happy_accident/runs/e1_resample/requests.json \
+  --out-dir happy_accident/runs/e1_resample/out --log
+```
+
+Winner then full-rendered (`requests_full.json`, min=max=5397) and comped:
+
+```bash
+python3 happy_accident/audio_splice.py ORIGINAL candidate.wav OUT.wav \
+  --tokens tokens_e1_ar_s03_full.json --baseline tokens_baseline.json \
+  --word-ranges 3933:3964
+```
+
+Word 2 sweep (`runs/e2_resample/`), 16 seeds, prefix **5056** → max 5397
+(do not use 5100; it cuts inside the word): same pattern.
+
+### Artifacts produced in round 2 (mirrored to GCS)
+
+| path | contents |
+|---|---|
+| `deliverables/listen_v3/` | round-2 audition: e1 AR s01/s03/s04/s15, two audio grafts, e2 whole-word |
+| `deliverables/listen_v4/` | round-3 audition (e2 AR shortlist), built when the sweep lands |
+| `candidates/v3_e1_ar/e1_ar_s03.wav` | chosen word-1 hybrid (39.5 MB) |
+| `runs/e1_resample/` | requests, per-seed `semantic.json`, full renders, hybrid, logs |
+| `runs/e2_resample/` | requests, per-seed `semantic.json` + WAVs, log |
+| `tokens/tokens_e1_ar_s03_full.json` | 5397-frame stream for the word-1 winner |
+| `scripts/audio_splice.py` | now supports `--word-ranges` (whole-word graft) |
+
+### Next three steps
+
+1. When the e2 sweep ends: `python3 happy_accident/runs/e2_resample/prep_listen.py`
+   (cuts the 4 most diverse tails into `deliverables/listen_v4/`).
+2. User picks the e2 take that says `فَإِنَّ`.
+3. `python3 happy_accident/runs/assemble_final.py <e2 candidate.wav> <e2 tokens.json>
+   deliverables/tracks/FINAL_e1_ar_s03_<e2>.wav`; it comps word 2 onto the e1
+   hybrid, asserts `identical_outside_regions`, and prints both sha256s.
 
 ---
 
@@ -213,7 +297,12 @@ for e1. Always demucs first.
 | 4 | local baseline audio with original binary (GPU) | **aborted** before WAV (killed with the build); use the GCS `repro/reproB` WAV or re-run later. |
 | 4b | baseline audio render with new binary | **done 2026-10-20, bit-identical** `dbc00722…` |
 | 5 | token splices (e1 note/word; e2 onset/word) | **done 2026-10-20**: 13 renders + 13 local comps; see `report.md` |
-| 6 | error-2 tail resample seed sweep | **not needed yet**; only if the word donors fail by ear |
+| 6 | error-2 tail resample seed sweep | **done 2026-10-20 (round 2)**: 16 AR tails, prefix 5056 → 5397 |
+| 7 | round-1 listening (H0–H4) | **0/4 accepted**; e2 clips had audible seams (`rating_20261020-1223.md`) |
+| 8 | comp fix: graft the whole word, not the changed frames | **done**: `--word-ranges`; regions 156.995–158.855 / 201.835–204.775 |
+| 9 | whole-word donor comp for e2 | **rejected by ear** (still `بِأَنَّ`) |
+| 10 | real-audio grafts of the Outro `عَلَيْهِ` (note + word) | **rejected by ear** |
+| 11 | **AR re-sing, word 1** (prefix 3933 → max 3964, 16 seeds) | **WORKS**: s01/s03/s04 pass; chosen `e1_ar_s03` |
 
 The aborted v1 batch is at `runs/token_surgery/v1/` (no WAVs).
 
@@ -536,6 +625,15 @@ binary or the baseline.
 - Do not cut error 2 at frame 5100; use 5056.
 - Do not assume the Outro `عَلَيْهِ` is wrong; it is correct and is a donor.
 - Do not overwrite the original WAV or the original run directory.
+- **Do not re-run the round-1 donor splices** (H1–H4, `e1_*`, `e2_*`). They were
+  rejected by ear; the donor route is closed for both words.
+- **Do not comp only the changed frames.** Always pass `--word-ranges`; a
+  partial-word graft silently reverts the rest of the word to the original.
+- **Do not judge an AR candidate from a render that stops at the word end** —
+  the tokens are correct (AR sampling is causal) but the audio has no trailing
+  context. Pick the seed short, then full-render the winner at `min=max=5397`.
+- **Do not "fix" word 1 with the Outro word as audio.** That was tried and
+  rejected by ear (`GNOTE_`/`GWORD_donor_audio`).
 
 ---
 

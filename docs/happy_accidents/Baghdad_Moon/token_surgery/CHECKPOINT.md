@@ -1,6 +1,6 @@
 # CHECKPOINT — Baghdad Moon B two-word repair
 
-**Last updated:** 2026-10-20 ~06:55 UTC
+**Last updated:** 2026-10-20 ~11:20 UTC
 **Read this first on a fresh runtime.** It supersedes the "pending" wording in
 `RESTORE.md` §5 and `HANDOFF.md` §0/§7.
 
@@ -22,8 +22,11 @@ Original WAV (never modified):
 | 13 token-splice candidates rendered | **done** (one batch, all 5397 frames) |
 | local-comp hybrids (surgical delivery) | **done** (bit-identical outside edits) |
 | listening pack + Arabic scorecard | **done**, handed to the user |
-| human listening evaluation | **IN PROGRESS (user)** |
-| final version selection + assembly | **pending** (blocked on §6) |
+| human listening evaluation, round 1 | **done** — 0/4 accepted (`rating_20261020-1223.md`) |
+| delivery bug: comp grafted only changed frames | **found + fixed** (`--word-ranges`) |
+| word 1 — **fixed** by AR re-sing (seed s03) | **done**, passes by ear |
+| word 2 — donor splice rejected; AR tail sweep | **running** (16 seeds) |
+| final assembly (`FINAL_*.wav`) | pending word 2 |
 | final report polish / GitHub update | pending after selection |
 
 Nothing is lost if Colab disconnects: every WAV, token file, log, metric and
@@ -174,7 +177,35 @@ chmod +x audiocpp_cli_prefix && cd .. && . ./cuda_loader_path.sh
 
 ---
 
-## 6. What remains — decision tree
+## 6. Round 2 — what the evaluation changed (2026-10-20 11:20 UTC)
+
+Round 1 was rejected 0/4. Two independent causes, both now understood:
+
+1. **Word 2: comp bug.** `audio_splice.py` grafted only the frames whose tokens
+   changed. For a partial-word edit that cuts back to the original *inside* the
+   word, so the corrected `ف` was followed by the original `…بِأَنَّ` tail. Fixed
+   with `--word-ranges` (graft the whole word). Verified in the audio: the old
+   hybrids became bit-identical to the original from 203.52 s, i.e. 1.04 s
+   before the word ended.
+2. **Word 1: donor tokens do not transfer.** Even whole-word donor comps were
+   heard as unchanged, and two direct *audio* grafts of the Outro word (final
+   note and whole word) also failed. The donor is not the problem — re-synthesis
+   in the Verse-2 context is.
+
+**Fix that works: AR re-sing.** Prefix = the tokens before the word,
+`semantic_max_tokens` = the word end, seed sweep. The AR sees the real lyric, so
+the correct consonant is available to it.
+
+- Word 1 (`prefix 3933 → max 3964`, 16 seeds): 4 diverse seeds got full
+  5397-frame renders; **s01, s03, s04 pass by ear**, s15 fails. Chosen: **s03**.
+  Comp region 156.995–158.855 s, `identical_outside_regions: true`.
+- Word 2 (`prefix 5056 → max 5397`, 16 seeds): rendering now; audition the raw
+  tails first, comp only the winner (region 201.835–204.775 s).
+
+Artifacts: `deliverables/listen_v3/` (round 2, e1 + e2) and `listen_v4/`
+(round 3, e2 only), `runs/e1_resample/`, `runs/e2_resample/`.
+
+## 7. What remains — decision tree (historical, round 1)
 
 ### Step A — read the user's evaluation (blocking)
 
