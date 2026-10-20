@@ -174,6 +174,39 @@ can be auditioned before committing to a full 5397-frame render. Only the
 winner is rendered once more as a complete stream and comped into the original
 (word-span graft).
 
+### 6.1 Result — word 1 is fixed
+
+16 seeds were generated; 4 diverse ones got full 5397-frame renders and were
+comped. The listener tested 6 versions in `deliverables/listen_v3/`:
+
+| version | what it is | verdict |
+|---|---|---|
+| `e1_ar_s01`, `e1_ar_s03`, `e1_ar_s04` | AR re-sing, whole-word comp | **pass** |
+| `e1_ar_s15` | AR re-sing, whole-word comp | fail |
+| `GNOTE_donor_audio` | Outro's final note as audio | fail |
+| `GWORD_donor_audio` | Outro's whole word as audio | fail |
+
+The two *real-audio* grafts also failed, which is informative: the listener's
+problem with the old candidates was not merely "wrong timbre" — the donor word
+itself does not deliver a convincing `ه` in the Verse-2 context, whether it is
+re-synthesised from tokens or copied as audio. Only re-singing the word from
+the lyric works.
+
+Winner: **`e1_ar_s03`** (the user rated s01/s03/s04 as equally good; s03 also
+has the best donor DTW of the three). Comp region 156.995–158.855 s,
+`identical_outside_regions: true`.
+
+### 6.2 Word 2 — the donor splice still fails
+
+The whole-word comp (`E2_FIXED_fullword`, region 201.835–204.775 s) removed the
+mid-word cut, but the listener still hears the wrong word: the donor's 26-frame
+`فَإِنَّ` spliced into a 58-frame slot does not transfer the `ف` either.
+
+Same conclusion as word 1: re-sing it. The documented fallback is a tail
+resample — prefix = first **5056** frames, `semantic_max_tokens = 5397`, seeds
+`1712905618 + 0..15`. 16 tails are rendered; the four most diverse will be
+auditioned before any comp.
+
 ## 7. Files
 
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`

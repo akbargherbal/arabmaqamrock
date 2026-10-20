@@ -10,9 +10,15 @@ as in normal vocal comping.
 
 Everything outside the comp regions stays bit-identical to the original.
 
+IMPORTANT (2026-10-20 fix): a partial-word edit changes only a *sub-range* of the
+word's tokens. Grafting just the changed frames cuts back to the original in the
+middle of the word, which re-introduces the wrong syllables (heard as
+"فإ + half a nun"). Pass --word-ranges so the graft always covers the whole word.
+
 Usage:
     python3 audio_splice.py ORIGINAL.wav CANDIDATE.wav OUT.wav \
         --tokens tokens.json --baseline tokens_baseline.json \
+        [--word-ranges 3933:3964,5056:5114] \
         [--margin 0.30] [--fade 0.04] [--snap 0.12]
 """
 from __future__ import annotations
@@ -33,6 +39,36 @@ def changed_ranges(tokens, baseline):
         else:
             ranges.append([i, i])
     return ranges  # inclusive frame indices
+
+
+def parse_word_ranges(spec):
+    out = []
+    if not spec:
+        return out
+    for part in spec.split(","):
+        a, b = part.split(":")
+        out.append((int(a), int(b)))  # half-open, frames
+    return out
+
+
+def expand_to_words(ranges, words):
+    """Extend each changed run to the whole word it lies in (half-open frames)."""
+    out = []
+    for f0, f1 in ranges:  # inclusive
+        g0, g1 = f0, f1 + 1
+        for w0, w1 in words:
+            if f0 < w1 and g1 > w0:  # overlaps the word
+                g0, g1 = min(g0, w0), max(g1, w1)
+        out.append((g0, g1))
+    # merge
+    out.sort()
+    merged = []
+    for a, b in out:
+        if merged and a <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(merged[-1][1], b))
+        else:
+            merged.append((a, b))
+    return merged
 
 
 def rms_env(x, sr, hop=0.01):
@@ -59,6 +95,8 @@ def main():
     ap.add_argument("out")
     ap.add_argument("--tokens", required=True)
     ap.add_argument("--baseline", required=True)
+    ap.add_argument("--word-ranges", default="",
+                    help="half-open frame ranges of whole words, e.g. 3933:3964,5056:5114")
     ap.add_argument("--margin", type=float, default=0.30)
     ap.add_argument("--fade", type=float, default=0.04)
     ap.add_argument("--snap", type=float, default=0.12)
@@ -71,16 +109,18 @@ def main():
 
     tokens = json.load(open(a.tokens))
     baseline = json.load(open(a.baseline))
+    words = parse_word_ranges(a.word_ranges)
     fps = 25.0
     regions = []
-    for f0, f1 in changed_ranges(tokens, baseline):
+    runs = expand_to_words(changed_ranges(tokens, baseline), words)
+    for f0, f1 in runs:  # half-open
         t0 = max(0.0, f0 / fps - a.margin)
-        t1 = min(len(orig) / sr, (f1 + 1) / fps + a.margin)
+        t1 = min(len(orig) / sr, f1 / fps + a.margin)
         # snap cuts to quiet points, but never inside the changed frames
         s0 = snap_quiet(orig.astype(np.float32).mean(1), sr, t0, a.snap)
         s1 = snap_quiet(orig.astype(np.float32).mean(1), sr, t1, a.snap)
         s0 = min(max(s0, t0 - a.snap), f0 / fps)
-        s1 = max(min(s1, t1 + a.snap), (f1 + 1) / fps)
+        s1 = max(min(s1, t1 + a.snap), f1 / fps)
         regions.append((s0, s1))
 
     # merge overlapping/nearby regions (a word can have a 1-frame gap)
