@@ -65,8 +65,8 @@ word-2 takes.**
    B=gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery
    cd /content && git clone https://github.com/akbargherbal/arabmaqamrock.git
    cd arabmaqamrock && gh auth setup-git
-   gsutil cp $B/workspace/happy_accident_workspace_20261020b.tar.gz /tmp/
-   tar -xzf /tmp/happy_accident_workspace_20261020b.tar.gz -C .
+   gsutil cp $B/workspace/happy_accident_workspace_20261020c.tar.gz /tmp/
+   tar -xzf /tmp/happy_accident_workspace_20261020c.tar.gz -C .
    mkdir -p happy_accident/original happy_accident/runs
    gsutil -m cp "$B/../20261018-162827_batch_12_variants_backing_vocals/02-*B_1712905618.wav" happy_accident/original/
    sha256sum happy_accident/original/*.wav        # dbc00722…
