@@ -12,6 +12,11 @@ GitHub docs (tracked):
 Last verified: 2026-10-20 ~05:10 UTC, from a CPU-only Colab runtime that is about
 to be discarded.
 
+> **2026-10-20 ~06:55 UTC — execution is past this runbook.** The T4 session
+> restored everything, passed both §7.1 gates exactly, rendered all 13 splices,
+> built the local-comp hybrids and handed the listening pack to the user.
+> **Current state and next steps: `CHECKPOINT.md` in this folder.**
+
 ---
 
 ## 1. What is already done (do not redo)
@@ -25,7 +30,9 @@ to be discarded.
 | patched source diff | saved (code + full) | GCS `patches/` |
 | splice token files (13 variants, all 5397) | **pre-computed** | GCS `tokens/` |
 | evaluation scripts | **reconstructed** (see §5) | GCS `scripts/` + repo |
-| GPU smoke test + §7.1 baseline | **not done** | — |
+| GPU smoke test + §7.1 baseline | **done, both exact** (2026-10-20) | GCS `gates/` |
+| 13 candidate renders + local comps | **done** | GCS `candidates/v2/` |
+| listening pack + Arabic scorecard | **done, awaiting user** | GCS `deliverables/` |
 
 ---
 
@@ -171,13 +178,16 @@ frame 5056 with a seed sweep) — those need the GPU.
 
 ## 5. Honest status notes
 
-- **The binary has never executed on a GPU.** It was built on a CPU-only host;
-  `--version` only worked against a stub `libcuda.so.1`. §7.1 is the real test.
-- `evaluate.py`, `align.py`, `asr2.py` are **reconstructions**, written from
-  HANDOFF §4 after the originals were found missing from every backup. They are
-  syntax-checked but have not been run on audio (no models on the build host).
-  Their numbers are comparable across candidates rendered in the same session,
-  but are not a continuation of any earlier numeric series.
+- **The binary has now run on the T4** (2026-10-20). Both §7.1 gates passed:
+  semantic byte-identical `1b1aa3e2…`; full WAV bit-identical `dbc00722…`.
+- `evaluate.py`, `align.py`, `asr2.py` are **reconstructions**. They have now
+  been run on audio. Two real bugs were found and fixed: `evaluate.py` compared
+  the reference full mix against the candidate's vocal stem (now full-mix vs
+  full-mix), and both scripts used the pre-transformers-v5 processor call (now
+  `audio=`, with a fallback). Their numbers are comparable across candidates
+  rendered in the same session, but are not a continuation of any earlier
+  numeric series. CTC is not reliable at single-consonant resolution; see
+  `report.md` §2 and `APPROACH.md`.
 - The build's local commit is `58caf774`, not the `42bb0a88` named in older
   notes; the code diff is byte-identical to the saved patch.
-- No candidate WAV exists yet.
+- 13 candidate WAVs and 13 local comps exist; see `CHECKPOINT.md` §4.

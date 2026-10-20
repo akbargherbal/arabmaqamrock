@@ -4,6 +4,13 @@
 It was written after working the problem on the actual T4 environment. Read this
 first; use the Claude prompt only as background.
 
+> **STATUS 2026-10-20 ~06:55 UTC — read `CHECKPOINT.md` for the live state.**
+> The T4 session restored everything, passed both §7.1 gates **exactly**
+> (semantic `1b1aa3e2…`, WAV `dbc00722…`), rendered all 13 splices, built the
+> local-comp hybrids, and delivered a listening pack + Arabic scorecard. The
+> remaining step is the user's listening verdict, then final assembly. This
+> handoff remains the background/case file; §5 and §7 are no longer "pending".
+
 Last updated: 2026-10-19 ~21:45 UTC (Colab session may be ephemeral).
 
 ---
@@ -204,9 +211,9 @@ for e1. Always demucs first.
 | 2 | A/C semantic exports (`stop_after=semantic`) | **success**: A 5874 frames, C 6192 frames; request wall 275 s each. |
 | 3 | rebuild `eb8e21bd` + cherry-pick `d32a6a01` | **done 2026-10-20** on a CPU-only runtime: CUDA 12.0.140, gcc 12.4.0, sm75, sha256 `4e1534f3…`, `semantic_prefix` present, staged to GCS. GPU smoke test + §7.1 still pending. |
 | 4 | local baseline audio with original binary (GPU) | **aborted** before WAV (killed with the build); use the GCS `repro/reproB` WAV or re-run later. |
-| 4b | baseline audio render with new binary | **pending** |
-| 5 | token splices (e1 note/word; e2 onset/word) | **pending** |
-| 6 | error-2 tail resample seed sweep | **pending** |
+| 4b | baseline audio render with new binary | **done 2026-10-20, bit-identical** `dbc00722…` |
+| 5 | token splices (e1 note/word; e2 onset/word) | **done 2026-10-20**: 13 renders + 13 local comps; see `report.md` |
+| 6 | error-2 tail resample seed sweep | **not needed yet**; only if the word donors fail by ear |
 
 The aborted v1 batch is at `runs/token_surgery/v1/` (no WAVs).
 
