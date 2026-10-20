@@ -292,6 +292,27 @@ have edge steps 0.0/−0.4 dB. No other new seed beats `s13`. Final pick awaits
 the ear. Details: `report.md` §6.7; scores:
 `happy_accident/runs/e2_phrase/new_vocal_scores.json`.
 
+**Melisma correction (2026-10-20 16:xx UTC).** The user’s diagnosis was right:
+the final `ه` in `يَنْزِعُهُ` is a sustained **G4 (~391 Hz) from about
+207.7 s to 213.2 s (≈5.5 s)**, with release/reverb to ~215 s. The phrase comps
+`20`–`31` ended at **207.90 s — 160 ms into the hold** — so they truncated the
+candidate’s note and handed the rest of the note back to the original, which is
+the audible “second `ه`”. The envelope-only phrase score missed a second
+problem: **`s13` ends the phrase on D4 (~295 Hz)**, not G4, and holds it for
+only ~2.8 s; no cut point can make that ending match the original. The other
+long-hold takes (`p5056_s25`, `p5040_s17`) do reach G4 but decay earlier and
+quieter than the original, so replacing the hold is still worse than keeping
+it.
+
+The fix is minimal: replace **only `فَإِنَّ`**, region **202.21–204.54 s**
+(the `فَإِنَّ` / `الله` boundary), and keep the original `اللهَ يَنْزِعُهُ`
+and its entire melisma untouched. Candidates `40` (s13 advanced 110 ms,
+80 ms exit crossfade), `41` (no shift), and `42` (110 ms shift, 150 ms
+crossfade) are in `deliverables/listen_v6/`, with full-outro (200–215.879 s)
+and hold-only (207.5–215.879 s) clips. All pass bit-identity outside
+156.995–158.855 and 202.21–204.54; outside max diff 0; edge step at 204.54
+−0.58 / −0.36 / −0.19 dB. Pick awaits the ear.
+
 ## 7. What remains — decision tree (historical, superseded)
 
 > **Superseded 2026-10-20 14:50 UTC.** All steps below were executed with the

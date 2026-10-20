@@ -365,6 +365,56 @@ outside max diff **0**, sha256 `19343646…`. It is in `listen_v5/` as `23`.
 rendering on the T4. They will be scored the same way; the best take replaces
 `s13` if it improves whole-phrase continuity.
 
+### 6.8 Round 5/6 — the final `ه` is a ~5.5 s melisma (correction)
+
+The user's diagnosis was exact: the final `ه` of `يَنْزِعُهُ` is not a word
+ending that can be crossed at 207.9 s; it is a long melismatic hold.
+
+Measured on the Demucs vocal stem, original take:
+
+| event | time | measurement |
+|---|---|---|
+| `فَإِنَّ` | 202.26–204.54 | lyric/ASR timing |
+| `الله` | 204.54–204.98 | lyric/ASR timing |
+| `يَنْزِعُ` | 204.98–~207.7 | lyric/ASR timing |
+| **final `ه`** | **~207.7–213.2** | stable **G4 ≈ 391 Hz** (p10–p90 389–394 Hz), ≈5.5 s |
+| release/reverb | 213.2–~215.3 | level falls from −21 dB to −45 dB |
+| track end | 215.879 | — |
+
+The phrase comps `20`–`31` ended at **207.90 s**, i.e. **160 ms into the
+hold**. They therefore cut the candidate’s `ه` and handed the rest of the same
+note back to the original. That is the audible “another `ه` comes after”.
+
+The envelope-only phrase score missed a second, independent problem:
+
+| take | final-note pitch | final-note duration | verdict |
+|---|---|---|---|
+| original | **G4 ≈ 391 Hz** | ~5.5 s + release | reference |
+| `s13` | **D4 ≈ 295 Hz** | ~2.8 s | wrong final note; cannot be fixed by moving the cut |
+| `s08`/`pick` | G4 ≈ 391 Hz | ~3.0 s | correct pitch, too short |
+| `p5056_s25` | G4 ≈ 391 Hz | ~5.1 s, but decays earlier/quieter | closest new take; still not the original hold |
+| `p5040_s17` | G4 ≈ 391 Hz | active to ~212.2, then artifacts | too short/unstable |
+| `p5056_s18` | G4 ≈ 391 Hz | ~1.4 s | correct pitch, much too short |
+
+So no generated take reproduces the original’s 5.5 s hold at the same level.
+Replacing the hold with a shorter take is worse than keeping the original.
+
+**Minimal fix:** replace only `فَإِنَّ`, region **202.21–204.54 s** (the
+`فَإِنَّ` / `الله` boundary), and leave the original `اللهَ يَنْزِعُهُ` —
+including the entire final `ه` — untouched:
+
+| candidate | first word | shift | exit crossfade | edge step at 204.54 |
+|---|---|---|---|---|
+| `40` | `s13` | −110 ms | 80 ms | −0.58 dB |
+| `41` | `s13` | 0 ms | 80 ms | −0.36 dB |
+| `42` | `s13` | −110 ms | 150 ms | −0.19 dB |
+| `43` | `p5056_s18` | +20 ms | 80 ms | −0.99 dB |
+
+All four pass bit-identity outside 156.995–158.855 s and 202.21–204.54 s
+(outside max diff **0**). Pack: `deliverables/listen_v6/`, with full-outro
+(200–215.879 s) and hold-only (207.5–215.879 s) clips. The hold-only clip
+`52` is literally the original hold, which makes the A/B against `51` direct.
+
 ## 7. Files
 
 - Final track: `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav`
