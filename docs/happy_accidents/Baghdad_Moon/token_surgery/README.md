@@ -6,6 +6,10 @@ multi-session summary (what was tried, what was proven, what is still open).
 **Delivered v2:** `FINAL_e1_ar_s03_s13_41.wav`, sha256 `9b8fdb21…` — both words
 fixed, outro join fixed, original final `ه` melisma untouched.
 
+**Canonical reproducible run:** `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2/`
+— self-contained inputs, stems, scripts, QC, manifest, and a one-command
+rebuild. This is the example future repairs should follow.
+
 - `CHECKPOINT.md` — current state, artifacts, next steps.
 - `PROGRESS.md` — 6-session progress summary; S2-join issue is resolved.
 - `LESSONS.md` — retrospective across the case study, Claude prompt, the

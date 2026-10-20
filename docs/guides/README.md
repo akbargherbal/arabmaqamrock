@@ -6,3 +6,5 @@ Reusable, project-independent playbooks distilled from the work in this repo.
   — how to repair a wrong word without re-rendering the take: unit selection,
   melisma boundaries, prefix re-singing, vocal-stem comps, evaluation, review
   protocol and delivery QC.
+  - Reference run: `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2/`
+    — the complete, reproducible Baghdad Moon final fix described in §14.

@@ -14,7 +14,7 @@ It applies to hosted systems (Suno-style covers and section regeneration) and
 to local models (YuE / audio.cpp and similar token-based systems). The controls
 differ; the strategy does not.
 
-**Version:** 1.0 — 2026-10-20.
+**Version:** 1.1 — 2026-10-20 (adds the reproducible reference run in §14).
 
 **Contents**
 
@@ -32,8 +32,9 @@ differ; the strategy does not.
 11. [Model-specific notes](#11-model-specific-notes)
 12. [One-page checklist](#12-one-page-checklist)
 13. [Templates](#13-templates)
-14. [Worked example](#appendix-worked-example-baghdad-moon)
-15. [Glossary](#glossary)
+14. [Reference run: Baghdad Moon final fix](#14-reference-run-baghdad-moon-final-fix)
+15. [Worked example](#appendix-worked-example-baghdad-moon)
+16. [Glossary](#glossary)
 
 ---
 
@@ -557,6 +558,9 @@ Rules:
 - keep an A/B pack with the original and final, using the same windows;
 - version the delivery (`v1`, `v2`, …) and say what changed.
 
+A complete, reproducible example of this manifest and directory layout is the
+reference run in §14.
+
 ---
 
 ## 10. Failure modes and fixes
@@ -697,9 +701,151 @@ not bit-identical inside:
 
 ---
 
+## 14. Reference run: Baghdad Moon final fix
+
+A complete, self-contained run that applies this guide end to end. It is the
+canonical example to copy when you need to fix a new song.
+
+```
+gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2/
+```
+
+Project docs:
+`docs/happy_accidents/Baghdad_Moon/token_surgery/` (the narrative history,
+measurements and lessons).
+
+### What the run is
+
+A deterministic **composite**, not a new generation:
+
+```
+inputs/ORIGINAL.wav
+  + word 1 from inputs/e1_ar_s03.wav
+  + word 2 from inputs/s13.wav     (فَإِنَّ only)
+  + scripts/comp_region.py         (202.21–204.54 s, vocal stem)
+  = output/FINAL_e1_ar_s03_s13_41.wav
+```
+
+Final hash: `9b8fdb21…`; original hash: `dbc00722…`; duration 215.879 s.
+Changed spans: **156.9964–158.8546 s** and **202.2105–204.5395 s**; outside
+max abs diff **0**; hold 207.5 s–end byte-identical to the original.
+
+### Download and reproduce
+
+```bash
+gsutil -m cp -r \
+  gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2 .
+cd 20261020_baghdad_moon_final_fix_v2
+bash scripts/reproduce_final.sh
+```
+
+Expected last line:
+
+```
+PASS: final is byte-identical to the delivered v2 track.
+```
+
+The script checks the original hash, rebuilds the final with
+`scripts/comp_region.py`, runs `scripts/verify_final.py`, and checks the final
+hash. It writes `qc/comp_output.json` and `qc/verify_output.txt`.
+
+Melisma analysis:
+
+```bash
+python3 scripts/analyze_melisma.py
+# writes analysis/melisma.json
+```
+
+### Run layout
+
+```
+README.md                     overview and quick facts
+METHOD.md                     lab notebook: decisions, failures, commands
+PROVENANCE.md                 model, seeds, prefixes, stems, hashes
+REVIEW.md                     full-track audition instructions
+MANIFEST.json                 machine-readable manifest
+CHECKSUMS.sha256              sha256 of every file (except itself)
+inputs/
+  ORIGINAL.wav                frozen original
+  e1_ar_s03.wav               word-1 render
+  s13.wav                     word-2 tail render
+  request_e1_s03.json         exact word-1 request
+  request_e2_s13.json         exact word-2 request
+stems/
+  original/vocals.wav         Demucs vocal stem, original
+  s13/vocals.wav              Demucs vocal stem, s13
+tokens/                       prefixes and the e1 full token export
+scripts/                      comp, verify, reproduce, analyze, scoring
+output/                       FINAL_e1_ar_s03_s13_41.wav + .sha256
+analysis/                     melisma.json + melisma.md
+qc/                           comp report, verify transcript, hashes
+```
+
+### How the method was applied
+
+1. **Baseline.** Both determinism gates passed; original hash frozen. No edit
+   was attempted until the baseline was exact.
+2. **Word 1 (`عَلَيْهِ`, Verse 2).** AR re-sing from prefix 3933, max 3964,
+   seed `1712905621` (`s03`); whole-word vocal comp at 156.995–158.855 s.
+   Accepted by ear.
+3. **Word 2 (`فَإِنَّ`, Outro).** Donor splices failed 0/4. The v1 word comp
+   ended at 204.775 s, inside `الله`. The phrase comp ended at 207.90 s, inside
+   the final `ه`.
+4. **The measurement.** The original final `ه` is a **G4 ≈ 391 Hz hold from
+   ~207.7 to ~213.2 s (≈5.5 s)**, release to ~215. The phrase candidate `s13`
+   ends the phrase on **D4 ≈ 295 Hz** and holds only ~2.7 s. No cut point can
+   fix a wrong final note.
+5. **The decision.** Replace **only `فَإِنَّ`** at 202.21–204.54 s; keep the
+   original `اللهَ يَنْزِعُهُ` and the entire melisma. Vocal stem only, no
+   timing shift, 50 ms in / 80 ms out, gain ramp.
+6. **QC.** Changed spans as above; outside diff 0; edge step at 204.54
+   −0.36 dB; hold 207.5 s–end byte-identical.
+7. **Review.** Full tracks only; S1 target 154.5–161.0 s; S2 target 200.0 s to
+   the end. Never a partial word.
+
+### Mapping the guide to the run
+
+| guide step | artifact in the run |
+|---|---|
+| save/hash original | `inputs/ORIGINAL.wav`, `MANIFEST.json` |
+| word 1 source | `inputs/e1_ar_s03.wav`, `inputs/request_e1_s03.json`, `tokens/tokens_prefix_e1_3933.json` |
+| word 2 source | `inputs/s13.wav`, `inputs/request_e2_s13.json`, `tokens/tokens_prefix_e2_5056.json` |
+| isolate vocal | `stems/original/vocals.wav`, `stems/s13/vocals.wav` |
+| build comp | `scripts/comp_region.py`, `scripts/reproduce_final.sh` |
+| verify | `scripts/verify_final.py`, `qc/verify_output.txt` |
+| melisma measurement | `scripts/analyze_melisma.py`, `analysis/melisma.json` |
+| manifest / hashes | `MANIFEST.json`, `CHECKSUMS.sha256` |
+| review | `REVIEW.md`, `inputs/ORIGINAL.wav`, `output/FINAL_e1_ar_s03_s13_41.wav` |
+| provenance | `PROVENANCE.md` |
+
+### What to copy for a new repair
+
+- the **layout**: `inputs/`, `stems/`, `scripts/`, `output/`, `qc/`, `analysis/`,
+  `MANIFEST.json`, `CHECKSUMS.sha256`;
+- the **manifest fields**: original/final hashes, changed spans, comp region,
+  fades, edge steps, model/seed/prefix, what is and is not bit-identical;
+- the **reproduce script**: one command that rebuilds the final and checks the
+  expected hash;
+- the **analysis script**: measure the final note before choosing the unit;
+- the **review rule**: full track with timestamps, or a complete section ending
+  at a real boundary / end of track.
+
+### What not to infer
+
+- This is **not** a rule that every fix is word-level. Word 1 and word 2 both
+  happened to be word-level here; the rule is the **smallest correct unit**.
+- This is **not** a rule that every melisma is 5.5 s. Measure your own.
+- This is **not** a new generation. The final is a deterministic composite; it
+  can be reconstructed exactly, but it cannot be regenerated as one model pass.
+- The 9.5–9.7/10 result is a legitimate stop. The remaining glitch at 204.54 is
+  a join/timbre question, not a reason to replace the melisma again.
+
+---
+
 ## Appendix: worked example (Baghdad Moon)
 
-A concrete case shows why the unit matters.
+A concrete case shows why the unit matters. The complete, self-contained run is
+in §14.
 
 - The take was a “happy accident”; the arrangement, voice and mix were right.
 - Two words were wrong: `عَلَيْهِ` → `عَلِيم`, and `فَإِنَّ` → `بِأَنَّ`.

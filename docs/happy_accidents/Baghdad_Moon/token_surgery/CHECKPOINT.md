@@ -17,6 +17,10 @@ Final track (v2):
 `$B/final/FINAL_e1_ar_s03_s13_41.wav`
 `9b8fdb2125b72d2bddd091ff5e5248b84ab9f715d9121452e3020e185c86311c`
 
+Canonical reproducible run:
+`gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2/`
+(self-contained inputs, stems, scripts, QC, manifest; one-command rebuild).
+
 Previous v1 (superseded, kept for reference):
 `$B/final/FINAL_e1_ar_s03_s08.wav`
 `51c6e238dfaad123779e32b113786df651b4c7053771f6f7dfc4970e2fb2a8e1`

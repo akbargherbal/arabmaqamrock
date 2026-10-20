@@ -238,6 +238,7 @@ GCS root:
 
 | path | contents |
 |---|---|
+| `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2/` | **canonical reproducible run** — inputs, stems, scripts, QC, manifest |
 | `$B/final/FINAL_e1_ar_s03_s13_41.wav` | **delivered v2** + `.sha256` |
 | `$B/deliverables/listen_final_v2/` | v2 original vs FINAL A/B clips (e1, full e2) |
 | `$B/deliverables/listen_v6/` | round-6 word-boundary candidates + scorecard |
