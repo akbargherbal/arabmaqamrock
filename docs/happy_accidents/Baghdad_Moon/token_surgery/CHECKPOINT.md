@@ -158,7 +158,7 @@ tar -xzf /tmp/happy_accident_workspace_20261020.tar.gz -C /content/arabmaqamrock
 
 # 3. audio needed for assembly
 mkdir -p happy_accident/original happy_accident/runs/token_surgery/v2/hybrid
-gsutil -m cp "$B/../../20261018-162827_batch_12_variants_backing_vocals/02-*B_1712905618.wav" \
+gsutil -m cp "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261018-162827_batch_12_variants_backing_vocals/02-*B_1712905618.wav" happy_accident/original/ \
   happy_accident/original/
 gsutil -m cp $B/candidates/v2/*.wav             happy_accident/runs/token_surgery/v2/
 gsutil -m cp $B/candidates/v2/hybrid/*.wav      happy_accident/runs/token_surgery/v2/hybrid/
