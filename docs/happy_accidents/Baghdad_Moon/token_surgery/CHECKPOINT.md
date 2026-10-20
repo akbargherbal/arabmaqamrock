@@ -216,8 +216,9 @@ renders, so extra takes need no GPU).
    rendered (`candidates/v3_e2_ar/`); `s00/s04/s10` were skipped only for
    rhythmic drift, not for the phoneme.
 3. `python3 happy_accident/runs/assemble_final.py <e2.wav> <e2 semantic.json>
-   deliverables/tracks/FINAL_e1_ar_s03_<seed>.wav` — no GPU, ~1 minute. It
-   asserts `identical_outside_regions` and prints both sha256s.
+   deliverables/tracks/FINAL_e1_ar_s03_<seed>.wav` — **tested end-to-end**
+   (2026-10-20 12:15 UTC with s08): 215.879 s, changes only 156.996–204.775 s,
+   `identical_outside_regions: true`, original still `dbc00722…`.
 4. Upload `$B/final/`, update `report.md`/`CHECKPOINT.md` to complete, push.
 
 ## 7. What remains — decision tree (historical, round 1)

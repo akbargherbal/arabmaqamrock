@@ -30,7 +30,7 @@ historical decision tree. The live truth is here.
 | comp bug (changed frames only) | **fixed**: `audio_splice.py --word-ranges` |
 | word 1 `عَلَيْهِ` | **FIXED by AR re-sing** — `e1_ar_s03`, passes by ear |
 | word 2 `فَإِنَّ` | donor splice still wrong; 16 AR tails rendered, **5 in `listen_v4/` awaiting your pick** |
-| final assembly | pending the word-2 winner (script ready, no GPU needed) |
+| final assembly | script tested end-to-end; pending the word-2 winner (no GPU) |
 
 ### What was learned (do not re-litigate)
 

@@ -241,6 +241,13 @@ listeners are told not to judge the music after the word. In the final track
 only the word is taken from the winner; everything outside the comp regions
 stays bit-identical to the original.
 
+**Clipping rule.** An AR tail render differs from the baseline over the whole
+regenerated tail (341 frames), not just the word. `--word-ranges` therefore
+*clips* a changed run to the word it touches instead of extending it; otherwise
+the comp would replace the entire 13.6 s outro. Verified: the assembled track
+changes only 156.996–204.775 s in two regions and the original stays
+`dbc00722…`.
+
 ## 7. Files
 
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`

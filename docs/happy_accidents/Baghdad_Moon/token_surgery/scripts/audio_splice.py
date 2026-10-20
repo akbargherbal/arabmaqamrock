@@ -52,14 +52,21 @@ def parse_word_ranges(spec):
 
 
 def expand_to_words(ranges, words):
-    """Extend each changed run to the whole word it lies in (half-open frames)."""
+    """Map changed runs onto the whole words they touch.
+
+    A word-level graft takes the *entire* word, never just the changed part. But
+    a run that extends past the word (e.g. an AR render that regenerated the
+    whole tail after the word) must be **clipped** to the word, not extended.
+    Changes that touch no word fall back to the raw run (half-open).
+    """
     out = []
     for f0, f1 in ranges:  # inclusive
         g0, g1 = f0, f1 + 1
-        for w0, w1 in words:
-            if f0 < w1 and g1 > w0:  # overlaps the word
-                g0, g1 = min(g0, w0), max(g1, w1)
-        out.append((g0, g1))
+        hits = [(w0, w1) for (w0, w1) in words if f0 < w1 and g1 > w0]
+        if hits:
+            out.extend(hits)
+        else:
+            out.append((g0, g1))
     # merge
     out.sort()
     merged = []
@@ -121,6 +128,7 @@ def main():
         s1 = snap_quiet(orig.astype(np.float32).mean(1), sr, t1, a.snap)
         s0 = min(max(s0, t0 - a.snap), f0 / fps)
         s1 = max(min(s1, t1 + a.snap), f1 / fps)
+        s1 = min(s1, len(orig) / sr)
         regions.append((s0, s1))
 
     # merge overlapping/nearby regions (a word can have a 1-frame gap)
