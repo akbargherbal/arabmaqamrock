@@ -204,7 +204,21 @@ the correct consonant is available to it.
   comp only the winner (region 201.835–204.775 s).
 
 Artifacts: `deliverables/listen_v3/` (round 2, e1 + e2) and `listen_v4/`
-(round 3, e2 only), `runs/e1_resample/`, `runs/e2_resample/`.
+(round 3, e2 only, + `scorecard_baghdad_moon_e2_round3.json`), `runs/e1_resample/`,
+`runs/e2_resample/`, `candidates/v3_e1_ar/`, `candidates/v3_e2_ar/` (all 16
+renders, so extra takes need no GPU).
+
+### 6.4 What happens next session
+
+1. Read the user's rating (`results.json` / `report.json`), record it in
+   `report.md` §6.4.
+2. Pick the word-2 take. If none of the five works, audition the other 11 already
+   rendered (`candidates/v3_e2_ar/`); `s00/s04/s10` were skipped only for
+   rhythmic drift, not for the phoneme.
+3. `python3 happy_accident/runs/assemble_final.py <e2.wav> <e2 semantic.json>
+   deliverables/tracks/FINAL_e1_ar_s03_<seed>.wav` — no GPU, ~1 minute. It
+   asserts `identical_outside_regions` and prints both sha256s.
+4. Upload `$B/final/`, update `report.md`/`CHECKPOINT.md` to complete, push.
 
 ## 7. What remains — decision tree (historical, round 1)
 

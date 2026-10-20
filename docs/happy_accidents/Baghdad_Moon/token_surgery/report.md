@@ -227,6 +227,20 @@ matches the original (a shifted or dropped word shows up as a 15–20 dB dip):
 Pack: `deliverables/listen_v4/` (original + 5 seeds, window 199.8–206.8 s).
 Only the chosen seed gets comped (region 201.835–204.775 s).
 
+### 6.4 Round-3 listening pack and scorecard (pending)
+
+`deliverables/listen_v4/` contains `00_ORIGINAL` plus `e2_ar_s08`, `s13`, `s11`,
+`s14`, `s07`, all cut 199.8–206.8 s. The rating-app scorecard is
+`scorecard_baghdad_moon_e2_round3.json` (schema v1, 10 Arabic questions:
+`ف` onset, diction, word completeness, seam, melody, naturalness, overall,
+"pick this take"). It scores word 2 only; word 1 is already fixed and is not in
+this pack.
+
+The clips are cut from raw AR renders, so the 13.6 s tail is a fresh take —
+listeners are told not to judge the music after the word. In the final track
+only the word is taken from the winner; everything outside the comp regions
+stays bit-identical to the original.
+
 ## 7. Files
 
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`

@@ -14,144 +14,118 @@ https://github.com/akbargherbal/arabmaqamrock/blob/main/docs/happy_accidents/Bag
 
 Also read, as needed:
 
-- `docs/happy_accidents/Baghdad_Moon/token_surgery/report.md` — per-candidate metrics
+- `docs/happy_accidents/Baghdad_Moon/token_surgery/HANDOFF.md` — background/case file (read §0.5)
+- `docs/happy_accidents/Baghdad_Moon/token_surgery/report.md` — round 1 + round 2 results
 - `docs/happy_accidents/Baghdad_Moon/token_surgery/APPROACH.md` — why the pipeline is what it is
-- `docs/happy_accidents/Baghdad_Moon/token_surgery/HANDOFF.md` — background/case file
 
 GCS root for this task:
 `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/`
 
 ## The goal (unchanged)
 
-The original Baghdad Moon B take is musically right but has two mis-sung words.
-Fix exactly those two words by token-level surgery on the original 5397-frame
+Fix exactly two mis-sung words by token-level surgery on the original 5397-frame
 semantic stream, changing as little else as possible. Do **not** change lyrics,
 style prompt, LoRA, seed, sampler settings or GPU type.
 
-- Word 1: `عَلَيْهِ` in Verse 2, sung as `عَلِيم` (ends in م instead of ه).
-  Frames 3933–3964, about 157.3–158.55 s.
-- Word 2: `فَإِنَّ` in the Outro, sung as `بِأَنَّ` (starts with ب instead of ف).
-  Frames 5056–5114, about 202.26–204.54 s.
-- The third, muddy `عَلَيْهِ` in the Outro is **not** edited. It is borderline
-  acceptable by the user's own judgement.
+- Word 1: `عَلَيْهِ` in Verse 2, sung `عَلِيم`. Frames 3933–3964.
+- Word 2: `فَإِنَّ` in the Outro, sung `بِأَنَّ`. Frames 5056–5114.
+- The third, muddy `عَلَيْهِ` in the Outro is **not** edited.
 
-Original WAV must never be overwritten. Its sha256 is:
+Original WAV must never be overwritten:
 `dbc00722534d5ee763ae54a048cd704eaa4c927e37834cd54542eaf379e0de42`
 
-## State when we stopped
+## State when we stopped (2026-10-20 ~12:10 UTC)
 
-- Restore done; model, VAE and LoRAs verified.
-- Prefix-capable binary verified on T4: git `58caf774`,
-  sha256 `4e1534f3e6fde456198ed5404313a832029193bf7ea47c817086a24a5aa3849c`.
-- Gate 1 (semantic) passed exactly: `1b1aa3e2…`, 5397 frames,
-  `positive_prefix_tokens 1079`, `negative_prefix_tokens 12`.
-- Gate 2 (full render) passed exactly: WAV `dbc00722…`. Batch mode also exact.
-- 13 token-splice candidates rendered, one batch, all 5397 frames. Every exported
-  semantic matches its input token file.
-- 13 local-comp hybrids built with `audio_splice.py`; all report
+- **Word 1 is FIXED and accepted by ear**: AR re-sing, seed `s03`. Hybrid is
+  `$B/candidates/v3_e1_ar/e1_ar_s03.wav`, tokens
+  `$B/tokens/tokens_e1_ar_s03_full.json`. Comp region 156.995–158.855 s,
   `identical_outside_regions: true`.
-- Listening pack delivered: 5 montages (original + H1–H4), 10 A/B clips,
-  4 full hybrid tracks, plus an Arabic 12-question scorecard.
+- **Word 2 is waiting on the user's ear.** 16 AR tails were rendered from
+  prefix = first 5056 tokens, `max=5397`, seeds `1712905618+0..15`; five
+  (`s08, s13, s11, s14, s07`) were cut into `$B/deliverables/listen_v4/` with the
+  scorecard `scorecard_baghdad_moon_e2_round3.json`. **All 16 raw renders are
+  backed up** in `$B/candidates/v3_e2_ar/`, so more takes can be auditioned
+  without a GPU.
+- Round 1 (the 13 donor splices) was **rejected 0/4**; the causes and the fix are
+  in `report.md` §5–§6. The donor route is closed for both words.
+- Docs are current on GitHub (`main`), all audio/artifacts on GCS.
 
-**The user was in the middle of the listening evaluation with the rating app.
-That is the only thing blocking final assembly.**
+**The only thing blocking final assembly is the user's pick among the five
+word-2 takes.**
 
-## What to do first in this session
+## What to do first
 
-1. Ask the user for their evaluation result. Ideally the app's
-   `runs/<run_id>/results.json` (or `report.json`). If they don't have the file,
-   accept a plain answer: for each word, which version sounded correct, and
-   whether any seam was audible.
-
-   The five rated versions and what they contain:
-
-   | ID | Word 1 edit | Word 2 edit |
-   |---|---|---|
-   | `01_original` | none | none |
-   | `02_H1_minimal` | final note (8 frames) | onset (13 frames) |
-   | `03_H2_e2word` | final note | first 26 frames |
-   | `04_H3_e1word` | whole word (31 frames) | onset |
-   | `05_H4_bothword` | whole word | first 26 frames |
-
-   Montage timing is identical in all five: word 1 at 2.1–3.4 s, word 2 at
-   7.4–9.6 s, total 11.1 s.
-
-2. Record their verdicts in `report.md` (human evaluation section) and update
-   `CHECKPOINT.md` status.
-
-3. Pick the winning word-1 edit and word-2 edit. Any mix of
-   {final note, whole word} × {onset, first 26 frames} already exists:
-
-   | word 1 ↓ / word 2 → | onset | first 26 |
-   |---|---|---|
-   | final note | H1 | H2 |
-   | whole word | H3 | H4 |
-
-   Just use the matching `hybrid/*.wav` as the final track — **no GPU and no
-   re-render needed**.
-
-4. If the user instead asks for a combination involving the C donors
-   (`e1_C_A`, `e1_C_C`, `e2_A_onset_A`, `e2_A_onset_C`), generate the combo
-   token file with `token_surgery.py`, render once at `min=max=5397` with the
-   original seed, then comp. On a fresh GPU runtime:
+1. Ask for the rating-app output: `runs/<run_id>/results.json` (or
+   `report.json`), or a plain answer — which take says `فَإِنَّ`, and is the word
+   complete with no seam.
+2. Record the verdict in `report.md` (§6.4) and `CHECKPOINT.md`.
+3. Assemble — **no GPU needed**, everything is a WAV/JSON:
 
    ```bash
-   ./setup_colab.sh
    B=gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery
-   gsutil cp $B/bin/audiocpp_cli_prefix_sm75 bin/
-   cd bin && sha256sum -c audiocpp_cli_prefix_sm75.sha256 \
-     && mv audiocpp_cli_prefix_sm75 audiocpp_cli_prefix \
-     && chmod +x audiocpp_cli_prefix && cd ..
-   . ./cuda_loader_path.sh
-   ./bin/audiocpp_cli_prefix --version   # must print git: 58caf774
+   cd /content && git clone https://github.com/akbargherbal/arabmaqamrock.git
+   cd arabmaqamrock && gh auth setup-git
+   gsutil cp $B/workspace/happy_accident_workspace_20261020b.tar.gz /tmp/
+   tar -xzf /tmp/happy_accident_workspace_20261020b.tar.gz -C .
+   mkdir -p happy_accident/original happy_accident/runs
+   gsutil -m cp "$B/../20261018-162827_batch_12_variants_backing_vocals/02-*B_1712905618.wav" happy_accident/original/
+   sha256sum happy_accident/original/*.wav        # dbc00722…
+   gsutil cp $B/candidates/v3_e1_ar/e1_ar_s03.wav  happy_accident/runs/e1_resample/hybrid/e1_ar_s03.wav
+   gsutil cp $B/candidates/v3_e2_ar/e2_ar_s08.wav  happy_accident/runs/e2_resample/pick.wav   # winner
+   gsutil cp $B/e2_resample/semantic/e2_ar_s08/semantic.json happy_accident/runs/e2_resample/pick.json
+   python3 happy_accident/runs/assemble_final.py \
+     happy_accident/runs/e2_resample/pick.wav happy_accident/runs/e2_resample/pick.json \
+     happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav
    ```
 
-5. Final QC and delivery:
-   - Re-run `audio_splice.py` and confirm `identical_outside_regions: true`.
-   - Confirm the original WAV is still `dbc00722…`.
-   - Export `deliverables/tracks/FINAL_<word1>_<word2>.wav`.
-   - Append the human scores to `report.md`; mark `CHECKPOINT.md` complete.
-   - Upload the final track and docs to `$B/final/` and `$B/reports/`.
-   - Commit and push the docs to GitHub (`gh auth setup-git` first; the repo
-     remote hangs without it).
+   `assemble_final.py` comps word 2 onto the word-1 hybrid, asserts
+   `identical_outside_regions`, and prints both sha256s.
+4. Final QC / delivery:
+   - original still `dbc00722…`; final changed only inside 156.996–158.855 and
+     201.835–204.775 s;
+   - upload to `$B/final/` and docs to `$B/reports/`;
+   - append human scores to `report.md`, mark `CHECKPOINT.md` complete;
+   - commit and push (`gh auth setup-git` first, the remote hangs without it).
 
-## Fallback, only if both word donors fail by ear
+## If all five auditioned word-2 takes fail
 
-- Word 1 AR resample: `semantic_prefix_file` = first 3933 tokens,
-  `semantic_max_tokens=3964`, seed sweep around 1712905618; keep candidates of
-  31 frames; comp.
-- Word 2 tail resample: prefix = first **5056** tokens (not 5100),
-  `semantic_max_tokens=5397`, seeds `1712905618 + 0..15`; evaluate and comp.
+- **First, audition the other 11 takes from the same sweep** (already rendered
+  and backed up): `s00 s01 s03 s04 s06 s09 s10 s12 s15` — note
+  `s00, s04, s10` were skipped only because their word timing drifted (14–20 dB
+  level dip in 202–205 s), not because of the phoneme. Cut any of them with the
+  same window 199.8–206.8 s and listen. No GPU, no re-render.
+- If all 16 fail, render more seeds (`1712905618+16..47`) or try a slightly
+  earlier prefix (e.g. 5040) so the word has more lead-in context. Keep
+  `semantic_max_tokens=5397`.
+- If the AR word is always right but the **join** is audible, widen the comp
+  region to 201.6–205.2 s; if it is always rhythmically displaced, comp the whole
+  regenerated tail (202.24–215.88 s) and say so in the report.
 
-## Important findings to keep in mind
+## Findings to keep in mind
 
-- Token surgery is **not** sample-local. Changing 8 of 5397 frames changes the
-  whole waveform (NAR global coupling). A one-request baseline control proved
-  this is not batch RNG.
-- Perceptual collateral is small: median mel Δ outside the edits 0.034–0.071 dB,
-  p95 0.33–0.82 dB; the peak 1 s mel Δ lands exactly on the edited second.
-- YuE2 has no repaint/edit mode (only `semantic_prefix` continuation). Generic
-  diffusion inpainting cannot choose the phoneme, so it is unsuitable.
-- The delivery method is a **local comp**: synthesise the corrected word, then
-  graft only that word's time range back into the original with 40 ms
-  crossfades on quiet points.
-- Evidence: word 2 is strong (donor MFCC-DTW 5.24 → 3.54; wrong donors
-  5.74–5.88). Word 1 is weaker (original 4.482, best candidate 4.459) because
-  its only donor is the differently-arranged Outro.
-- CTC is not reliable at single-consonant resolution. Do not use it alone to
-  accept or reject a candidate.
+- **A comp must cover the whole word** (`--word-ranges`). Grafting only the
+  changed tokens cuts back to the original inside the word — that was the
+  round-1 "ف + half a nūn" failure.
+- **Donor tokens do not transfer the consonant.** Whole-word donor comps failed
+  by ear, and so did direct audio grafts of the Outro word. Do not reopen this.
+- **AR re-sing works.** AR sampling is causal, so the word tokens from a short
+  render are valid; only the winner needs a `min=max=5397` render for context.
+- Token surgery is not sample-local (NAR global coupling); the comp is what
+  makes delivery surgical.
+- CTC is unreliable at single-consonant resolution; do not accept/reject on CTC.
+- YuE2 has no repaint/edit mode. Generic diffusion inpainting cannot choose the
+  phoneme.
 
 ## Do not redo
 
-- Do not regenerate the baseline semantic or the A/C exports.
-- Do not rebuild the binary.
-- Do not re-render the 13 candidates unless a fallback above is needed.
-- Do not overwrite the original WAV.
-- Do not claim bit-identity *inside* the edited words — only outside them.
+- Do not regenerate the baseline semantic, the A/C exports or the binary.
+- Do not re-render the 13 donor candidates or re-run the donor route.
+- Do not overwrite the original WAV; do not claim bit-identity *inside* edited
+  words — only outside the comp regions.
 
 ## Session hygiene
 
-`/content` is ephemeral. After any decision or new artifact, upload to the GCS
-root above and commit docs to GitHub. The scorecard is at
-`docs/happy_accidents/Baghdad_Moon/token_surgery/scorecard_baghdad_moon_two_word.json`
-and a copy is in GCS `reports/`.
+`/content` is ephemeral. After any decision or artifact, upload to the GCS root
+and commit docs to GitHub. Scorecards: `scorecard_baghdad_moon_two_word.json`
+(round 1, H1–H4) and `scorecard_baghdad_moon_e2_round3.json` (round 3, e2 takes),
+both in `docs/happy_accidents/Baghdad_Moon/token_surgery/` and GCS `reports/`.

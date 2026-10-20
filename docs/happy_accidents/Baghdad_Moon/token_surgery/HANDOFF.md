@@ -29,8 +29,8 @@ historical decision tree. The live truth is here.
 | round-1 listening evaluation | **done**: H1–H4 all rejected; e2 clips had bad seams |
 | comp bug (changed frames only) | **fixed**: `audio_splice.py --word-ranges` |
 | word 1 `عَلَيْهِ` | **FIXED by AR re-sing** — `e1_ar_s03`, passes by ear |
-| word 2 `فَإِنَّ` | donor splice still wrong; **AR tail sweep running** (16 seeds) |
-| final assembly | pending the word-2 winner |
+| word 2 `فَإِنَّ` | donor splice still wrong; 16 AR tails rendered, **5 in `listen_v4/` awaiting your pick** |
+| final assembly | pending the word-2 winner (script ready, no GPU needed) |
 
 ### What was learned (do not re-litigate)
 
@@ -81,21 +81,32 @@ Word 2 sweep (`runs/e2_resample/`), 16 seeds, prefix **5056** → max 5397
 | path | contents |
 |---|---|
 | `deliverables/listen_v3/` | round-2 audition: e1 AR s01/s03/s04/s15, two audio grafts, e2 whole-word |
-| `deliverables/listen_v4/` | round-3 audition (e2 AR shortlist), built when the sweep lands |
+| `deliverables/listen_v4/` | **round-3 audition: e2 AR s08/s13/s11/s14/s07 + original + scorecard** |
 | `candidates/v3_e1_ar/e1_ar_s03.wav` | chosen word-1 hybrid (39.5 MB) |
+| `candidates/v3_e2_ar/e2_ar_s00..s15.wav` | all 16 word-2 AR renders (632 MB); extra takes need no GPU |
 | `runs/e1_resample/` | requests, per-seed `semantic.json`, full renders, hybrid, logs |
-| `runs/e2_resample/` | requests, per-seed `semantic.json` + WAVs, log |
+| `runs/e2_resample/` | requests, per-seed `semantic.json`, logs |
 | `tokens/tokens_e1_ar_s03_full.json` | 5397-frame stream for the word-1 winner |
 | `scripts/audio_splice.py` | now supports `--word-ranges` (whole-word graft) |
+| `reports/scorecard_baghdad_moon_e2_round3.json` | rating-app scorecard for the word-2 takes |
 
 ### Next three steps
 
-1. When the e2 sweep ends: `python3 happy_accident/runs/e2_resample/prep_listen.py`
-   (cuts the 4 most diverse tails into `deliverables/listen_v4/`).
-2. User picks the e2 take that says `فَإِنَّ`.
-3. `python3 happy_accident/runs/assemble_final.py <e2 candidate.wav> <e2 tokens.json>
-   deliverables/tracks/FINAL_e1_ar_s03_<e2>.wav`; it comps word 2 onto the e1
-   hybrid, asserts `identical_outside_regions`, and prints both sha256s.
+1. User rates `deliverables/listen_v4/` with
+   `scorecard_baghdad_moon_e2_round3.json` (10 questions, Arabic: `ف` onset,
+   diction, word completeness, seam, naturalness, overall, "pick this take").
+2. Pick the take. If none of the five works, audition the other 11 from
+   `candidates/v3_e2_ar/` (already rendered; `s00/s04/s10` were only skipped for
+   rhythmic drift).
+3. Assemble (no GPU):
+
+   ```bash
+   python3 happy_accident/runs/assemble_final.py <e2 take.wav> <e2 semantic.json> \
+     happy_accident/deliverables/tracks/FINAL_e1_ar_s03_<seed>.wav
+   ```
+
+   It comps word 2 onto the word-1 hybrid, asserts
+   `identical_outside_regions`, and prints both sha256s. Upload to `$B/final/`.
 
 ---
 
