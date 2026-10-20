@@ -20,9 +20,10 @@ Last updated: 2026-10-20 ~11:25 UTC (Colab session may be ephemeral).
 
 ## 0.5 Round 2 — the state that matters now (2026-10-20 11:25 UTC)
 
-> **COMPLETE 2026-10-20 14:50 UTC.** Word 2 verdict: `s08` and `s13` both pass;
-> `s08` chosen. Final track `$B/final/FINAL_e1_ar_s03_s08.wav` (`51c6e238…`).
-> See `CHECKPOINT.md` and `report.md` §6.4–§6.5.
+> **v1 DELIVERED 2026-10-20 14:50 UTC; S2 seam open.** Word 2 verdict: `s08`
+> and `s13` both pass; `s08` chosen. Final track
+> `$B/final/FINAL_e1_ar_s03_s08.wav` (`51c6e238…`). The user hears a join in
+> the outro edit; see `CHECKPOINT.md` §6.5 and `PROGRESS.md` §4.
 
 **Round-1 verdict (user, rating app `rating_20261020-1223.md`): 0/4 accepted.**
 Note this file was written before round 1; §7's "remaining plan" is the

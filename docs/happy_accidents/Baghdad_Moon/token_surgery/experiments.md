@@ -52,3 +52,16 @@ For every rendered candidate:
 - waveform correlation with the original (overall and 5 s windows), and mel-spectrogram mean absolute difference, to quantify collateral change.
 - the user decides by ear; candidates are ranked and exported as `runs/final/*.wav`.
 
+
+## Outcome (2026-10-20) — this table is superseded
+
+The plan above (#3–#7) was executed, but the donor route (#3–#6) was rejected
+0/4 by ear: donor tokens and donor audio do not transfer the consonant. The
+working method was **AR re-sing + local whole-word comp**:
+
+- word 1: `e1_ar_s03` (accepted);
+- word 2: `e2_ar_s08` (chosen 5/5, tied with `s13`);
+- final v1: `FINAL_e1_ar_s03_s08.wav` (`51c6e238…`).
+
+One open issue: the outro comp has an audible join (S2). See `PROGRESS.md` §4,
+`CHECKPOINT.md` §6.5 and `report.md` §6.6.

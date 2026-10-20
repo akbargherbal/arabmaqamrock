@@ -1,9 +1,11 @@
 # CHECKPOINT — Baghdad Moon B two-word repair
 
-**Status: COMPLETE** — both words fixed, final track assembled and QC'd.
-**Last updated:** 2026-10-20 14:50 UTC
+**Status: v1 DELIVERED — one open polish item.** Both words are correct and the
+final track is assembled; the user hears a join in the outro edit (S2) and wants
+a smoother comp. See §6.6 and `PROGRESS.md` §4.
+**Last updated:** 2026-10-20 15:40 UTC
 **Read this first on a fresh runtime.** It supersedes the "pending" wording in
-`RESTORE.md` §5, `HANDOFF.md` §0/§7 and the earlier revision of this file.
+`RESTORE.md` §5, `HANDOFF.md` §0/§7 and earlier revisions of this file.
 
 GCS root:
 `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/`
@@ -34,6 +36,8 @@ Final track:
 | word 2 — human verdict (`s08`, `s13` both pass) | **done** — `s08` chosen |
 | final assembly (`FINAL_e1_ar_s03_s08.wav`) | **done**, QC passed |
 | final report / GitHub / GCS delivery | **done** |
+| post-delivery listen (user) | **S1 transparent, S2 join audible** — open |
+| smoother S2 comp (sub-phrase / cut points) | **next** — no GPU needed for first tests |
 
 Nothing is lost if Colab disconnects: every WAV, token file, log, metric and
 script is in GCS and/or GitHub (see §4).
@@ -221,7 +225,7 @@ Artifacts: `deliverables/listen_v3/` (round 2, e1 + e2) and `listen_v4/`
 `runs/e2_resample/`, `candidates/v3_e1_ar/`, `candidates/v3_e2_ar/` (all 16
 renders, so extra takes need no GPU).
 
-### 6.4 Final result (2026-10-20 14:50 UTC) — complete
+### 6.4 Final result (2026-10-20 14:50 UTC) — v1 delivered
 
 Round-3 rating: `rating_20261020-1557.md`, run
 `scorecard_baghdad_moon_e2_round3`, 6 tracks, not blind.
@@ -236,9 +240,7 @@ Round-3 rating: `rating_20261020-1557.md`, run
 | `s07` | still `ب` | 1 | 1 | bad | 1 | no |
 
 `s08` and `s13` tie; **`s08` chosen** for the best rhythmic alignment (5.5 dB
-vs 5.8 dB). The listener's caveat — the 7 s clips end inside `ينزعه`, which was
-not judged — is moot for delivery: only 201.835–204.775 s is comped, so
-`ينزعه` and the rest of the outro stay bit-identical to the original.
+vs 5.8 dB).
 
 Final assembly (no GPU): `runs/assemble_final.py` comps the `s08` word onto the
 accepted `e1_ar_s03` hybrid.
@@ -250,6 +252,26 @@ accepted `e1_ar_s03` hybrid.
 - Final A/B clips: `deliverables/listen_final/`.
 
 Uploaded to `$B/final/` (track) and `$B/reports/` (docs); GitHub docs updated.
+
+### 6.5 Open issue — S2 outro join (2026-10-20 PM)
+
+The user heard the delivered track: **S1 is transparent; S2 has a sudden
+jump**, like two clips joined. This is the phrase-continuity problem, not the
+phoneme:
+
+- comp edges are fixed word ± 0.3 s, not boundaries: 201.835 s is inside the
+  preceding `عَلَيْهِ` (201.04–202.26 s), 204.775 s is inside `الله`
+  (204.54–204.98 s);
+- neither edge is low-energy (201.835 s in a sustained ~74–75 dB region);
+- at 204.775 s the take is ~+3.5 dB vs original and the envelopes diverge right
+  after (205.10 s: 76.2 vs 69.3 dB), so the 40 ms fade cannot hide the step;
+- the model re-sings `فَإِنَّ اللهَ يَنْزِعُهُ` as a unit (202.26–207.74 s), but
+  we keep only `فَإِنَّ` and revert to the original inside `الله`.
+
+Next: phrase-level comp from the existing `s08`/`s13` tails (no GPU), ending
+after 207.74 s or at least after `الله` (204.98 s), with a longer fade at the
+start; then level matching / longer fades; then vocal-stem comp (Demucs) or a
+GPU re-render with an earlier prefix. Full rationale in `PROGRESS.md` §4.
 
 ## 7. What remains — decision tree (historical, superseded)
 

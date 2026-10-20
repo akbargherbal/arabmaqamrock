@@ -292,10 +292,53 @@ A final A/B pack of the *delivered* audio is in `deliverables/listen_final/`
 (`00_ORIGINAL__e1/e2` vs `FINAL__e1/e2`) for last-mile confirmation; the full
 track is `deliverables/tracks/FINAL_e1_ar_s03_s08.wav`.
 
+### 6.6 Post-delivery listen — the outro join (open)
+
+The user's verdict on the delivered track (2026-10-20 PM): **S1 is
+transparent, S2 has a sudden jump — it sounds like two clips joined.** The
+phoneme is right; this is a comp/join problem, not a pronunciation problem.
+
+Measured (10 ms envelopes, original vs `s08`; word timing from `evidence.md`):
+
+- The comp edges are fixed word ± 0.3 s, not chosen at word/phrase boundaries.
+  With the ASR/CTC timing, the start (201.835 s) is inside the preceding
+  `عَلَيْهِ` (201.04–202.26 s) and the end (204.775 s) is inside `الله`
+  (204.54–204.98 s) — the comp cuts both neighbours mid-vowel.
+- Neither edge is low-energy: 201.835 s sits in a sustained ~74–75 dB region,
+  204.775 s at ~71 dB.
+- At the end cut `s08` is ~**+3.5 dB** relative to the original, and the
+  envelopes diverge immediately after (205.10 s: original 76.2 dB, take
+  69.3 dB). The 40 ms fade removes the click but not the level/timbre step.
+- The comp reverts to the original **mid-phrase**. The model re-sings
+  `فَإِنَّ اللهَ يَنْزِعُهُ` as a unit (202.26–207.74 s); we keep only
+  `فَإِنَّ` and cut back to the original inside `الله`, discarding the model's
+  phrase continuation.
+
+Next options (details and cost order in `PROGRESS.md` §4):
+
+1. **Sub-phrase comp** (`فَإِنَّ اللهَ يَنْزِعُهُ`, 202.26–207.74 s) from the
+   existing `s08` / `s13` tails, end after 207.74 s (or at minimum after
+   `الله`, 204.98 s), no GPU. Risk: replaces more original audio and `s08`'s
+   post-word envelope drifts after ~205 s, so audition before committing.
+2. Word-level comp with level matching and a longer fade at envelope
+   crossings — cheap sanity check, may not fix phrase continuity.
+3. Demucs vocal/instrumental split; comp the **vocal stem only** against the
+   original instrumental. `demucs` is not installed in the current runtime.
+4. GPU: re-render the phrase with an earlier prefix (frame ~4980–5000) for
+   lead-in, then phrase-comp.
+
+The user's cut-point idea — 4-stem separation, cut at the lowest trough across
+stems — is sound for *attribution* (avoid sustained bass, drums, held vowels),
+but stems sum to the mix, so the global trough is essentially the mix trough.
+For a vocal comp the primary criterion should be a voiceless gap/breath in the
+lead vocal, with the instrumental stems as constraints. Case-by-case is the
+right policy: keep the transparent S1 word-level edit, reconsider only S2.
+
 ## 7. Files
 
 - Final track: `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav`
 - Final A/B clips: `happy_accident/deliverables/listen_final/`
+- Multi-session summary: `PROGRESS.md`
 - Round-3 raw results: `docs/.../results_20261020_e2_round3.json`,
   `docs/.../rating_20261020-1557.md`
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`
