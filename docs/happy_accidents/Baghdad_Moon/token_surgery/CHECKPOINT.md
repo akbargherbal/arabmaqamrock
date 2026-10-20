@@ -21,6 +21,12 @@ Previous v1 (superseded, kept for reference):
 `$B/final/FINAL_e1_ar_s03_s08.wav`
 `51c6e238dfaad123779e32b113786df651b4c7053771f6f7dfc4970e2fb2a8e1`
 
+**Review protocol (adopted 2026-10-20):** never send a clip that ends inside a
+sung word or melisma. Send either the **whole track with target timestamps**, or
+a **complete section** ending at a real boundary / end of track. The hold-only
+`50`–`53` and 201.8–208.5 s `e2_word` clips were withdrawn for this reason. Use
+`deliverables/listen_final_v2/` (full tracks + complete outro-to-end).
+
 ---
 
 ## 1. Where we are

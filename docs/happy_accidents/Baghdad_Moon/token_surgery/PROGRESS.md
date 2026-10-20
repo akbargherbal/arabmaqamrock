@@ -292,3 +292,8 @@ GitHub (tracked): `docs/happy_accidents/Baghdad_Moon/token_surgery/` —
    do not show where the note actually ends. Use Demucs + pitch tracking, and
    never cut a sustained vowel at a lexical boundary. Keeping the original
    melisma was better than any generated replacement.
+7. **Never ask for a verdict on a partial word.** A review clip that ends inside
+   a sustained vowel cannot show whether the performance regresses afterwards.
+   Send either the **whole track with target timestamps**, or a **complete
+   section** ending at a real boundary / end of track. The hold-only `50`–`53`
+   and 201.8–208.5 s `e2_word` clips violated this and were withdrawn.

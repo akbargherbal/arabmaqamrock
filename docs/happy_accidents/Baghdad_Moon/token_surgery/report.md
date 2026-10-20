@@ -419,7 +419,9 @@ no timing shift, 80 ms crossfade at 204.54. `40`/`42` (110 ms shift) and `43`
 (`s18`) did not pass. The user also judged the hold-only clips `50`/`51`/`52`
 **sub-word**: starting at 207.5 s isolates the sustained vowel
 (“عهوووو”), not `يَنْزِعُهُ`, so they are a technical check, not a valid word
-A/B. Future packs use the full word/outro window.
+A/B. They were withdrawn. The final review pack
+(`deliverables/listen_final_v2/`) contains full tracks plus a complete
+outro-to-end file; no clip ends inside a sung word.
 
 v2 final: `FINAL_e1_ar_s03_s13_41.wav` — 215.879 s, sha256 `9b8fdb…`.
 Changed spans **156.9964–158.8546 s** and **202.2105–204.5395 s**; outside
