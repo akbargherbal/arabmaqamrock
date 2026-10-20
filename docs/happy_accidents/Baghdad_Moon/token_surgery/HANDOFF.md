@@ -22,18 +22,16 @@ Last updated: 2026-10-19 ~21:45 UTC (Colab session may be ephemeral).
 - The original prebuilt binary (`bin/audiocpp_cli`, audio.cpp `eb8e21bd`) **does
   not support `semantic_prefix` / `semantic_prefix_file`**. It silently ignores
   the option and re-runs the AR. Token surgery requires a patched binary.
-- **Build status: PAUSED ON PURPOSE (2026-10-19 ~21:50 UTC).** The GPU build was
-  killed at ~26% and the T4 was released. The build is CPU-only; running it on a
-  GPU VM wastes GPU time. Next session: **finish the build on a CPU-only Colab
-  runtime** using `CPU_BUILD.md`, save the binary, then move back to a T4 GPU
-  runtime for baseline + renders. See §6.6.
-- The partially built tree `/tmp/opencode/audio.cpp` and its `build/` dir are
-  ephemeral and can be discarded. The patch is saved in
-  `happy_accident/backup/patches/` and on GCS; the source is public, so the build
-  is fully reproducible.
-- Next concrete step: **do not start with the GPU.** On a CPU runtime, build
-  `eb8e21bd` + `d32a6a01` for `sm75`, verify `--version`/`strings`, save the
-  binary + sha256, then move to the T4 and run §7.1.
+- **Build status: DONE (2026-10-20 ~04:52 UTC, CPU-only runtime).** `eb8e21bd` +
+  cherry-picked `d32a6a01` built for `sm75` with **CUDA 12.0.140** (the original
+  prebuilt's toolkit) and gcc 12.4.0. Binary + sha256 + manifest + build log are
+  on GCS under `.../bin/`; sha256 `4e1534f3…`. `semantic_prefix` and
+  `semantic_prefix_file` are present in `strings`. See §6.7.
+- **Hardware smoke test is still pending.** The build host had no GPU, so the
+  binary has not executed on sm75 yet and no WAV has been produced with it.
+- Next concrete step: on the **T4**, fetch the binary, verify its sha256, then
+  run **§7.1** (baseline semantic, then full baseline WAV → expect `dbc00722…`).
+  Only after that does token surgery start.
 - After the binary is staged: run the baseline render with `min=max=5397` and the
   original token stream, and check the WAV is bit-identical to
   `dbc00722534d5ee763ae54a048cd704eaa4c927e37834cd54542eaf379e0de42`.
@@ -305,6 +303,48 @@ Summary:
 
 If CUDA 12.5 is unavailable, try 12.0; if neither works on the CPU image, build
 with 13.0 and explicitly test baseline bit-identity before claiming success.
+
+### 6.7 Build result (DONE — 2026-10-20 ~04:52 UTC, CPU-only runtime)
+
+The CPU build succeeded. **The prefix-capable binary exists and is backed up.**
+
+| item | value |
+|---|---|
+| GCS binary | `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/bin/audiocpp_cli_prefix_sm75` |
+| sha256 | `4e1534f3e6fde456198ed5404313a832029193bf7ea47c817086a24a5aa3849c` |
+| size | 351,848,224 bytes |
+| tarball | `.../bin/audiocpp_cli_prefix_sm75.tar.gz` (sha256 `5e8d16b5…`) |
+| manifest | `.../bin/audiocpp_cli_prefix_sm75.manifest.json` |
+| build log | `.../bin/build_audio_cpp_20261020.log` |
+| local commit | `58caf774` (cherry-pick of `d32a6a01` on `eb8e21bd`) |
+| CUDA | **12.0.140** (exactly the original prebuilt's toolkit) |
+| host compiler | gcc/g++ **12.4.0** (gcc-13 is rejected by CUDA 12.0) |
+| cmake / ccache | 3.31.10 / 4.9.1 |
+| arch | `CMAKE_CUDA_ARCHITECTURES=75`, cubins verified `sm_75` |
+
+`--version` on the GPU-less build host (with a stub `libcuda.so.1`) prints:
+
+```
+audio.cpp dev
+git: 58caf774 2026-10-20
+build: RelWithDebInfo, gcc 12.4.0, Linux x86_64
+backends: cpu,cuda
+```
+
+`strings` contains `semantic_prefix`, `semantic_prefix_file`,
+`parse_semantic_prefix`, `semantic_prefix_from_options`. So CPU_BUILD.md §6
+passes.
+
+Notes:
+- Local commit is `58caf774`, not `42bb0a88`; the commit hash differs only by
+  committer identity/time. `git diff eb8e21bd..HEAD -- src include model_specs`
+  is **byte-identical** to the saved
+  `backup/patches/semantic_prefix_on_eb8e21bd_code.patch` (verified, 0 diff
+  lines). Fresh patches are saved as `rebuild_58caf774_{code,full}.patch`.
+- No GPU was used or needed for the build.
+- Still **unverified on hardware**: no smoke test on sm75 yet, and the baseline
+  render (§7.1) has not been run. Next session must do §7.1 on the T4 before any
+  token surgery.
 
 ---
 
