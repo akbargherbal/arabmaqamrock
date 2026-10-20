@@ -273,6 +273,15 @@ after 207.74 s or at least after `الله` (204.98 s), with a longer fade at th
 start; then level matching / longer fades; then vocal-stem comp (Demucs) or a
 GPU re-render with an earlier prefix. Full rationale in `PROGRESS.md` §4.
 
+**Round-4 execution (2026-10-20 15:xx UTC).** A phrase comp was built on the
+accepted word-1 hybrid: region **202.21–207.90 s**, 50 ms in / 120 ms out
+fades, level ramp, **vocal stem only** (original instrumental kept). `s13` was
+best of the 16 existing tails at phrase level (corr 0.50, 0 ms), while `s08`
+was 0.30 at +190 ms. Edge level steps 0.0/−0.4 dB (v1: +3.5 dB), outside max
+diff 0, sha256 `19343646…`. Candidate `23` is in `deliverables/listen_v5/`.
+16 new tails are rendering (prefix 5056 +16..+27, prefix 5040 +16..+19); final
+pick pending. Details: `report.md` §6.7.
+
 ## 7. What remains — decision tree (historical, superseded)
 
 > **Superseded 2026-10-20 14:50 UTC.** All steps below were executed with the

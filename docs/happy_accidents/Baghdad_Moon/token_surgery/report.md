@@ -334,6 +334,37 @@ For a vocal comp the primary criterion should be a voiceless gap/breath in the
 lead vocal, with the instrumental stems as constraints. Case-by-case is the
 right policy: keep the transparent S1 word-level edit, reconsider only S2.
 
+### 6.7 Round 4 — phrase-level S2 comp (in progress)
+
+Approach: treat `فَإِنَّ اللهَ يَنْزِعُهُ` as one unit (202.26–207.74 s), comp
+the whole phrase, and put both joins in the performance:
+
+| setting | value |
+|---|---|
+| region | **202.21–207.90 s** (enter in the vocal breath 202.15–202.21, leave after the phrase) |
+| fade | 50 ms in, 120 ms out, cosine |
+| level | linear dB gain ramp matching the take to the original at the edges |
+| delivery | **vocal stem only**, original instrumental kept (Demucs htdemucs) |
+| outside | bit-identical to the original / to the accepted word-1 hybrid |
+
+Take choice was re-done at **phrase level**, not word level. All 16 existing
+tails scored over 202.26–207.74 s: `s13` is best (envelope corr 0.50 at 0 ms,
+word 0.66, `الله` 0.74, `ينزعه` 0.51); `s08` — the word-level winner — is 0.30
+at +190 ms and is not suitable for a phrase comp.
+
+Demucs shows why a full-mix comp is wrong here: over the phrase, the take's
+instrumental stems correlate with the original at ≈0 (drums −0.34, bass −0.33,
+other −0.03) and drums are +4 dB louder. A full-mix comp would replace the
+arrangement; the vocal-stem comp keeps the original music.
+
+First candidate (`s13`, vocal): edge level steps **0.0 dB / −0.4 dB** (v1 was
+~+3.5 dB at the end), changed only 202.2105–207.8996 s plus the word-1 region,
+outside max diff **0**, sha256 `19343646…`. It is in `listen_v5/` as `23`.
+
+16 new tails (prefix 5056, seeds +16..+27; prefix 5040, +16..+19) are
+rendering on the T4. They will be scored the same way; the best take replaces
+`s13` if it improves whole-phrase continuity.
+
 ## 7. Files
 
 - Final track: `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav`
