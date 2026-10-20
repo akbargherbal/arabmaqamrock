@@ -253,3 +253,6 @@ The method is reusable:
 | What is the guarantee? | bit-identical outside 156.9964–158.8546 and 202.2105–204.5395 |
 | What is the rating? | 9.5–9.7/10 (user), one join glitch open to investigation |
 | What would we do differently? | measure the musical unit first; keep the original wherever it is already correct; don’t assume phrase > word |
+
+The reusable, project-independent version of these lessons is
+[`../../../guides/fixing_ai_music_mispronunciations.md`](../../../guides/fixing_ai_music_mispronunciations.md).

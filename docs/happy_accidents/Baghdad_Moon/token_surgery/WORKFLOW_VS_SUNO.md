@@ -224,5 +224,7 @@ but our best edit was smaller and stricter than a section regeneration.
 
 ---
 
-Related documents: `LESSONS.md`, `report.md` §5–§8, `PROGRESS.md` §4,
-`CHECKPOINT.md` §6.8, and the case study `../case_study_Baghdad_moon.md`.
+Related documents: `LESSONS.md`, the canonical
+`../../../guides/fixing_ai_music_mispronunciations.md`, `report.md` §5–§8,
+`PROGRESS.md` §4, `CHECKPOINT.md` §6.8, and the case study
+`../case_study_Baghdad_moon.md`.
