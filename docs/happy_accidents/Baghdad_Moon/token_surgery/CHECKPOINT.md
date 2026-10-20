@@ -1,9 +1,9 @@
 # CHECKPOINT — Baghdad Moon B two-word repair
 
-**Status: v1 DELIVERED — one open polish item.** Both words are correct and the
-final track is assembled; the user hears a join in the outro edit (S2) and wants
-a smoother comp. See §6.6 and `PROGRESS.md` §4.
-**Last updated:** 2026-10-20 15:40 UTC
+**Status: v2 DELIVERED — candidate `41` accepted by ear.** Both words are
+correct, the outro join is fixed, and the original 5.5 s final `ه` melisma is
+untouched. The earlier v1 (`…_s08`) is superseded but kept.
+**Last updated:** 2026-10-20 16:xx UTC
 **Read this first on a fresh runtime.** It supersedes the "pending" wording in
 `RESTORE.md` §5, `HANDOFF.md` §0/§7 and earlier revisions of this file.
 
@@ -13,7 +13,11 @@ GCS root:
 Original WAV (never modified):
 `dbc00722534d5ee763ae54a048cd704eaa4c927e37834cd54542eaf379e0de42`
 
-Final track:
+Final track (v2):
+`$B/final/FINAL_e1_ar_s03_s13_41.wav`
+`9b8fdb2125b72d2bddd091ff5e5248b84ab9f715d9121452e3020e185c86311c`
+
+Previous v1 (superseded, kept for reference):
 `$B/final/FINAL_e1_ar_s03_s08.wav`
 `51c6e238dfaad123779e32b113786df651b4c7053771f6f7dfc4970e2fb2a8e1`
 
@@ -36,8 +40,11 @@ Final track:
 | word 2 — human verdict (`s08`, `s13` both pass) | **done** — `s08` chosen |
 | final assembly (`FINAL_e1_ar_s03_s08.wav`) | **done**, QC passed |
 | final report / GitHub / GCS delivery | **done** |
-| post-delivery listen (user) | **S1 transparent, S2 join audible** — open |
-| smoother S2 comp (sub-phrase / cut points) | **next** — no GPU needed for first tests |
+| post-delivery listen (user) | **S1 transparent; S2 v1 join audible** — fixed in v2 |
+| S2 melisma diagnosis (Demucs + pitch) | **done** — final `ه` is ~5.5 s G4, not a word ending |
+| minimal word-boundary comp (`41`) | **done** — accepted by ear |
+| v2 final assembly + QC | **done** — `FINAL_e1_ar_s03_s13_41.wav`, `9b8fdb…` |
+| v2 delivery to GitHub / GCS | **done** |
 
 Nothing is lost if Colab disconnects: every WAV, token file, log, metric and
 script is in GCS and/or GitHub (see §4).
@@ -311,7 +318,20 @@ and its entire melisma untouched. Candidates `40` (s13 advanced 110 ms,
 crossfade) are in `deliverables/listen_v6/`, with full-outro (200–215.879 s)
 and hold-only (207.5–215.879 s) clips. All pass bit-identity outside
 156.995–158.855 and 202.21–204.54; outside max diff 0; edge step at 204.54
-−0.58 / −0.36 / −0.19 dB. Pick awaits the ear.
+−0.58 / −0.36 / −0.19 dB.
+
+**Verdict (2026-10-20): `41` is the only good one.** The user accepted
+`41_P13_word_boundary_noshift__s2.wav`: `s13` for `فَإِنَّ`, no timing shift,
+80 ms crossfade at 204.54. `40` and `42` (110 ms shift) and `43` (`s18`) were
+not accepted. The hold-only clips `50`/`51`/`52` were judged **sub-word**:
+starting at 207.5 s isolates the sustained vowel (“عهوووو”), not the word, so
+they are not a valid A/B for `يَنْزِعُهُ`. Future packs should use the full
+word/outro window.
+
+v2 final: `FINAL_e1_ar_s03_s13_41.wav`, sha256 `9b8fdb…`, 215.879 s; changed
+spans **156.9964–158.8546 s** and **202.2105–204.5395 s**; outside max diff 0;
+the hold from 207.5 s to the end is byte-identical to the original
+(raw-sample sha256 `dbb7ec72…`).
 
 ## 7. What remains — decision tree (historical, superseded)
 

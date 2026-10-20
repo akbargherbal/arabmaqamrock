@@ -3,8 +3,11 @@
 **Read `CHECKPOINT.md` first — it is the live state.** `PROGRESS.md` is the
 multi-session summary (what was tried, what was proven, what is still open).
 
+**Delivered v2:** `FINAL_e1_ar_s03_s13_41.wav`, sha256 `9b8fdb21…` — both words
+fixed, outro join fixed, original final `ه` melisma untouched.
+
 - `CHECKPOINT.md` — current state, artifacts, next steps.
-- `PROGRESS.md` — 4-session progress summary and the open S2-join issue.
+- `PROGRESS.md` — 6-session progress summary; S2-join issue is resolved.
 - `WORKFLOW_VS_SUNO.md` — how this repair differs from Suno cover influence and
   Studio section regeneration.
 - `report.md` — measurements for every round, including the final track.

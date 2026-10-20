@@ -1,8 +1,8 @@
 # Progress summary — Baghdad Moon B two-word repair
 
-**Status:** v1 delivered (both words fixed), **one open polish item**: an audible
-join in the outro edit.
-**Span:** 2026-10-19 → 2026-10-20 (4 sessions across two ephemeral Colab VMs).
+**Status:** **v2 delivered** — both words fixed, outro join fixed, original
+final `ه` melisma untouched. Candidate `41` accepted by ear.
+**Span:** 2026-10-19 → 2026-10-20 (6 sessions across two ephemeral Colab VMs).
 **Read with:** `CHECKPOINT.md` (live state), `report.md` (measurements).
 
 ---
@@ -74,6 +74,8 @@ Original: `02-استيداع-قمر-بغداد-ولوعة-الوداع-B_1712905
 | 3 | 2026-10-20 12:57 | user rating of the five tails | **`s08` and `s13` both 5/5**; `s08` chosen |
 | 3b | 2026-10-20 14:50 | final assembly, QC, delivery | **v1 delivered** (`51c6e238…`) |
 | 4 | 2026-10-20 PM | post-delivery listen | **S2 join audible**; documentation + next options |
+| 5 | 2026-10-20 PM | phrase-level comp + 16 new tails | **s13 phrase candidate**; still a join |
+| 6 | 2026-10-20 PM | melisma diagnosis (Demucs + pitch); minimal word comp | **`41` accepted; v2 delivered** (`9b8fdb…`) |
 
 ### Round 1 — donor route (closed)
 
@@ -205,6 +207,27 @@ correct.
 
 Do **not** claim bit-identity inside the comp regions — only outside them.
 
+### Resolution (round 6, 2026-10-20)
+
+The user's diagnosis was the missing piece: the final `ه` of `يَنْزِعُهُ` is a
+**sustained G4 (~391 Hz) melisma from ~207.7 to ~213.2 s (≈5.5 s)**, with release
+to ~215 s. The phrase comps ended at 207.90 s — 160 ms into that note — so they
+cut it and handed the rest back to the original: the audible “second `ه`”.
+Envelope correlation had also hidden a pitch error: `s13` ends the phrase on
+**D4 (~295 Hz)**, not G4, and holds it for only ~2.8 s, so no cut point could
+have made its phrase ending match.
+
+The accepted fix is not a longer phrase comp. It is the minimal word comp:
+replace **only `فَإِنَّ`**, region **202.21–204.54 s**, and keep the original
+`اللهَ يَنْزِعُهُ` and its entire melisma. Candidate **`41`** (`s13`, no timing
+shift, 80 ms crossfade) is the v2 final. The hold from 207.5 s to the end is
+byte-identical to the original.
+
+Lesson: the comp unit must be chosen from the **performance**, not the lexical
+word. A word can end in a multi-second melisma; Demucs + pitch tracking, not
+text timing or envelope correlation alone, is needed to see where it actually
+ends.
+
 ---
 
 ## 5. Artifact map
@@ -215,8 +238,11 @@ GCS root:
 
 | path | contents |
 |---|---|
-| `$B/final/FINAL_e1_ar_s03_s08.wav` | delivered v1 + `.sha256` |
-| `$B/deliverables/listen_final/` | original vs FINAL A/B clips (e1, e2) |
+| `$B/final/FINAL_e1_ar_s03_s13_41.wav` | **delivered v2** + `.sha256` |
+| `$B/deliverables/listen_final_v2/` | v2 original vs FINAL A/B clips (e1, full e2) |
+| `$B/deliverables/listen_v6/` | round-6 word-boundary candidates + scorecard |
+| `$B/final/FINAL_e1_ar_s03_s08.wav` | superseded v1 + `.sha256` |
+| `$B/deliverables/listen_final/` | v1 original vs FINAL A/B clips (e1, e2) |
 | `$B/candidates/v3_e1_ar/` | word-1 AR renders (incl. `e1_ar_s03.wav`) |
 | `$B/candidates/v3_e2_ar/` | all 16 word-2 tails |
 | `$B/e2_resample/semantic/` | token export per tail |
@@ -262,3 +288,7 @@ GitHub (tracked): `docs/happy_accidents/Baghdad_Moon/token_surgery/` —
    matter more.
 5. **Sweep seeds for performance, not just similarity.** The winning word-2 take
    was picked for rhythmic alignment; token diversity between seeds is huge.
+6. **A word can end in a multi-second melisma.** Text timing and RMS envelopes
+   do not show where the note actually ends. Use Demucs + pitch tracking, and
+   never cut a sustained vowel at a lexical boundary. Keeping the original
+   melisma was better than any generated replacement.

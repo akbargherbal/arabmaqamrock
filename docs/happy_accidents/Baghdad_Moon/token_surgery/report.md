@@ -412,13 +412,25 @@ including the entire final `ه` — untouched:
 
 All four pass bit-identity outside 156.995–158.855 s and 202.21–204.54 s
 (outside max diff **0**). Pack: `deliverables/listen_v6/`, with full-outro
-(200–215.879 s) and hold-only (207.5–215.879 s) clips. The hold-only clip
-`52` is literally the original hold, which makes the A/B against `51` direct.
+(200–215.879 s) and hold-only (207.5–215.879 s) clips.
+
+**Verdict (2026-10-20): `41` accepted; the others rejected.** `41` is `s13`,
+no timing shift, 80 ms crossfade at 204.54. `40`/`42` (110 ms shift) and `43`
+(`s18`) did not pass. The user also judged the hold-only clips `50`/`51`/`52`
+**sub-word**: starting at 207.5 s isolates the sustained vowel
+(“عهوووو”), not `يَنْزِعُهُ`, so they are a technical check, not a valid word
+A/B. Future packs use the full word/outro window.
+
+v2 final: `FINAL_e1_ar_s03_s13_41.wav` — 215.879 s, sha256 `9b8fdb…`.
+Changed spans **156.9964–158.8546 s** and **202.2105–204.5395 s**; outside
+max diff **0**; 207.5 s–end hold byte-identical to the original
+(raw-sample sha256 `dbb7ec72…`).
 
 ## 7. Files
 
-- Final track: `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav`
-- Final A/B clips: `happy_accident/deliverables/listen_final/`
+- Final track (v2): `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s13_41.wav`
+- Final A/B clips (v2): `happy_accident/deliverables/listen_final_v2/`
+- Superseded v1 track: `happy_accident/deliverables/tracks/FINAL_e1_ar_s03_s08.wav`
 - Multi-session summary: `PROGRESS.md`
 - Round-3 raw results: `docs/.../results_20261020_e2_round3.json`,
   `docs/.../rating_20261020-1557.md`
