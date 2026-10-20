@@ -107,7 +107,74 @@ Script: `happy_accident/audio_splice.py` (reusable).
 Nothing here is claimed to be bit-identical to the original *inside* the edited
 words — only outside them. The final choice is by ear.
 
-## 5. Files
+## 5. Human evaluation (round 1) — all four rejected
+
+Source: rating app export `rating_20261020-1223.md`, raw data in
+`results_20261020.json` (10 clips, blind off). The listener rated the original
+and H1–H4 on both words.
+
+| version | e1 verdict / diction | e2 verdict / diction | melody | seam | overall | keep |
+|---|---|---|---:|---:|---:|---|
+| `00_ORIGINAL` | still wrong / 2 | still wrong / 1 | 5 | none | 1 | no |
+| `H1_minimal` | still wrong / 2 | still wrong / 1 | 2 | **bad** | 2 | no |
+| `H2_e2word` | still wrong / 2 | still wrong / 1 | 2 | **bad** | 1 | no |
+| `H3_e1word` | still wrong / 2 | still wrong / 1 | 1 | **bad** | 1 | no |
+| `H4_bothword` | still wrong / 2 | still wrong / 1 | 1 | **bad** | 1 | no |
+
+Verdict: **0/4 accepted**. Two distinct failures, and they have different
+causes.
+
+### 5.1 Word 2 — the comp region was too short (delivery bug, now fixed)
+
+The listener's description is precise: *“he starts ف … then sings the wrong
+word again (بِأَنَّ)”*, and for H2 *“he sang (فَإِنَّ) fully but stopped in the
+middle of the nūn — out came (فإ) + half a nūn”*, with a bad seam.
+
+Cause: `audio_splice.py` grafted only the frames that **differ from the
+baseline**, not the whole word. For e2 the edit window is 58 frames
+(202.24–204.56 s) but only the first 13 or 26 frames carry changed tokens:
+
+| hybrid | grafted | word actually spans |
+|---|---|---|
+| H1/H3 | 201.84–203.16 s | 202.24–204.56 s |
+| H2/H4 | 201.84–203.52 s | 202.24–204.56 s |
+
+So the graft ended 1.0–1.4 s before the end of the word, and everything after
+the cut was the original `…بِأَنَّ` again. Sample inspection confirms it: the
+first differing sample after 203.515 s is *identical to the original*.
+The listener heard exactly that: corrected onset, original tail.
+
+Fix: `audio_splice.py` now takes `--word-ranges 3933:3964,5056:5114` and
+extends every changed run to the whole word before adding margin and snapping
+to quiet points. New comps in `runs/token_surgery/v2/hybrid_full/`, regions
+156.995–158.855 s and 201.835–204.775 s, `identical_outside_regions: true`.
+
+### 5.2 Word 1 — the donor does not carry a convincing `ه`
+
+Even H3/H4, which replaced the **whole** 31-frame word with the Outro instance,
+were heard as unchanged (`عَلِيم`, diction 2, "no regression, no fix"). The
+Outro donor is the muddy instance; its final consonant is not a clean `ه`.
+The donor route for e1 is exhausted — see §6.
+
+## 6. Round 2 — AR resample for word 1
+
+Fallback from the checkpoint: regenerate frames 3933–3964 from the AR model
+with the correct lyrics, conditioning on the first 3933 tokens.
+
+```
+semantic_prefix_file = tokens_prefix_e1_3933.json   (first 3933 frames)
+semantic_min_tokens = semantic_max_tokens = 3964    (exactly 31 new frames)
+seeds 1712905618 + 0..15
+```
+
+Each run re-sings the word with the real lyric text, so `ه` is available to
+the model; the seed sweep gives several renditions to choose from. The render
+itself already contains the word in full context (0–158.56 s), so candidates
+can be auditioned before committing to a full 5397-frame render. Only the
+winner is rendered once more as a complete stream and comped into the original
+(word-span graft).
+
+## 7. Files
 
 - Full candidates: `happy_accident/runs/token_surgery/v2/<id>.wav`
 - Local comps: `happy_accident/runs/token_surgery/v2/hybrid/<id>.wav`
