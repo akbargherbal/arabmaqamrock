@@ -8,8 +8,10 @@ fixed, outro join fixed, original final `ه` melisma untouched.
 
 - `CHECKPOINT.md` — current state, artifacts, next steps.
 - `PROGRESS.md` — 6-session progress summary; S2-join issue is resolved.
+- `LESSONS.md` — retrospective across the case study, Claude prompt, the
+  iteration, the Suno comparison, and the final 9.5–9.7/10 milestone.
 - `WORKFLOW_VS_SUNO.md` — how this repair differs from Suno cover influence and
-  Studio section regeneration.
+  Studio section regeneration (revised after the melisma finding).
 - `report.md` — measurements for every round, including the final track.
 - `HANDOFF.md` — earlier handoff (historical; §0.5 is annotated).
 - `evidence.md` — CTC/ASR/F0 evidence for the two words and the donors.

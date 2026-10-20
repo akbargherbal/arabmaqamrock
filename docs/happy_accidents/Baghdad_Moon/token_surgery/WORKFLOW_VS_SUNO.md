@@ -9,6 +9,13 @@ about its internals. The point is the control model: **global audio
 conditioning with a fidelity/freedom dial** versus **bounded token-level
 re-singing plus a local audio comp**.
 
+> **Revision after round 6 (2026-10-20).** This note was written before the
+> final-`ه` melisma was measured. The control-model comparison still holds, but
+> two claims below are superseded: the musical unit is **not** 202.26–207.74 s
+> (the final `ه` holds to ~213.2 s), and the accepted fix was **smaller than a
+> phrase** — only `فَإِنَّ` (202.21–204.54 s), leaving the original
+> `اللهَ يَنْزِعُهُ` and its melisma untouched. See §8.
+
 ---
 
 ## 1. The two problems look similar, but they are not
@@ -93,18 +100,22 @@ percentage. The nearest analogue is how much real prior performance is forced.
 Unlike a percentage, it is discrete and exact: we force everything before the
 error, so context is maximal and the error is absent.
 
-**“Regenerate the verse” → phrase-level AR re-sing.** For the outro we treated
-`فَإِنَّ اللهَ يَنْزِعُهُ` as one unit (202.26–207.74 s), not the word
-`فَإِنَّ` alone. The model re-sings the phrase; the comp then replaces exactly
-that unit. For the Verse-2 `عَلَيْهِ`, a word-level unit was enough — this is a
-case-by-case decision.
+**“Regenerate the verse” → bounded AR re-sing of the smallest correct unit.**
+We first tried the phrase `فَإِنَّ اللهَ يَنْزِعُهُ` as one unit, but that was
+too large: the original `اللهَ يَنْزِعُهُ` was already correct, and its final
+`ه` is a ~5.5 s G4 melisma. The accepted fix re-sings **only `فَإِنَّ`**
+(202.21–204.54 s) and leaves the rest of the phrase untouched. For the Verse-2
+`عَلَيْهِ`, a word-level unit was enough. The principle is not “phrase beats
+word”; it is “use the smallest unit that contains the error and has clean
+performance boundaries.”
 
 **“Nudge the model and retry” → seed sweep + take selection.** We rendered 16
-tails, scored them on the musical unit, and picked the best. The model load is
-the fixed cost; extra takes are cheap. For word 2 the shortlist was chosen on
-rhythmic alignment; for the phrase comp, `s13` won on vocal-stem correlation
-(0.91 at +110 ms) while the old word-level winner `s08` was worse over the
-phrase (0.82, +200 ms).
+tails, scored them on the intended unit, and picked the best. The model load is
+the fixed cost; extra takes are cheap. The phrase-level shortlist put `s13`
+first on vocal-stem envelope correlation (0.91 at +110 ms), but that score was
+envelope-only: `s13` ends the phrase on **D4 (~295 Hz)**, not the original G4,
+so it was invalid for a full-phrase replacement. It was still the right take
+for `فَإِنَّ` alone. Envelope correlation ranks dynamics, not melody.
 
 **“Keep the music as much as possible” → vocal-stem-only comp.** This is the
 part the cover workflow does not give you. We can keep the **original
@@ -113,17 +124,22 @@ over the phrase, the take’s drums/bass/other correlate with the original at
 ≈0 (drums even +4 dB louder), so a full-mix comp would replace the arrangement,
 not just the voice.
 
-**“Where to make the cut” → joins in the performance.** We choose the entrance
-and exit from the vocal envelope, not from a timeline grid. For the outro:
-enter in the actual vocal breath at 202.15–202.21 s; leave at 207.90 s, after
-the phrase. The old word-level comp cut at 204.775 s, which is **inside
-`الله`** (204.54–204.98 s) — that was the audible “two clips” join.
+**“Where to make the cut” → joins in the performance, including melisma.** We
+choose the entrance and exit from the vocal envelope and the actual note
+boundaries, not from a timeline grid. For the outro, the first phrase comp left
+at 207.90 s and called that “after the phrase”; in fact the final `ه` is a
+~5.5 s G4 hold that runs to ~213.2 s, so 207.90 s was **160 ms inside the
+note**. The accepted fix enters at 202.21 s and leaves at **204.54 s**, the
+start of `الله`, keeping the original `اللهَ يَنْزِعُهُ` and its entire
+melisma. The old v1 comp cut at 204.775 s, inside `الله`; the phrase comp cut
+inside the `ه`.
 
 **“Iterative nudging” → a different search space.** Suno iterates on one global
-knob. We iterate on interpretable choices: word vs phrase, which take, where
-the joins are, fade length, full mix vs vocal stem. That is why the S2 fix
-moved from word-level to phrase-level, from 40 ms to 50/120 ms fades, from
-full mix to vocal stem, and from 202.10 s to 202.21 s.
+knob. We iterate on interpretable choices: the unit, which take, where the joins
+are, fade length, full mix vs vocal stem. The S2 search moved from word-level
+to phrase-level and then **back to a smaller word-level unit**, from 40 ms to
+50/120 ms fades, from full mix to vocal stem, and from 202.10 to 202.21 s. The
+last move was the important one: the winning edit was smaller, not bigger.
 
 ---
 
@@ -161,19 +177,52 @@ correct `فَإِنَّ` and a rest of the track that is literally the same reco
 ## 7. Practical checklist if you come from the Suno workflow
 
 1. **Do not regenerate the song.** Find the exact frame range of the error and
-   the musical unit around it (word or phrase).
+   its **complete musical unit** — word, phrase, or sustained note, including
+   any melisma. Use Demucs + pitch/duration, not text timing alone.
 2. **Cut the conditioning before the error.** Force the token prefix up to the
    unit; let the model generate the unit from the lyric.
 3. **Sweep seeds, score the unit, not the whole song.** Use the ear for the
-   phoneme; use envelope/DTW for rhythm and level.
-4. **Choose joins in the performance.** A breath or a voiceless gap, never a
-   fixed word ± margin. Check neighbouring word boundaries.
+   phoneme; use pitch, duration, envelope and DTW for rhythm and level. Never
+   select on envelope correlation alone.
+4. **Choose joins in the performance.** A breath, a voiceless gap, or a real
+   note boundary — never a fixed word ± margin and never inside a sustained
+   vowel. Check the neighbouring word and note boundaries.
 5. **Deliver by comp.** Replace only the chosen span; verify bit-identity
-   outside it. If the music must not change, comp the vocal stem only.
-6. **Measure the seam.** Edge level step, sample step, and phrase continuity.
-   A 40 ms fade removes clicks but not a mid-word cut or a +3.5 dB level jump.
+   outside it. If the music must not change, comp the vocal stem only. If the
+   original vocal is already correct, leave it alone.
+6. **Measure the seam.** Edge level step, sample step, pitch continuity and
+   phrase continuity. A 40 ms fade removes clicks but not a mid-word cut, a
+   pitch change, or a +3.5 dB level jump.
+7. **Review with complete audio.** Full track + target timestamps, or a
+   complete section ending at a real boundary / end of track. Never ask for a
+   verdict on a partial word.
 
 ---
 
-Related documents: `report.md` §5–§7, `PROGRESS.md` §4, `CHECKPOINT.md` §6.5,
-and the case study `../case_study_Baghdad_moon.md`.
+## 8. Revision after the melisma finding
+
+The original version of this note treated `فَإِنَّ اللهَ يَنْزِعُهُ`
+(202.26–207.74 s) as a phrase ending at 207.74 s and recommended a phrase-level
+comp ending at 207.90 s. That was wrong for this song:
+
+- the final `ه` is a **G4 ≈ 391 Hz hold from ~207.7 to ~213.2 s (≈5.5 s)**,
+  with release/reverb to ~215 s; 207.90 s is 160 ms inside it;
+- `s13` ends the phrase on **D4 ≈ 295 Hz**, not G4, so an `s13` phrase comp
+  could never preserve the original ending;
+- the original `اللهَ يَنْزِعُهُ` was already correct, so replacing it was
+  unnecessary;
+- the accepted fix is **only `فَإِنَّ`**, 202.21–204.54 s.
+
+The general correction is not “use a phrase instead of a word.” It is:
+
+> **Use the smallest unit that contains the error and has clean performance
+> boundaries. Keep everything the original already sings correctly.**
+
+That is why the winning edit is smaller than the phrase and why the original
+melisma is untouched. The Suno Studio analogy remains the closest in spirit,
+but our best edit was smaller and stricter than a section regeneration.
+
+---
+
+Related documents: `LESSONS.md`, `report.md` §5–§8, `PROGRESS.md` §4,
+`CHECKPOINT.md` §6.8, and the case study `../case_study_Baghdad_moon.md`.
