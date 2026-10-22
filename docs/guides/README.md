@@ -8,3 +8,7 @@ Reusable, project-independent playbooks distilled from the work in this repo.
   protocol and delivery QC.
   - Reference run: `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261020_baghdad_moon_final_fix_v2/`
     — the complete, reproducible Baghdad Moon final fix described in §14.
+- [Repair session runbook](repair_session_runbook.md)
+  — the operational procedure for a real repair session: intake, defect card,
+  unit approval, seed batch, scoring, comp, verification, and the record that
+  makes the next repair repeatable.

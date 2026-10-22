@@ -16,6 +16,9 @@ differ; the strategy does not.
 
 **Version:** 1.1 — 2026-10-20 (adds the reproducible reference run in §14).
 
+**Operational companion:** [Repair Session Runbook](repair_session_runbook.md)
+— the step-by-step session procedure, defect card and repair record.
+
 **Contents**
 
 0. [The ten rules](#0-the-ten-rules)
