@@ -1,0 +1,78 @@
+{
+  "case": "001",
+  "take": "03-الرد-على-الواشي-والرسوخ-كالأرعن_3_810750224",
+  "take_sha256": "3981465c20614d00cdc025e8f99525bb85268d5bfb842af1972f51a6d34b7b69",
+  "fps": 25,
+  "total_frames": 5938,
+  "target": {
+    "word": "فَأَدُّوهَا",
+    "phrase": "فَأَدُّوهَا إِلَيْنَا",
+    "occurrence": 1,
+    "line_index": 14,
+    "word_index": 65,
+    "note_after": "keep",
+    "acoustic_note": "هَا + إِلَيْنَا are one continuous note: 415→465 Hz from 127.76, then 465→368 Hz to ≈129.15. There is no gap between the words."
+  },
+  "ladder": {
+    "L1_phrase": {
+      "comp": {"start": 126.60, "end": 129.18, "fade_in": 0.03, "fade_out": 0.06},
+      "frames": [3165, 3230],
+      "replaces": "the whole phrase, including the continuous note",
+      "joins": "gap before; breath after",
+      "use": "first"
+    },
+    "L2_word": {
+      "comp": {"start": 126.60, "end": 127.72, "fade_in": 0.03, "fade_out": 0.04},
+      "frames": [3165, 3193],
+      "replaces": "فَأَدُّو; keeps the original هَا + إِلَيْنَا note",
+      "joins": "gap before; note start after",
+      "use": "if L1 fails"
+    },
+    "L3_syllable": {
+      "comp": {"start": 127.18, "end": 127.65, "fade_in": 0.01, "fade_out": 0.015},
+      "frames": [3179, 3192],
+      "replaces": "دُّو (closure + release + vowel)",
+      "joins": "closure before; release after",
+      "use": "if L2 fails; the floor (a single consonant cannot be comped)"
+    }
+  },
+  "generation": {
+    "start": 126.44,
+    "end": 130.00,
+    "prefix": 3161,
+    "max": 3250,
+    "why": "prefix = the note offset before the 0.36 s gap; the model sings the gap + phrase. 89 generated frames. A longer max does not change the word tokens (AR is causal); it gives the NAR trailing context through the breath."
+  },
+  "seeds": {
+    "base": 810750224,
+    "sweep": "base + 0..7",
+    "count": 8
+  },
+  "stems": {
+    "original": "htdemucs vocals of inputs/ORIGINAL.wav",
+    "candidate": "htdemucs vocals of each candidate (same model)"
+  },
+  "checks": {
+    "outside_diff": 0,
+    "edge_step_db": "< 1",
+    "duration": "unchanged",
+    "target_metric": "closure duration 80-160 ms (original ~55 ms)",
+    "f0_L1": "20 cents over 126.79-129.18; 311 -> 355 -> 370 -> 415 -> 465 -> 368 Hz",
+    "f0_L2": "20 cents over 126.79-127.72; 311 -> 355 -> 370 Hz",
+    "f0_L3": "370 Hz over 127.28-127.60",
+    "shift": "<= ±60 ms for L1/L2, <= ±20 ms for L3; no time-stretch",
+    "ctc": "فَأَدُّوهَا present (presence filter only)"
+  },
+  "audition": {
+    "L1": "3 shortlisted candidates on the full line 123.00-129.20",
+    "L2": "2-3 candidates, same line, only if L1 fails",
+    "L3": "1-2 candidates, same line, only if L2 fails"
+  },
+  "status": "draft — wide-first ladder; the ear picks the level",
+  "notes": [
+    "The ladder uses one render batch; only the comp window changes between levels.",
+    "The token re-derive + bit-identity gate is mandatory: this take has no exported semantic stream.",
+    "The guide's 'replace less' is a default, not a law. If L1 passes, the phrase-first workflow is the fast path.",
+    "Do not grind seeds if a whole level fails; change the text, use the donor, or regenerate."
+  ]
+}
