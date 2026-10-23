@@ -89,11 +89,16 @@ export HF_TOKEN=...                 # if needed
 Stage the prefix-capable binary (do **not** overwrite `bin/audiocpp_cli`):
 
 ```bash
-gsutil cp gs://akbar-december-2024-backup/arabmaqamrock/runs/20261019_baghdad_moon_token_surgery/bin/audiocpp_cli_prefix_sm75 \
+gsutil cp gs://akbar-december-2024-backup/arabmaqamrock/binaries/sm75-t4/prefix/audiocpp_cli_prefix_sm75 \
   bin/audiocpp_cli_prefix
 chmod +x bin/audiocpp_cli_prefix
 sha256sum bin/audiocpp_cli_prefix     # 4e1534f3e6fde456198ed5404313a832029193bf7ea47c817086a24a5aa3849c
 . ./cuda_loader_path.sh
+```
+
+If the object is missing: **stop; do not rebuild on the T4.** Do a one-time CPU
+build (CPU_BUILD.md), publish it to `binaries/sm75-t4/prefix/`, then rerun this
+block. The binary must live in the durable `binaries/` prefix, not a run folder.
 ```
 
 ### 4.2 Freeze the take
