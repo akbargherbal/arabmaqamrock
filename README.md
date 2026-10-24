@@ -98,16 +98,56 @@ Per-song fields (`strict` — unknown keys are an error):
 | `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`) |
 | `cap` / `quantile` | explicit token cap, or a quantile (0.90 / 0.95 / 0.975, default 0.95) |
 | `lora` | optional alias into the top-level `loras` map (see below) |
+| `abc_file` / `score` | optional ABC score: a path, or an alias into the top-level `scores` map (mutually exclusive) |
+| `cot` | `off` (default) / `melody` / `full`; required when a score is given |
 
-`defaults` supplies `style`/`style_file`, `repeat`, `quantile`, and `lora` for every
-song. The trigger word **`arabmaqamrock`** is prepended to any style that lacks it
-(every training caption carried it; disable with `--no-trigger`).
+`defaults` supplies `style`/`style_file`, `repeat`, `quantile`, `lora`, and
+`score`/`abc_file`/`cot` for every song. The trigger word **`arabmaqamrock`** is
+prepended to any style that lacks it (every training caption carried it; disable
+with `--no-trigger`).
 
 The optional top-level `loras` map lets one batch mix adapters:
 
 ```json
 "loras": { "v3": { "dir": "loras" }, "quran": { "dir": "loras/quran" } }
 ```
+
+### ABC scores (melody / chord conditioning)
+
+Hand a song an ABC score and the model conditions on it: tempo, structure and how
+busy the vocal and lead lines are come from the score; the style prompt dresses
+what the score allows. This is the supported way to edit an arrangement (e.g.
+guitar fills) without regenerating the song blind.
+
+```json
+{
+  "scores": { "v1": "scores/score_v1.abc", "v2": "scores/score_v2.abc" },
+  "defaults": { "style_file": "prompts/Hijaz_style.txt", "cot": "full" },
+  "songs": [
+    { "name": "bm_v1", "score": "v1", "lyrics_file": "baghdad.txt", "seed": 20261024 },
+    { "name": "bm_v2", "score": "v2", "lyrics_file": "baghdad.txt", "seed": 20261024 }
+  ]
+}
+```
+
+| Field | Meaning |
+|---|---|
+| `abc_file` | path to an ABC file (relative to the JSON) |
+| `score` | alias into the top-level `scores` map |
+| `cot` | `off` (default) / `melody` (melody-only; the cover path) / `full` (melody + chord symbols) |
+
+A score requires an explicit `cot` of `melody` or `full`. `cot` is never
+inferred: it changes what the model conditions on, so guessing it would silently
+decide an A/B variable. Inline `abc` is rejected — chord symbols are
+double-quoted, so inline scores would need escaping on every bar.
+
+`cot=melody|full` **without** a score asks the model to write its own plan, saved
+as `plans/<name>_<seed>/score.abc`; edit it and feed it back with `abc_file`.
+`--dry-run` prints each score's length and cap headroom, and warns when the score
+is longer than the cap allows — before any GPU time is spent. Re-running into the
+same `--out-dir` with a changed score is a hard error, not a skip: the WAV name
+carries no score id, so use a new `--out-dir`/`--label` (one folder per score
+batch) or `--force`.
 
 Useful flags: `--dry-run`, `--limit N`, `--label`, `--out-dir`, `--force`,
 `--lora-ar` / `--lora-nar`, `--no-trigger`. Sampler knobs
@@ -146,6 +186,8 @@ input.json                 exact copy of your input
 batch_manifest.json        resolved seeds/caps + asset hashes (written before generation)
 batch_summary.txt          per-track exit/wall/duration
 prompts/<name>_{style,lyrics}.txt   the conditioning text actually used
+scores/<name>.abc           the ABC score copy actually used
+plans/<name>_<seed>/score.abc   model-planned score (cot != off, no score given)
 <name>_<seed>.wav          the audio
 <name>_<seed>.log / _time.txt / _gpu.csv / .json   per-track log, timings, GPU trace, sidecar
 ```

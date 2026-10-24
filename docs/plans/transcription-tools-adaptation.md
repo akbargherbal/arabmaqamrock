@@ -586,8 +586,8 @@ Implemented on 2026-10-24:
 | `docs/transcription.md` | user guide, hardware matrix, resume semantics, provenance, license, troubleshooting |
 | `README.md`, `plumbing/README.md` | optional-feature and setup-script entries |
 | `install.sh`, `setup_colab.sh` | opt-in `--with-transcribe` |
-| `run_one.sh` | optional `COT=melody\|full` + `ABC_FILE=...` for guide-conditioned renders; `generate.py` remains `cot=off` |
-| `generate.py` | explicitly pins the batch path to `COT=off` so an exported guide env cannot change it silently |
+| `run_one.sh` | optional `COT=melody\|full` + `ABC_FILE=...` for guide-conditioned renders |
+| `generate.py` | `input.scores` registry + per-song `abc_file`/`score`/`cot`; score copy + sha256 in the manifest; score-aware resume guard |
 | `docs/sessions/2026-10-24_baghdad_moon_abc_guide.md` | worked example: transcription, cap investigation, v1 guide render, five variants |
 | `.gitignore` | `.venv-sheetsage2/`, `.cache/` |
 
@@ -627,6 +627,8 @@ Follow-up work on 2026-10-24:
 
 The session record is in
 [`docs/sessions/2026-10-24_baghdad_moon_abc_guide.md`](../sessions/2026-10-24_baghdad_moon_abc_guide.md).
-The batch path remains `cot=off`; `run_one.sh` gained optional `COT`/`ABC_FILE`,
-and `generate.py` explicitly pins `COT=off`. The audio.cpp binary, models, and
+The batch path now supports scores too: `input.scores` aliases plus `abc_file` and
+`cot` per song, with the score's sha256 recorded in `batch_manifest.json` and a
+resume guard on score changes. `run_one.sh` remains usable directly with
+`COT`/`ABC_FILE` for one-off guide renders. The audio.cpp binary, models, and
 LoRAs were not modified.

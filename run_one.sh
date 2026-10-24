@@ -8,12 +8,15 @@
 #   OUT_DIR     output folder for this run's files (default: $ROOT/out)
 #   STYLE_FILE  style text file (default: $ROOT/prompts/<Maqam>_style.txt)
 #   LYRICS_FILE lyrics text file (default: $ROOT/prompts/<Maqam>_lyrics.txt)
+#   COT         symbolic route: off | melody | full (default: off). melody/full
+#               generate (or consume, with ABC_FILE) an ABC score first.
+#   ABC_FILE    external ABC score; requires COT=melody|full
+#   PLAN_DIR    pass --out-dir here: when COT != off and no ABC_FILE is given,
+#               the model's planned score.abc is written into this folder
 #   LORA_AR     AR adapter (default: $ROOT/loras/arabmaqamrock-v3-ar.safetensors)
 #   LORA_NAR    NAR adapter (default: $ROOT/loras/arabmaqamrock-v3-nar.safetensors)
 #   LORA_AR_SCALE / LORA_NAR_SCALE  per-expert adapter strength, default 1.0.
 #               Scale 0 switches that expert's adapter off (base weights).
-#   COT         chain-of-thought mode: off (default), melody, or full.
-#   ABC_FILE    optional ABC score; requires COT=melody or COT=full.
 # Writes everything under $OUT so each run is self-contained:
 #   $OUT/<Maqam>_<seed>.wav        audio
 #   $OUT/<Maqam>_<seed>.log        CLI --log (TRACE/TIMING, errors)
@@ -44,16 +47,6 @@ LORA_NAR="${LORA_NAR:-$ROOT/loras/arabmaqamrock-v3-nar.safetensors}"
 # Per-expert scales; 0 switches that expert's adapter off (base weights).
 LORA_AR_SCALE="${LORA_AR_SCALE:-1.0}"
 LORA_NAR_SCALE="${LORA_NAR_SCALE:-1.0}"
-COT="${COT:-off}"
-ABC_FILE="${ABC_FILE:-}"
-case "$COT" in
-  off|melody|full) ;;
-  *) echo "invalid COT=$COT (expected off, melody, or full)" >&2; exit 2 ;;
-esac
-if [ -n "$ABC_FILE" ]; then
-  [ -f "$ABC_FILE" ] || { echo "ABC_FILE not found: $ABC_FILE" >&2; exit 2; }
-  [ "$COT" != "off" ] || { echo "ABC_FILE requires COT=melody or COT=full" >&2; exit 2; }
-fi
 wav="$OUT/${M}_${S}.wav"
 log="$OUT/${M}_${S}.log"
 tfile="$OUT/${M}_${S}_time.txt"
@@ -66,9 +59,22 @@ extra_request=()
 for kv in ${EXTRA_REQUEST_OPTS:-}; do
   extra_request+=(--request-option "$kv")
 done
+
+# Symbolic (CoT) route. External ABC scores need melody/full; cot=off ignores the
+# score, so refuse the combination instead of silently rendering a cot=off take.
+COT="${COT:-off}"
+ABC_FILE="${ABC_FILE:-}"
+PLAN_DIR="${PLAN_DIR:-}"
+case "$COT" in
+  off|melody|full) ;;
+  *) echo "error: COT must be off|melody|full (got '$COT')" >&2; exit 2 ;;
+esac
 if [ -n "$ABC_FILE" ]; then
+  [ -f "$ABC_FILE" ] || { echo "error: ABC_FILE not found: $ABC_FILE" >&2; exit 2; }
+  [ "$COT" != "off" ] || { echo "error: ABC_FILE needs COT=melody|full (got COT=off)" >&2; exit 2; }
   extra_request+=(--request-option "abc_file=$ABC_FILE")
 fi
+[ -n "$PLAN_DIR" ] && extra_request+=(--out-dir "$PLAN_DIR")
 
 if [ "$CAP_ARG" = "auto" ]; then
   CAP=$(python3 "$SCRIPT_DIR/duration_cap.py" "$lyrics")
@@ -81,7 +87,7 @@ fi
     --format=csv,noheader,nounits >> "$csv" 2>/dev/null; sleep 1; done ) &
 SM=$!
 
-line="=== START ${M} seed=${S} cap=${CAP} (${CAP_ARG}) ar_lora=${LORA_AR} nar_lora=${LORA_NAR} $(date -u +%FT%TZ) ==="
+line="=== START ${M} seed=${S} cap=${CAP} (${CAP_ARG}) cot=${COT} abc=${ABC_FILE:-none} ar_lora=${LORA_AR} nar_lora=${LORA_NAR} $(date -u +%FT%TZ) ==="
 echo "$line"; echo "$line" >> "$status"
 
 /usr/bin/time -v -o "$tfile" \

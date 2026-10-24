@@ -165,10 +165,14 @@ ABC_FILE=/path/to/score.abc \
   (`215.879 s × 25`) hits the cap, so use 6750 for a like-for-like run.
 - Pick a **new seed** for a new rendition.
 
+For batch runs, the same thing is available from the JSON: `input.scores`
+aliases plus `abc_file` and `cot` per song (see the README section *ABC scores
+(melody / chord conditioning)*). The batch path records the score's sha256 in
+`batch_manifest.json` and refuses to resume a take whose score changed.
+
 This is a symbolic guide, not audio-to-audio, and it is **off-distribution** for
 the v3 adapter (trained with `cot=off`). It is not expected to reproduce the
-source track bit-for-bit; listen before trusting it. `generate.py` still renders
-`cot=off` only.
+source track bit-for-bit; listen before trusting it.
 
 ## Controlling ABC influence
 
