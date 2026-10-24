@@ -16,6 +16,7 @@
 #   ./install.sh                     # GCS prebuilt if reachable, else build
 #   ./install.sh --cuda-arch 75      # forward the arch (needed to build with no GPU)
 #   ./install.sh --build             # force a source build
+#   ./install.sh --with-transcribe   # also build the optional SheetSage2 venv
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 
@@ -27,12 +28,14 @@ LORA_AR="arabmaqamrock-v3-ar.safetensors"
 LORA_NAR="arabmaqamrock-v3-nar.safetensors"
 
 BIN_ARGS=()
+WITH_TRANSCRIBE=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --cuda-arch) BIN_ARGS+=(--cuda-arch "${2:?}"); shift 2 ;;
     --build)     BIN_ARGS+=(--build); shift ;;
+    --with-transcribe) WITH_TRANSCRIBE=1; shift ;;
     --prebuilt)  shift ;;                      # kept for compatibility; GCS-first is the default
-    -h|--help)   sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help)   awk 'NR>1 && /^set -euo/{exit} NR>1{print}' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -67,10 +70,19 @@ done
 [ -d "$MODELS/sidecars" ] && echo "  [ok] $MODELS/sidecars" || { echo "  [MISSING] $MODELS/sidecars"; ok=0; }
 
 if [ "$ok" = 1 ]; then
+  if [ "$WITH_TRANSCRIBE" = 1 ]; then
+    echo "== 4. optional transcription env =="
+    ./plumbing/setup_transcribe.sh
+  fi
   echo
   echo "Done. Then:"
   echo "  python3 generate.py songs.example.json --dry-run"
   echo "  python3 generate.py songs.example.json"
+  if [ "$WITH_TRANSCRIBE" = 1 ]; then
+    echo "  ./transcribe.sh out/latest --dry-run"
+  else
+    echo "  (optional) ./plumbing/setup_transcribe.sh && ./transcribe.sh out/latest --dry-run"
+  fi
 else
   echo "Install incomplete — see [MISSING] above." >&2; exit 1
 fi

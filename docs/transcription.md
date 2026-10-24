@@ -1,0 +1,191 @@
+# Symbolic transcription (SheetSage2)
+
+Turn a finished generation run into a symbolic melody score with the official
+[`m-a-p/SheetSage2`](https://huggingface.co/m-a-p/SheetSage2) model. This is an
+**optional, CPU-default** tool: it does not touch the audio.cpp generation stack
+and does not need a GPU.
+
+> This is melody/score transcription, not lyric transcription or pronunciation
+> verification. For ASR/CTC checks of a repair, use the scripts under
+> `docs/happy_accidents/.../scripts/`.
+
+## What you get
+
+For each take `<name>_<seed>.wav`:
+
+```
+out/<run>/transcripts/<name>_<seed>/
+  score.abc                  primary artifact
+  transcription.mid          combined MIDI
+  melody_vocal.mid           vocal melody
+  melody_instrumental.mid    instrumental melody
+  melody_*.lab               timed melody annotations
+  events.json / events.tsv   timed annotations
+  beat.lab / downbeat.lab / key.lab / chord.lab / structure.lab
+  notation/                  beat/chord/key/structure text exports
+  tokens.json / tokens.txt   model token stream
+  meta.json                  source hash + model/env provenance
+```
+
+plus run-level `_driver.log`, `_timings.csv`, and `transcribe_manifest.json`.
+
+`--melody-only` (the default) keeps the Vocal and Ins melody staves and omits
+chord symbols from the ABC. It is **not** “lead vocal only”. Use `--full` for a
+full SheetSage2 transcription with chord symbols.
+
+## Install
+
+Prerequisites:
+
+- `uv` (`python3 -m pip install -U uv`)
+- `ffmpeg` (upstream recommends 6.1 with shared libraries)
+- ~3–5 GB of disk for the venv and model cache
+
+```bash
+./plumbing/setup_transcribe.sh            # CPU wheels (recommended)
+./plumbing/setup_transcribe.sh --cuda     # CUDA 12.6 wheels, optional
+./plumbing/setup_transcribe.sh --doctor   # build/reuse, then diagnostics
+./plumbing/setup_transcribe.sh --warm     # also pre-download the models
+```
+
+The env is repo-local at `.venv-sheetsage2/` and ignored by git. The system
+Python (3.13 / transformers 5.x here) is not compatible with SheetSage2’s custom
+code; the venv pins Python 3.11, `torch==2.8.0`, and `transformers==4.45.2`.
+
+`./install.sh --with-transcribe` and `./setup_colab.sh --with-transcribe` call
+the same setup script. It remains opt-in.
+
+## Use
+
+```bash
+# Plan only: no model load, no writes.
+./transcribe.sh out/latest --dry-run
+
+# One track, then stop. Use this before a batch.
+./transcribe.sh out/latest --smoke
+
+# The whole newest run.
+./transcribe.sh out/latest
+
+# Explicit run + separate output tree.
+./transcribe.sh out/20261024-102834_ibn_zuraiq_formatted \
+  --out-dir /tmp/abc_ibn_zuraiq
+```
+
+`out/latest` is the text pointer written by `generate.py`. `transcribe.sh` runs
+the driver inside `.venv-sheetsage2`; `python3 transcribe.py` also works for
+`--dry-run`, `--verify`, and `--doctor` without the venv.
+
+Common flags:
+
+| Flag | Meaning |
+|---|---|
+| `--device cpu\|cuda\|auto` | default `cpu`; `auto` chooses CUDA if available |
+| `--threads N` | torch CPU threads (default `min(4, CPU count)`) |
+| `--exclude REGEX` | skip matching stems; **no default exclusion** |
+| `--limit N`, `--smoke` | cap the batch / one-track smoke |
+| `--force` | re-transcribe even when a valid ABC exists |
+| `--verify` | re-check ABC + source hashes without loading the model |
+| `--fail-fast` | stop at the first failure (default: continue) |
+| `--time-budget SEC` | stop starting new tracks after SEC |
+| `--per-track-timeout SEC` | best-effort per-track alarm |
+| `--on-collision error\|suffix` | duplicate-stem policy (default: error) |
+| `--cache-dir DIR` | use DIR as `HF_HOME` for the model cache |
+| `--doctor` | environment diagnostics |
+
+There is intentionally **no default `_[23]_` exclusion**. Real take names in
+this repo can contain those markers, e.g.
+`03-الرد-على-الواشي-والرسوخ-كالأرعن_3_810750224.wav` in
+`cases/001_harith03_faadduha/`. Excluding them silently was a bug in the
+ancestor driver.
+
+## Resume and stale-ABC guard
+
+An existing `score.abc` is skipped only when its `meta.json` says the last
+transcription succeeded, records the same `source_wav_sha256` as the current
+WAV, and its `abc_sha256` matches the ABC on disk:
+
+- **all three match** → `skipped`
+- **different source hash** → `stale`, exit 1; re-run with `--force`
+- **previous status was not `ok`** → retried automatically
+- **no `meta.json`** → `skipped-unverified` with a warning; `--force` redoes it
+- **ABC does not match `abc_sha256`** → `invalid`, exit 1; `--force` redoes it
+
+This prevents the ancestor failure mode where an old ABC is silently paired with
+a re-rendered take, and it also prevents a failed `--force` run from being
+mistaken for a finished one. `--verify` performs the same checks without loading
+the model.
+
+## CPU / GPU
+
+| Scenario | Result |
+|---|---|
+| CPU-only machine / Colab CPU runtime | Works with the default CPU wheels; no CUDA runtime |
+| GPU box, transcribing only | Works; CPU default leaves the GPU free |
+| GPU box, generating and transcribing | Run on CPU with `CUDA_VISIBLE_DEVICES=""` to avoid contention |
+| CUDA-accelerated transcription | `setup_transcribe.sh --cuda` then `--device cuda` |
+
+The audio.cpp SheetSage2 backend is **not** used here. The current
+`bin/audiocpp_cli` is built `--models yue2`, has no SheetSage2 family, and is
+CUDA-linked; using it would require a separate rebuild and model download. The
+Python path produces the same `score.abc` without touching generation.
+
+Measured upstream on CPU: roughly **4–6 minutes per track** and **~4.3 GB peak
+RAM** for a ≤10-minute song. Long tracks are processed sequentially; memory is
+not shared across tracks.
+
+Measured in this repo on a 2-vCPU / 12 GB CPU box: **433 s for a 272 s track**
+(2 threads, ~2.6 KB ABC) with roughly **4 GB RSS**; a warmed resume that skipped
+the same track took 10.7 s to load the model and 0.2 s to finish.
+
+## Provenance
+
+The driver records:
+
+- source WAV path, size, duration, SHA-256
+- ABC SHA-256 and size
+- SheetSage2 model ID and pinned revision
+- Python/torch/transformers versions, device, thread count
+- source run and `batch_manifest.json` hash when present
+- per-track status, seconds, and error
+
+The default model revision is
+`b83c3d79a6d98bcffaf8f9ed112c90aa887887bc`. Override with `--revision` or
+`SHEETSAGE2_REVISION`; a different revision is recorded in the manifest.
+
+The model is loaded by repository ID with `trust_remote_code=True`. A local
+snapshot cannot be used directly because SheetSage2’s custom module imports a
+sibling module that a local-directory load does not cache correctly.
+
+## Backup
+
+Outputs live under `out/<run>/transcripts/`, so the existing backup sidecar
+(`plumbing/backup_to_gcp.py`) mirrors them with the rest of the run. There is no
+separate `--gcs` flag.
+
+```bash
+python3 plumbing/backup_to_gcp.py --once --dry-run
+```
+
+## Licensing
+
+SheetSage2 and its MERT-v2-FullSong backbone are **CC-BY-NC-4.0**. This repo’s
+code is MIT, but use of the transcription model and its outputs is
+non-commercial. This is separate from, and in addition to, the non-commercial
+terms of the ArabMaqamRock LoRA weights.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `SheetSage2 env not found` | `./plumbing/setup_transcribe.sh` |
+| `IMPORT FAIL` for torch/transformers in `--doctor` | You are outside the venv; use `./transcribe.sh` |
+| `ffmpeg: MISSING` | `apt-get install -y ffmpeg` |
+| HF rate limit / 401 | Set `HF_TOKEN`; both repos are public but rate-limited |
+| `stale` on a track | The WAV changed; use `--force` if the new take is intended |
+| `invalid` ABC | Re-run that track with `--force`; check `_driver.log` |
+| OOM on CPU | Close other jobs; the model needs ~4.3 GB peak |
+| Model download is slow | `setup_transcribe.sh --warm`, or pre-populate `~/.cache/huggingface` |
+
+For the design rationale and the full adaptation plan, see
+[`docs/plans/transcription-tools-adaptation.md`](plans/transcription-tools-adaptation.md).

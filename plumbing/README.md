@@ -32,6 +32,7 @@ re-downloaded on a fresh VM.
 | `env.sh` | sourced by the others: repo root, `GCP_BACKUP_BASE`/`GCP_PREFIX`, `gcs_*` wrappers (`gcloud storage`, else `gsutil`) |
 | `arch.sh` | compute capability ⇄ arch tag (`detect_compute_cap`, `arch_tag_for_cc`) |
 | `fetch_binary.sh` | stage `./bin/audiocpp_cli`: fetch the arch prebuilt from GCS, sha256-verify, else build from source; `--publish` uploads a new build |
+| `setup_transcribe.sh` | build the optional repo-local `.venv-sheetsage2` for `./transcribe.sh` (Python 3.11, CPU default; `--cuda` opt-in) |
 | `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`) |
 | `audio_cpp.pin` | the audio.cpp commit a build should use (empty = track main) |
 
@@ -41,9 +42,15 @@ re-downloaded on a fresh VM.
 ./plumbing/fetch_binary.sh                  # prebuilt for this GPU
 ./plumbing/fetch_binary.sh --build --publish --cuda-arch 75   # rebuild + re-publish
 
+./plumbing/setup_transcribe.sh              # optional SheetSage2 env (CPU)
+./transcribe.sh out/latest --dry-run
+
 python plumbing/backup_to_gcp.py --once     # one backup pass
 python plumbing/backup_to_gcp.py            # daemon every 5 min
 ```
+
+The transcription venv and its module cache are git-ignored
+(`.venv-sheetsage2/`, `.cache/`). Nothing in the generation path imports them.
 
 Backup as a detached sidecar (survives closing the tab):
 

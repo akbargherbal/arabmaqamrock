@@ -3,6 +3,7 @@
 # Fresh Colab VM -> ready to generate, in one command.
 #
 #   ./setup_colab.sh
+#   ./setup_colab.sh --with-transcribe   # also build the optional CPU transcription env
 #
 # Does, in order:
 #   1. sanity-check tooling (nvidia-smi, gcloud/gsutil auth, hf, python3) and
@@ -16,6 +17,15 @@
 set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")"
 . plumbing/env.sh
+
+WITH_TRANSCRIBE=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --with-transcribe) WITH_TRANSCRIBE=1; shift ;;
+    -h|--help)         awk 'NR>1 && /^set -euo/{exit} NR>1{print}' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+done
 
 MODELS="$REPO_ROOT/models/Yue2-3B-GGUF"
 LORAS="$REPO_ROOT/loras"
@@ -72,8 +82,18 @@ else
   pgrep -f 'plumbing/backup_to_gcp.py' >/dev/null && ok "backup daemon started (logs/gcp_backup.log)" || warn "backup daemon did not start"
 fi
 
+if [ "$WITH_TRANSCRIBE" = 1 ]; then
+  echo "== 5. optional transcription env =="
+  "$REPO_ROOT/plumbing/setup_transcribe.sh"
+fi
+
 echo
 echo "Ready. Validate then generate:"
 echo "  python3 generate.py songs.example.json --dry-run"
 echo "  python3 generate.py songs.example.json"
+if [ "$WITH_TRANSCRIBE" = 1 ]; then
+  echo "  ./transcribe.sh out/latest --dry-run"
+else
+  echo "Optional symbolic transcription: ./plumbing/setup_transcribe.sh"
+fi
 echo "Backup verify:  ${GCS_CLI} ls ${GCP_PREFIX}/runs/"

@@ -152,6 +152,28 @@ prompts/<name>_{style,lyrics}.txt   the conditioning text actually used
 
 `out/latest` names the newest run. Re-run with `--out-dir <folder>` to resume.
 
+## Optional: symbolic transcription
+
+Turn a finished run into melody **ABC** scores on CPU with SheetSage2. This is
+separate from generation: no GPU, no changes to `bin/audiocpp_cli`, and no extra
+model in the audio.cpp stack.
+
+```bash
+./plumbing/setup_transcribe.sh        # once; CPU wheels by default
+./transcribe.sh out/latest --dry-run  # plan only
+./transcribe.sh out/latest --smoke    # one track
+./transcribe.sh out/latest            # whole run
+```
+
+Scores land in `out/<run>/transcripts/<name>_<seed>/score.abc`, with MIDI/event
+side artifacts, a per-track `meta.json`, and a run-level manifest. Existing
+scores are skipped only when their recorded source-WAV hash still matches; use
+`--force` after re-rendering a take.
+
+See [docs/transcription.md](docs/transcription.md) for CPU/GPU options, resume
+guards, and licensing. The optional env is also available via
+`./install.sh --with-transcribe` and `./setup_colab.sh --with-transcribe`.
+
 ## License
 
 **The weights are non-commercial.** This project is a derivative of
@@ -161,6 +183,8 @@ released here inherit that: **non-commercial use only.**
 - **Code** in this repository: **MIT** (see [LICENSE](LICENSE)).
 - **Weights** (the LoRAs) and the base model: **CC-BY-NC-4.0** (see
   [MODEL_CARD.md](MODEL_CARD.md)).
+- **Transcription model** (optional): SheetSage2 / MERT-v2-FullSong are
+  **CC-BY-NC-4.0**; their use is non-commercial too.
 - The training data (Suno-rendered audio) is **not** distributed.
 
 ## Provenance

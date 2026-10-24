@@ -8,5 +8,9 @@
 __pycache__/
 *.pyc
 
+# optional SheetSage2 transcription env + cache
+/.venv-sheetsage2/
+/.cache/
+
 # local happy-accident working tree (WAVs, stems, tokens, backups)
 /happy_accident/
