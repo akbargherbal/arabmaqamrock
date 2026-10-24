@@ -138,6 +138,31 @@ Measured in this repo on a 2-vCPU / 12 GB CPU box: **433 s for a 272 s track**
 (2 threads, ~2.6 KB ABC) with roughly **4 GB RSS**; a warmed resume that skipped
 the same track took 10.7 s to load the model and 0.2 s to finish.
 
+## Use the ABC as a guide (advanced)
+
+The generation runner accepts two optional environment variables:
+
+```bash
+OUT_DIR=/path/to/guide-run \
+STYLE_FILE=/path/to/style.txt \
+LYRICS_FILE=/path/to/lyrics.txt \
+COT=melody \
+ABC_FILE=/path/to/score.abc \
+./run_one.sh MyGuideSong 20261024 5397
+```
+
+- `COT` is `off` by default. ABC conditioning requires `melody` or `full`.
+- `ABC_FILE` must be a melody ABC; for a SheetSage2 `--melody-only` score use
+  `COT=melody`.
+- `5397` is `semantic_max_tokens`; use a cap that matches the score/lyrics
+  length (25 frames per second).
+- Pick a **new seed** for a new rendition.
+
+This is a symbolic guide, not audio-to-audio, and it is **off-distribution** for
+the v3 adapter (trained with `cot=off`). It is not expected to reproduce the
+source track bit-for-bit; listen before trusting it. `generate.py` still renders
+`cot=off` only.
+
 ## Provenance
 
 The driver records:

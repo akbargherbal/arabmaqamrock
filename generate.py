@@ -788,6 +788,10 @@ def run_batch(run_dir: Path, tracks: list[Track], prompt_info: dict, fp: dict,
                 "LYRICS_FILE": str(run_dir / prompt_info[t.name]["lyrics_file"]),
                 "LORA_AR": str(ar),
                 "LORA_NAR": str(nar),
+                # This batch path is the trained cot=off regime. ABC-guided
+                # renders use run_one.sh directly (COT=melody ABC_FILE=...).
+                "COT": "off",
+                "ABC_FILE": "",
             })
             cmd = ["bash", str(RUN_ONE), t.name, str(t.seed), str(t.cap)]
 

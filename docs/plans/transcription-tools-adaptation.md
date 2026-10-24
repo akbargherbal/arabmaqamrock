@@ -465,9 +465,9 @@ Only after v1 is stable:
 - **audio.cpp backend:** rebuild `bin/audiocpp_cli` with SheetSage2 support
   (build flags, `audio-cpp/SheetSage2-GGUF`), add `--backend audiocpp`, and
   verify the upstream-unverified flags before relying on them.
-- **ABC-conditioned render:** add `cot`/`abc_file` fields to `generate.py` or a
-  dedicated driver, and validate on the adapter that is actually shipped here.
-  This is a separate project from transcription.
+- **ABC-conditioned render:** `run_one.sh` now accepts `COT`/`ABC_FILE` for a
+  direct guide render. Exposing it through `generate.py` and validating it on the
+  shipped adapter is still future work.
 - **Vocal-only melody:** derive a lead-vocal ABC from `melody_vocal.mid` /
   `events.json` if that proves more useful than the combined melody score.
 - **Analysis integration:** optional comparison of pre/post-repair scores.
@@ -586,6 +586,8 @@ Implemented on 2026-10-24:
 | `docs/transcription.md` | user guide, hardware matrix, resume semantics, provenance, license, troubleshooting |
 | `README.md`, `plumbing/README.md` | optional-feature and setup-script entries |
 | `install.sh`, `setup_colab.sh` | opt-in `--with-transcribe` |
+| `run_one.sh` | optional `COT=melody\|full` + `ABC_FILE=...` for guide-conditioned renders; `generate.py` remains `cot=off` |
+| `generate.py` | explicitly pins the batch path to `COT=off` so an exported guide env cannot change it silently |
 | `.gitignore` | `.venv-sheetsage2/`, `.cache/` |
 
 Verification performed:

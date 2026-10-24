@@ -12,6 +12,8 @@
 #   LORA_NAR    NAR adapter (default: $ROOT/loras/arabmaqamrock-v3-nar.safetensors)
 #   LORA_AR_SCALE / LORA_NAR_SCALE  per-expert adapter strength, default 1.0.
 #               Scale 0 switches that expert's adapter off (base weights).
+#   COT         chain-of-thought mode: off (default), melody, or full.
+#   ABC_FILE    optional ABC score; requires COT=melody or COT=full.
 # Writes everything under $OUT so each run is self-contained:
 #   $OUT/<Maqam>_<seed>.wav        audio
 #   $OUT/<Maqam>_<seed>.log        CLI --log (TRACE/TIMING, errors)
@@ -42,6 +44,16 @@ LORA_NAR="${LORA_NAR:-$ROOT/loras/arabmaqamrock-v3-nar.safetensors}"
 # Per-expert scales; 0 switches that expert's adapter off (base weights).
 LORA_AR_SCALE="${LORA_AR_SCALE:-1.0}"
 LORA_NAR_SCALE="${LORA_NAR_SCALE:-1.0}"
+COT="${COT:-off}"
+ABC_FILE="${ABC_FILE:-}"
+case "$COT" in
+  off|melody|full) ;;
+  *) echo "invalid COT=$COT (expected off, melody, or full)" >&2; exit 2 ;;
+esac
+if [ -n "$ABC_FILE" ]; then
+  [ -f "$ABC_FILE" ] || { echo "ABC_FILE not found: $ABC_FILE" >&2; exit 2; }
+  [ "$COT" != "off" ] || { echo "ABC_FILE requires COT=melody or COT=full" >&2; exit 2; }
+fi
 wav="$OUT/${M}_${S}.wav"
 log="$OUT/${M}_${S}.log"
 tfile="$OUT/${M}_${S}_time.txt"
@@ -54,6 +66,9 @@ extra_request=()
 for kv in ${EXTRA_REQUEST_OPTS:-}; do
   extra_request+=(--request-option "$kv")
 done
+if [ -n "$ABC_FILE" ]; then
+  extra_request+=(--request-option "abc_file=$ABC_FILE")
+fi
 
 if [ "$CAP_ARG" = "auto" ]; then
   CAP=$(python3 "$SCRIPT_DIR/duration_cap.py" "$lyrics")
@@ -80,7 +95,7 @@ echo "$line"; echo "$line" >> "$status"
   --session-option yue2.attention=flash \
   --lyrics "$(cat "$lyrics")" \
   --request-option style="$(cat "$style")" \
-  --request-option cot=off \
+  --request-option cot="$COT" \
   --request-option semantic_max_tokens="$CAP" \
   "${extra_request[@]}" \
   --seed "$S" \
