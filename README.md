@@ -171,8 +171,11 @@ scores are skipped only when their recorded source-WAV hash still matches; use
 `--force` after re-rendering a take.
 
 See [docs/transcription.md](docs/transcription.md) for CPU/GPU options, resume
-guards, and licensing. The optional env is also available via
-`./install.sh --with-transcribe` and `./setup_colab.sh --with-transcribe`.
+guards, and licensing. ABC scores can also be used as a symbolic guide for a new
+render via `run_one.sh`’s `COT`/`ABC_FILE` environment variables; see
+[the Baghdad Moon session](docs/sessions/2026-10-24_baghdad_moon_abc_guide.md).
+The optional env is also available via `./install.sh --with-transcribe` and
+`./setup_colab.sh --with-transcribe`.
 
 ## License
 

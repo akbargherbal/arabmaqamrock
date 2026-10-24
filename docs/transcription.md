@@ -138,6 +138,11 @@ Measured in this repo on a 2-vCPU / 12 GB CPU box: **433 s for a 272 s track**
 (2 threads, ~2.6 KB ABC) with roughly **4 GB RSS**; a warmed resume that skipped
 the same track took 10.7 s to load the model and 0.2 s to finish.
 
+The Baghdad Moon session measured **417.1 s** for a 215.9 s melody-only score
+and **381.9 s** for the full/chords score on the same box. It also has a worked
+ABC-guided render and five variants:
+[`docs/sessions/2026-10-24_baghdad_moon_abc_guide.md`](sessions/2026-10-24_baghdad_moon_abc_guide.md).
+
 ## Use the ABC as a guide (advanced)
 
 The generation runner accepts two optional environment variables:
@@ -148,20 +153,55 @@ STYLE_FILE=/path/to/style.txt \
 LYRICS_FILE=/path/to/lyrics.txt \
 COT=melody \
 ABC_FILE=/path/to/score.abc \
-./run_one.sh MyGuideSong 20261024 5397
+./run_one.sh MyGuideSong 20261024 6750
 ```
 
 - `COT` is `off` by default. ABC conditioning requires `melody` or `full`.
 - `ABC_FILE` must be a melody ABC; for a SheetSage2 `--melody-only` score use
   `COT=melody`.
-- `5397` is `semantic_max_tokens`; use a cap that matches the score/lyrics
-  length (25 frames per second).
+- The final argument is `semantic_max_tokens`; use a cap that matches the
+  score/lyrics length (25 frames per second). The original Baghdad Moon batch
+  used **6750** (`q=0.95`, 507 letters). A length-matched **5397** cap
+  (`215.879 s × 25`) hits the cap, so use 6750 for a like-for-like run.
 - Pick a **new seed** for a new rendition.
 
 This is a symbolic guide, not audio-to-audio, and it is **off-distribution** for
 the v3 adapter (trained with `cot=off`). It is not expected to reproduce the
 source track bit-for-bit; listen before trusting it. `generate.py` still renders
 `cot=off` only.
+
+## Controlling ABC influence
+
+There is no single “ABC strength” value. The score is a token prefix, so
+influence is structural.
+
+| Control | Effect |
+|---|---|
+| Score scope/content | A short or sparse score is a loose hint; a full, note-dense score constrains more |
+| `cot=melody` vs `cot=full` | Full/chord-annotated ABC adds harmonic constraints |
+| Vocal-only vs Vocal+Ins | Vocal-only steers singing and leaves arrangement freer; keeping both constrains both |
+| Partial score | Guides only the covered section; the model extrapolates beyond it |
+| `semantic_prefix[_file]` | Forces exact semantic frames at the start; the strongest lock |
+| `semantic_temperature`, `semantic_top_p/k` | Soft sampling controls; lower is usually tighter/more repeatable |
+| Seed | Different seeds find different compromises; useful for selection |
+
+Things that are **not** ABC-strength controls:
+
+- `guidance_scale` amplifies style/lyrics, not the ABC. With an external score,
+  the same ABC is present in both CFG branches. If style conflicts with the
+  score, raising guidance can move away from the ABC.
+- `abc_temperature`, `abc_top_p`, `abc_top_k`, `abc_repetition_penalty`,
+  `abc_min_tokens`, `abc_max_tokens` apply only when the model generates its
+  own ABC. They are ignored with an external `abc` / `abc_file`.
+- `num_inference_steps` affects NAR rendering quality, not ABC adherence.
+
+**Current binary note:** `bin/audiocpp_cli` in this repo has no
+`semantic_prefix` / `semantic_prefix_file` support (`strings bin/audiocpp_cli |
+grep semantic_prefix` is empty). The hard-lock row needs a newer audio.cpp build;
+without it, passing the option is silently a no-op.
+
+A worked session with five variants is in
+[`docs/sessions/2026-10-24_baghdad_moon_abc_guide.md`](sessions/2026-10-24_baghdad_moon_abc_guide.md).
 
 ## Provenance
 

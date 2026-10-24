@@ -588,6 +588,7 @@ Implemented on 2026-10-24:
 | `install.sh`, `setup_colab.sh` | opt-in `--with-transcribe` |
 | `run_one.sh` | optional `COT=melody\|full` + `ABC_FILE=...` for guide-conditioned renders; `generate.py` remains `cot=off` |
 | `generate.py` | explicitly pins the batch path to `COT=off` so an exported guide env cannot change it silently |
+| `docs/sessions/2026-10-24_baghdad_moon_abc_guide.md` | worked example: transcription, cap investigation, v1 guide render, five variants |
 | `.gitignore` | `.venv-sheetsage2/`, `.cache/` |
 
 Verification performed:
@@ -610,6 +611,22 @@ done  ok=1/1  failed=0
 ```
 
 A warmed resume then reported `skipped (source WAV unchanged)` after a 10.7 s
-model load, and `--verify` reported `1/1 ok`. The generation path
-(`generate.py`, `run_one.sh`, `bin/audiocpp_cli`, models, LoRAs) was not
-modified.
+model load, and `--verify` reported `1/1 ok`.
+
+Follow-up work on 2026-10-24:
+
+- transcribed the accepted Baghdad Moon final with both `--melody-only` and
+  `--full`;
+- found the original generation cap was **6750**, not the length-matched
+  **5397** used by the first guide render;
+- rendered one ABC-guided track and ran five cap-6750 variants (combined,
+  skeleton, full/chords, temperature 0.7, and vocal-only after the hard-prefix
+  test failed);
+- confirmed the current prebuilt binary has no `semantic_prefix` support, so the
+  hard-prefix variant is a no-op until audio.cpp is rebuilt.
+
+The session record is in
+[`docs/sessions/2026-10-24_baghdad_moon_abc_guide.md`](../sessions/2026-10-24_baghdad_moon_abc_guide.md).
+The batch path remains `cot=off`; `run_one.sh` gained optional `COT`/`ABC_FILE`,
+and `generate.py` explicitly pins `COT=off`. The audio.cpp binary, models, and
+LoRAs were not modified.
