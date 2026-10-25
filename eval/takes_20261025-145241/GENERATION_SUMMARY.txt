@@ -1,0 +1,13 @@
+=== batch summary — 2026-10-25T15:42:40Z ===
+run dir: /content/arabmaqamrock/out/20261025-145241_baghdad_moon_spec
+
+ idx  name                          take        seed    cap  exit      wall    dur_s   trunc
+--------------------------------------------------------------------------------------------
+   1  baghdad_moon_claude_score_01     0         101   7000     0      8:16    268.8      no
+   2  baghdad_moon_vanilla_01          0         101   7000     0      8:32    217.3      no
+   3  baghdad_moon_claude_score_02     0         313   7000     0      7:26    237.3      no
+   4  baghdad_moon_vanilla_02          0         313   7000     0      9:23    242.9      no
+   5  baghdad_moon_claude_score_03     0         577   7000     0      6:55    213.1      no
+   6  baghdad_moon_vanilla_03          0         577   7000     0      8:55    237.8      no
+
+ok: 6   failed: 0   skipped: 0   total wall: 49:28
