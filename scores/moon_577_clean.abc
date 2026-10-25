@@ -1,0 +1,34 @@
+X:1
+T:Baghdad Moon - CLEAN
+M:4/4
+L:1/16
+Q:1/4=69
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+K:Dm
+% intro
+z10D2D2F2|G2AzA2A2A2A2G2F2|G2G4z10|E2E2G2G2A2G2E2F2|
+D2E2C2B,2A,z7|Z|Z|Z|
+Z|z14A2|
+% verse
+d2dd2eedd3AA2GG|A4cBB2z8|cc2de3dd2c2B2c2|A2AGAGGF3z5A|
+dd2dd2def2f2f2ed|eeffg4z8|ee2de2edd2c2e3c|B2ccBAAz8A|
+% pre-chorus
+f2ed2d2ef2zf2fee|d2de3z9c|e2dd2c2de2d2c2BB|c2BBAAz9A|
+f2ed2d2ef2zf2f2e|d2de2decz7c|e2ee2e2ga2agf2zg|b2ba3a8A2|
+% chorus
+d2de2f2ga2ffee2d|e4cBBAAz7|cc2de3dd2c2B2cB|B2c2B2A3z7|
+% interlude
+Z|Z|Z|z14A2|
+% verse
+f2ee2d2ef2e2d2d2-|dd2ef2g2e4z3c|e2ddc3edccz4c|B3cB2A3B^cde3f|
+ff2ef2edf2edz2f2-|feggffe2d2z4e2|e2ed2c2de2d2c2BB|c3BA2A4z5A-|
+Af2ee2d2z3aa2g2|e2dde2eddcz5c|e2ee2e2ga2agg2ee|f3gf2d2z7A|
+f2ee2d2ee2z2f2e2|c2e3ccz7cf-|fe3e2a2g3a4b|agb3ba3z5A2|
+% chorus
+d2de2f2ga2ffeedd|e4cBBAz8|Ac2de3dd2c2B2cB|z2c2B2A3z7|
+% interlude
+Z|Z|Z|Z|
+Z|Z|Z|z15A|
+% verse
+f2eedd2fe2z2f2e2|c2e2d2z8c2|e2e2e2azg2z6|g2a2b2g2b4a2a2-|
+a4f2e4d2Bz3|Z|Z|

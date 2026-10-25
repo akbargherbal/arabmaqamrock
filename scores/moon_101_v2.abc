@@ -1,0 +1,51 @@
+X:1
+T:Baghdad Moon (V2)
+M:2/4
+L:1/16
+Q:1/4=73
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+K:Dm
+% intro
+Z11|
+% verse
+D4_E2^F2-|^F2G2A2B2-|B2c2c2B2|Az7|
+z2c2d2c2-|c2B2A2A2|G2^F2_E2^F2|_EDz6|
+Z|
+^F2G2A2A2-|A2B2B2c2-|c2d2z2c2|Bz7|
+z2ccd2c2|ccc2B2A2|G2G2^F2_E2|D4z4|
+z2Ac2BB2|c2cd2dc2|cd2_e2_ed2|d2z6|
+z2cd2cc2|B2BB2d2_e|_ezd2c2B2|A4z4|
+z2d_e2_ed2|_e3^f3g2|^f3^fg2g^f|_e_ez4dz|
+z2Bc2dd2|c3Bc2B2|A3Bc2B2|A4z4|
+z2aa2gg2|a2g^f^f2_e2|^f2gaag2g|g4^f_e_ez|
+z2_e_e2^fg^f|_e2_e2d2_ed|d2ccd2_e_e|dd3_e4|
+g2^f^f2ga2|
+% chorus
+a3gg2^f2|_e3^fg2^f_e|ddz6|z2gg2ag^f|
+^f2^fgg2^f_e|_e2^f^f_e2^f_e|ddz6|
+Z|
+% interlude
+Z8|
+% verse
+d3_e2^f^f2|g3^f_e2d2|d2d_e3^fg|a2ag2g2z|
+z2^f^f2gg2|^f2_e2d2c2|z2cd2_e_e2|d2z6|
+d3_e2_e_e2|dd2_eddz2|d2_e_e2^f2^f|_e2z6|
+g2g2gg2^f|g2g2g2^f_e|_e3dd2_e2|ddz6|
+d2a2aa2g|^f2^f^f2^f2_e|d2d_e2^f2g|^f2z5_e|
+_e2^fg2g2^f|_e2_eddcc2|B3c2d_e2|d2z5d|
+d2_e^f2g2^f|_edz4a2|a3b2b2a|ggz4_e2|
+_e_e2_ed2_e_e|ddcd2d2_e|d2_e^f3_e2|dd3_e4|
+g2^f^f2ga2|
+% chorus
+a3gg2^f2|_e3^fg2^f_e|ddz6|z2gg2ag^f|
+^f2^fgg2^f_e|_e2^f^f_e2^f_e|ddz6|
+Z|
+% interlude
+Z9|
+z7A|
+% chorus
+d2_e^f2g2^f|_edz4a2|a3b2b2a|g^fz4_e_e-|
+_e^f2_ed2_e_e|ddcd2d2_e-|_eddz5|_e2^f3^f_e2|
+% outro
+ddz6|
+Z4|

@@ -1,0 +1,41 @@
+X:1
+T:
+M:4/4
+L:1/16
+Q:1/4=112
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+K:Dm
+% intro
+Z9|z14A2|
+% verse
+A4A2A4A2A2G2|F4F4F2E2D2D2|A6A2A2G3z3|Z|
+E2E4F2G6A2|G2^F2_E3z1_E2D2D2C2|_E4_E2D2D8|z14A2|
+d4d2d4d4e2|f2ez3d2e2e2d2c2|c2c2B2c2c2B3z3|Z|
+e6e2e2d2c2d2|e4c4d2c2d2c2|B2B2B2B2A3z5|z14A2|
+f4e2d4d2d2d2-|d2d4z4d4e2|e4d2c3BA2z4|z14A2|
+c4d2e4e4d2|e2d2c2c2B3cd2e2|d4c2B2A4z4|z14A2|
+f4e2d4d4d2-|d2d4a4g4g2|g2f2e2f2g6fe|z14e2|
+e4f2g4a2f2e2|e2e2d2d2c2d2c2c2|c2B4B2A2A4z2|z14A2|
+d4d2d4d2e2f2-|f2f2f2f2e2e2e2f2|e2e2f2g4f2ez3|z14e2|
+e4f2g4g4f2|f2a2b4g2f2e2e2|f2e2e2d2d8-|d4z2e2f2g2a2a2|
+% chorus
+a4a2a4a2a2g2|f2e2f2f2g2e2d2d2|b6a2a2g2g2f2|z14e2-|
+e2g4a2g2f2e2e2|e2d2c2d2c2d4c2|c2B2c2B2Az1A4z2|Z|
+% interlude
+Z7|z12A4|
+% verse
+d4d2d4d4e2|f4f4e2d2d2d2|c2c2d2d2c2d2e2e2-|e2z12e2|
+e4f2g2g4e2e2|e2d4c2d4c2B2|A4z10A2|A4z2A2A4A2A2|
+d4d4z2a4g2|g2f2e2f2g4z4|z10g4g2|f2f2a2e2e2e2f2d2|
+d2c2d2c2d2e4e2|d2d4z8d2|a4a2a2f2f4g2|a4a4a4a2b2|
+b4b2a2g4z4|z10e2e2f2|g4g2g4g2b4|g2f2f2e2e2g4e2|
+d2d4z8A2|d4d2d4f4e2|d4z4d3d3c2|c2Bc3B4z6|
+z10e2e4|e2e2e2d2e2d2c2c2|d4d4e2d2c2e2|d4e2d2d8|
+a12z2e2|
+% chorus
+a4a2a4a2a2g2|f2e2f2f2f2e2d2d2|b6a2a2a2g2z2|z14f2-|
+f2g4a2g2f2e2e2|e2d2c2d2c2d4c2|d2B2c2B2A4z4|z14A2|
+B4B2A2G2c4B2|A4z4G3A3B2|B4A2A4z6|z6e2e4f2d2|
+d2c2z2d2e2d2c2c2|d4d4e4gz1g2-|g2g2b6a2g2g2|
+% outro
+^f4_e2d8-d2-|d2z14|Z2|
