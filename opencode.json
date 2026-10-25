@@ -33,5 +33,14 @@
         "variant": "high"
       }
     }
-  }
+  },
+  "plugins": [
+    {
+      "package": "opencode-tts",
+      "options": {
+        "voice": "en-US-AvaNeural",
+        "rate": "+25%"
+      }
+    }
+  ]
 }

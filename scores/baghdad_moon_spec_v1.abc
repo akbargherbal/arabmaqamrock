@@ -1,0 +1,45 @@
+X:1
+T:
+M:4/4
+L:1/16
+Q:1/4=110
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+K:Dm
+% intro
+Z|Z|Z|Z|
+d4 d4 e2 e6 | f4 f2 e4 f4 z2 | e4 d2 d4 c6 | c4 B4 A8 |
+A2 c4 c2 d8 | d2 e2 e4 f8 | e4 e2 d4 c6 | d4 e4 d8 |
+% verse
+d4 d4 e2 e6 | f4 f2 e4 f4 z2 | e4 d2 d4 c6 | c4 B4 A8 |
+A2 c4 c2 d8 | d2 e2 e4 f8 | e4 e2 d4 c6 | d4 e4 d8 |
+f2 e4 e2 d8 | d4 e2 f2 f8 | e4 d2 c2 d8 | c4 B4 A8 |
+A4 c2 d2 d8 | e2 e2 f4 e8 | d4 e2 d2 c8 | d4 c4 d8 |
+A2 A4 B2 c8 | c4 d2 d4 c4 z2 | d4 e2 e4 d6 | B4 c4 A8 |
+d4 d2 e2 f8 | f2 e2 f4 e8 | d2 e2 d4 c8 | d4 e4 d8 |
+A4 c2 c2 d8 | d2 e2 e4 f8 | f4 e2 d2 c8 | c4 B4 A8 |
+d4 e2 f2 e8 | d2 e2 f4 f8 | e4 e2 d2 c8 | d4 e4 d8 |
+% chorus
+f4 f4 g2 g6 | g2 a2 a8 g4 | f4 g2 f4 e6 | d4 c4 A8 |
+d2 e4 e2 f8 | f2 g2 g4 a8 | a4 g2 f4 g6 | f4 e4 d8 |
+f4 f4 g2 g6 | g2 a2 a8 g4 | f4 g2 f4 e6 | d4 c4 A8 |
+d2 e4 e2 f8 | f2 g2 g4 a8 | a4 g2 f4 g6 | f4 e4 d8 |
+% interlude
+Z|Z|Z|Z|
+% verse
+d4 d4 e4 e4 | f6 e2 f4 e4 | d4 c2 d2 e8 | d4 c2 c2 B2 A6 |
+A2 A2 c4 d8 | d6 e4 f6 | e4 e4 d8 | c4 e4 d8 |
+f4 e4 e2 d6 | d2 e2 f4 e8 | e4 d2 c2 d8 | c6 B2 A8 |
+d6 c2 B4 B4 | A2 B2 c4 c8 | c4 d4 e4 e4 | e4 e4 d8 |
+d4 e4 f2 f6 | e4 d2 e2 e8 | d2 c2 c4 B8 | c4 B4 A8 |
+d4 d4 c2 d6 | e4 f4 f4 e4 | d2 e2 d4 c8 | d4 e4 d8 |
+f6 f4 e6 | d4 e4 f8 | e6 d2 c8 | c2 c2 B4 A8 |
+d4 d4 e2 e6 | e2 f2 f4 e8 | f4 e2 d2 e8 | d4 c2 d2 e2 d6 |
+% chorus
+f4 f4 g2 g6 | g2 a2 a8 g4 | f4 g2 f4 e6 | d4 c4 A8 |
+d2 e4 e2 f8 | f2 g2 g4 a8 | a4 g2 f4 g6 | f4 e4 d8 |
+f4 f4 g2 g6 | g2 a2 a8 g4 | f4 g2 f4 e6 | d4 c4 A8 |
+d2 e4 e2 f8 | f2 g2 g4 a8 | a4 g2 f4 g6 | f4 e4 d8 |
+% outro
+Z|Z|Z|Z|
+f6 f4 e6 | d4 e4 f8 | e6 d2 c8 | c2 c2 B4 A8 |
+d4 d4 e2 e6 | e2 f2 f4 e8 | f4 e2 d2 e8 | d4 c2 d2 e2 d6 |

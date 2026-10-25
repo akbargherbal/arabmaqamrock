@@ -420,6 +420,8 @@ def _abc_bar_units(bar: str, unit: float) -> float | None:
                 num += bar[i]
                 i += 1
             total += unit * _abc_len(num)
+        elif c.isspace():                 # formatting only (spec uses spaced bars)
+            i += 1
         elif c in '-~.':                  # tie / roll / staccato: no time change
             i += 1
         elif c in '<>':                   # broken rhythm: bar total unchanged

@@ -14,3 +14,5 @@ __pycache__/
 
 # local happy-accident working tree (WAVs, stems, tokens, backups)
 /happy_accident/
+/local_workspace/
+/datasets/
