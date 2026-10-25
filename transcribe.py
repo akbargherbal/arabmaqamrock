@@ -4,7 +4,7 @@
 This is the ArabMaqamRock port of the parent project's `music-cover` tool.
 It is intentionally independent of the audio.cpp generation stack:
 
-  * CPU by default (CPU torch wheels; no CUDA runtime required)
+  * auto device: uses the GPU when one is available, CPU otherwise
   * one model load, sequential tracks
   * resumable, with a source-WAV hash guard against stale ABCs
   * repo-relative paths; no `/content` and no mandatory GCS
@@ -713,8 +713,8 @@ def parse_args(argv: list[str] | None = None) -> tuple[Config, list[Track]]:
     ap.add_argument("--model", default=DEFAULT_MODEL)
     ap.add_argument("--revision",
                     default=os.environ.get("SHEETSAGE2_REVISION", DEFAULT_REVISION))
-    ap.add_argument("--device", choices=["cpu", "cuda", "auto"], default="cpu",
-                    help="inference device (default: cpu)")
+    ap.add_argument("--device", choices=["cpu", "cuda", "auto"], default="auto",
+                    help="inference device (default: auto -- GPU if available)")
     ap.add_argument("--threads", type=int,
                     default=min(4, os.cpu_count() or 1),
                     help="torch CPU threads (default: min(4, CPU count))")
