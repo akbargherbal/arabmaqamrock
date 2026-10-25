@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
 """Check an ABC score against the arabmaqamrock melody specification.
 
-Two jobs, both aimed at things a language model cannot reliably check itself:
+Three jobs, all aimed at things a language model cannot reliably check itself:
 
 1. **Structure** — complete bars, one voice, one metre, line/phrase budget.
-2. **Originality** — longest run of identical melodic movement shared with any
+2. **Texture** — line length in beats, how much of the score is rests, how many
+   note starts fall off the beat, phrase contour, register span, and whether
+   adjacent phrases repeat each other. These are the properties that decide
+   whether a score sounds like this style or like a slow hymn; they are
+   measured, not asserted, because a model writing melody cannot count them.
+3. **Originality** — longest run of identical melodic movement shared with any
    of the 177 reference tracks. "Do not copy" is only a real constraint if
    something measures it.
 
@@ -31,6 +36,16 @@ MAX_LEAP = 7
 LEAP_ALLOWANCE_PER_SECTION = 1
 BUDGET_TOLERANCE = 0.10
 ORIGINALITY_K = 8
+
+# Texture thresholds, from the 177 reference tracks (see the spec's table).
+# A phrase is a line of lyrics: notes separated by rests of a beat or more.
+PHRASE_GAP = 1.0            # beats of rest that end a phrase
+LINE_BEATS = (7.0, 14.0)    # one lyric line occupies this many beats (median 10)
+MIN_SILENCE = 0.25          # rests as a share of the sung span (corpus 30%)
+MIN_OFFBEAT = 0.25          # note starts not on a beat (corpus 64%)
+MAX_PHRASE_OVERLAP = 0.35   # shared 3-interval material between neighbours (corpus 5%)
+MIN_REGISTER_SPAN = 12      # p95-p05 in semitones (corpus 16)
+MIN_DESCENDING = 0.40       # share of phrases that open high and cadence low (corpus 62%)
 
 
 MUSIC_LINE = re.compile(r"^[\s{}|:A-Ga-gzZ0-9/,.'^_=\-\[\]!\"()><&%]+$")
@@ -71,6 +86,90 @@ def lyric_stats(path: pathlib.Path) -> dict:
 def tempo(sc) -> float:
     m = re.search(r"1/4=(\d+)", sc.headers.get("Q", ""))
     return float(m.group(1)) if m else 110.0
+
+
+def phrases(notes, gap: float = PHRASE_GAP) -> list[list]:
+    """Split a vocal line into phrases the way the corpus is measured.
+
+    A phrase ends where a rest of `gap` beats or more appears, or where the
+    section changes. Returns only groups long enough to be melodic.
+    """
+    out, cur = [], []
+    for n in notes:
+        if cur and (n.rest_before >= gap or n.section != cur[-1].section):
+            out.append(cur)
+            cur = []
+        cur.append(n)
+    if cur:
+        out.append(cur)
+    return [p for p in out if len(p) >= 3]
+
+
+def phrase_beats(p) -> float:
+    return (p[-1].onset + p[-1].dur) - p[0].onset
+
+
+def contour(p) -> str:
+    """Shape of a phrase, judged by where its highest note sits."""
+    ps = [n.pitch for n in p]
+    lo, hi = min(ps), max(ps)
+    if hi - lo <= 2:
+        return "flat"
+    at = ps.index(hi) / (len(ps) - 1)
+    if at <= 0.35:
+        return "falling"
+    if at >= 0.65:
+        return "rising"
+    if ps[0] >= hi - 2 or ps[-1] >= hi - 2:
+        return "other"
+    return "arch"
+
+
+def median(xs: list[float]) -> float:
+    s = sorted(xs)
+    n = len(s)
+    if not n:
+        return 0.0
+    return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+
+
+def silence_share(notes) -> float:
+    """Share of the sung span that is rest, from first note to last note end."""
+    span = max(n.onset + n.dur for n in notes) - min(n.onset for n in notes)
+    if span <= 0:
+        return 0.0
+    return 1.0 - sum(n.dur for n in notes) / span
+
+
+def offbeat_share(notes, tol: float = 0.02) -> float:
+    """Share of note starts that are not on a quarter-note beat."""
+    off = 0
+    for n in notes:
+        r = n.onset % 1.0
+        if min(abs(r), abs(1.0 - r)) > tol:
+            off += 1
+    return off / len(notes) if notes else 0.0
+
+
+def phrase_overlap(ph: list[list]) -> float:
+    """Median share of 3-interval material shared by neighbouring phrases."""
+    def grams(p):
+        iv = [b.pitch - a.pitch for a, b in zip(p, p[1:])]
+        return {tuple(iv[i:i + 3]) for i in range(len(iv) - 2)}
+
+    sims = []
+    for a, b in zip(ph, ph[1:]):
+        A, B = grams(a), grams(b)
+        if A and B:
+            sims.append(len(A & B) / len(A | B))
+    return median(sims) if sims else 0.0
+
+
+def register_span(notes) -> tuple[int, int]:
+    ps = sorted(n.pitch for n in notes)
+    lo = ps[int(0.05 * len(ps))]
+    hi = ps[min(len(ps) - 1, int(0.95 * len(ps)))]
+    return lo, hi
 
 
 def interval_sequence(notes) -> list[tuple[int, float]]:
@@ -129,6 +228,9 @@ def main(argv=None) -> int:
     ly = lyric_stats(args.lyrics)
     bpm = tempo(sc)
     vocal = sc.notes_of("Vocal")
+    if not vocal:
+        print("FAIL  no Vocal notes in the score")
+        return 1
     bars = vocal[-1].bar if vocal else 0
     budget = round((111.1 + 0.3126 * ly["letters"]) * bpm / 240 / 4) * 4
     results = []
@@ -150,6 +252,42 @@ def main(argv=None) -> int:
     check("syllabic setting",
           ly["syllables"] and 1.0 <= len(vocal) / ly["syllables"] <= 1.6,
           f"{len(vocal) / ly['syllables']:.2f} notes/syllable")
+
+    # texture: what separates this style from a slow hymn
+    ph = phrases(vocal)
+    if ph:
+        med_beats = median([phrase_beats(p) for p in ph])
+        check("line length", LINE_BEATS[0] <= med_beats <= LINE_BEATS[1],
+              f"median phrase {med_beats:.1f} beats over {len(ph)} phrase(s)"
+              f" (need {LINE_BEATS[0]:.0f}-{LINE_BEATS[1]:.0f})")
+    else:
+        check("line length", False,
+              "no phrase boundaries: add a rest of a beat or more between lines")
+
+    sil = silence_share(vocal)
+    check("silence", sil >= MIN_SILENCE,
+          f"{sil:.0%} rests (need >= {MIN_SILENCE:.0%})")
+
+    off = offbeat_share(vocal)
+    check("off-beat starts", off >= MIN_OFFBEAT,
+          f"{off:.0%} of note starts off the beat (need >= {MIN_OFFBEAT:.0%})")
+
+    if len(ph) >= 2:
+        ov = phrase_overlap(ph)
+        check("adjacent phrases differ", ov <= MAX_PHRASE_OVERLAP,
+              f"median shared material {ov:.2f} (need <= {MAX_PHRASE_OVERLAP:.2f})")
+    else:
+        check("adjacent phrases differ", False,
+              f"{len(ph)} phrase(s): the melody never breaks")
+
+    lo, hi = register_span(vocal)
+    check("register span", hi - lo >= MIN_REGISTER_SPAN,
+          f"p05-p95 {lo}-{hi} = {hi - lo} semitones (need >= {MIN_REGISTER_SPAN})")
+
+    if ph:
+        desc = sum(1 for p in ph if contour(p) == "falling") / len(ph)
+        check("descending phrases", desc >= MIN_DESCENDING,
+              f"{desc:.0%} descending (need >= {MIN_DESCENDING:.0%})")
 
     # melody: large leaps, at most LEAP_ALLOWANCE_PER_SECTION per section
     leaps = []
