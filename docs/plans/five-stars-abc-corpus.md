@@ -1,6 +1,7 @@
 # Plan — Five Stars ABC composition corpus
 
-**Status:** phases 0–1 complete; phases 2–5 specified, not started
+**Status:** phases 0–2 complete (Phase 2 run 2026-10-25);
+phases 3–5 specified, not started
 **Date:** 2026-10-25
 **Owner:** this repository (`arabmaqamrock`)
 **Upstream data:** `../Five_Stars_ArabMaqamRock` (pickle + 177 MP3s)
@@ -8,8 +9,7 @@
 **GCS corpus:** `gs://akbar-december-2024-backup/arabmaqamrock/datasets/five_stars/v1/`
 **Colab compute:** L4 + high-RAM for transcription; T4 is sufficient for alignment
 
-**Next action:** start a Colab L4 session and run §7. Everything upstream of it is
-uploaded and verified.
+**Next action:** Phase 3 QC/tiers over `v1/transcripts/` (§8).
 
 ## 1. Goal
 
@@ -208,7 +208,36 @@ find audio -name '*.mp3' | wc -l      # expect 177
 
 Note: `python3 transcribe.py` is only valid for `--dry-run`, `--verify`, and
 `--doctor`. **The model path must run through `./transcribe.sh`**, which uses the
-repo-local `.venv-sheetsage2`; the system Python has no torch.
+repo-local `.venv-sheetsage2`; the system Python has no usable SheetSage2 stack.
+
+Reality checks from the 2026-10-25 L4 session (these differ from the bootstrap
+above):
+
+- **Authentication was already present.** `gcloud auth list` showed
+  `ghurbal.akbar@gmail.com` active, so `google.colab.auth.authenticate_user()`
+  was skipped. GCS listing/downloads worked immediately.
+- **The checkout was already present** at `/content/arabmaqamrock` on commit
+  `bb7647a`; the commands below were run there instead of cloning to
+  `/content/amr`. Same commit, no behavioural difference.
+- **`abc2midi` is not on the image.** Install it before the parse gate:
+  `apt-get install -y abcmidi` (package `abcmidi`, binary `/usr/bin/abc2midi`).
+- **Do not use system-Python doctor as the environment check.**
+  `python3 transcribe.py --doctor` reports Python 3.13.16 with torch
+  2.11.0+cu130 / transformers 5.20.2 and exits 1. That is expected. The real
+  env check is `./transcribe.sh --doctor`: Python 3.11.17, torch
+  2.8.0+cu126, transformers 4.45.2, `cuda: True`, exit 0.
+- **`meta.json` does not record `peak_gpu_mib`.** The driver writes `seconds`
+  and duration but no memory field. Measure peak externally while the process
+  runs, e.g.:
+
+  ```bash
+  ( while pgrep -f 'transcribe.py' >/dev/null; do
+      nvidia-smi --query-gpu=memory.used --format=csv,noheader,nounits
+      sleep 2
+    done ) > /content/gpu_mem.log &
+  ```
+
+  then use `sort -n /content/gpu_mem.log | tail -1`.
 
 ### Smoke test first (3 tracks, ~2 min)
 
@@ -230,10 +259,31 @@ Inspect before committing the session:
 - the Vocal voice has a plausible note count (tens per line, not 2, not 500)
 - no octave jumps across a repeated figure
 - `meta.json` `seconds` per track → the real speedup factor
-- `meta.json` `peak_gpu_mib` → headroom on a 24 GB L4
+- externally sampled GPU peak → headroom on a 24 GB L4 (`meta.json` has no
+  `peak_gpu_mib`; see the reality checks above)
 
 If the speedup is under ~4×, stop and investigate before spending the session on
 177 tracks.
+
+**Measured smoke, 2026-10-25 L4** (all three `ok`, `abc2midi` exit 0):
+
+| Track | Audio s | GPU s | Realtime factor | CPU-baseline speedup |
+|---|---:|---:|---:|---:|
+| Ajam `5a30fe55…` | 313.2 | 23.4 | 13.4× | 21–26× |
+| Hijaz `57012957…` | 312.4 | 31.7 | 9.9× | 16–19× |
+| Nahawand `119f56d2…` | 250.8 | 16.6 | 15.1× | 24–29× |
+
+CPU-baseline range uses the two reference measurements above
+(417/216 = 1.93, 433/272 = 1.59 CPU-seconds per audio-second); even the
+conservative 1.59 baseline gives **15.7×**. Peak GPU sampled at 2 s intervals:
+**3,702 MiB of 23,034 MiB** (16%). Model load: 14.1 s. Total smoke wall time:
+89 s for 3 tracks.
+
+Structural smoke: Vocal note counts 263 / 580 / 414, 10–21 notes per sung line.
+One phrase-level artifact: Hijaz Ins repeats a 13-note figure exactly +12
+(notes 54–66 vs 244–256). No Vocal phrase-level octave transposition in any of
+the three tracks; isolated single-note leaps are recorded, not corrected.
+
 
 ### The run
 
@@ -278,16 +328,59 @@ gcloud storage cp /content/out/transcripts/{_timings.csv,transcribe_manifest.jso
 |---|---|
 | CPU baseline (measured in this repo) | 417 s for 216 s audio; 433 s for 272 s |
 | Whole corpus on CPU, 2 streams | ~10 h |
-| L4 at 25 s/track | **~75 min** |
-| L4 at 40 s/track | **~2 h** |
+| L4 at 20.6 s/track (measured) | **61 min** |
+| L4 at 25 s/track | ~75 min |
+| L4 at 40 s/track | ~2 h |
 | Largest source | 6.2 min → 2 windows (300 s window, 100 s hop) |
+| Output size (measured) | 144 MiB, mostly `events.json`/`playback.json` |
 
-`meta.json` already records `seconds` and `peak_gpu_mib`; use them to confirm the
-speedup on the first few tracks before walking away.
+`meta.json` records `seconds` (but not GPU memory — sample `nvidia-smi`
+externally); use it to confirm the speedup on the first few tracks before
+walking away.
 
-If `peak_gpu_mib` approaches ~20 GB on a 24 GB L4, or the process OOMs, drop the
+If the sampled peak approaches ~20 GB on a 24 GB L4, or the process OOMs, drop the
 long tail (the 10 tracks over 300 s) to `--device cpu` rather than restarting the
-batch.
+batch. The measured smoke peak was 3.7 GB, so this contingency did not trigger.
+
+### Result (2026-10-25)
+
+The batch finished inside the 5,400 s budget (`stopped_early: false`).
+
+| | |
+|---|---|
+| Tracks | **177/177 `ok`** (174 transcribed + 3 smoke tracks skipped by the resume guard) |
+| Failed / `no-abc` / `invalid-abc` | **0 / 0 / 0** |
+| Batch wall time | **3,671.6 s = 61.2 min** (`elapsed_s`, excludes 14.1 s model load) |
+| Per-track GPU time | 174 new tracks: mean 20.95 s, median 20.1 s, range 12.7–33.2 s |
+| Throughput | **12.3× realtime** over 12.727 h counting the smoke; ~19.6–23.8× the CPU baseline |
+| Peak GPU | **3,702 MiB / 23,034 MiB** (16%) |
+| Output | 144 MiB local; 177 `score.abc` + per-track artifacts in GCS |
+| `--verify` | **177/177 ok** |
+
+Structural audit (read-only: ABC parse + `abc2midi`, no edits):
+
+- **177/177 parse**, `abc2midi` exits 0, and it emits **no diagnostics** (no
+  incomplete-bar warnings). No missing-bar case was found.
+- Vocal notes: 162–669, median 444. No empty, sparse (<30 notes), or
+  one-note-per-line track.
+- Ins notes: 24–310, median 114. Six tracks have a thin (24–33 note) but
+  non-empty Ins line; not treated as broken.
+- **7 tracks contain a phrase-level Vocal octave transposition** (identical
+  pitch-class + rhythm figure, ≥10 notes, exact ±12):
+  `016ff6c5-d575-4c39-88a9-c6052fabc68c` (−12, 19 notes),
+  `83b06886-ddc6-4c02-a184-3abac266f40f` (+12, 15/12 notes, plus a 24-semitone
+  leap — worst case),
+  `a4c75146-2727-4ff5-a399-ca8a2bb31bab` (+12, 14),
+  `b0e7b4ce-5a61-4562-b415-69187cde1a3d` (+12, 12),
+  `bf08727a-0be7-44af-8c66-07ff3e7e7bc3` (−12, 10),
+  `e1e8c547-5123-462b-9934-ed0eac2ce77e` (+12, 15),
+  `f6784753-d127-45ec-9c1e-f0c59c4ae9e9` (+12, 12).
+  These are the documented SheetSage2 failure (plan §2/§11), not run failures.
+- 12 further tracks have an Ins phrase-level octave transposition; 52 have at
+  least one Vocal leap >12 (mostly exactly 12). **All flagged only; nothing was
+  auto-corrected.** Phase 3 should reject/flag the 7 Vocal cases and vet the Ins
+  cases by ear.
+
 
 ## 8. Phase 3 — QC and tiers
 
