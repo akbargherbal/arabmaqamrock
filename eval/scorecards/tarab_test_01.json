@@ -1,0 +1,184 @@
+{
+  "schema_version": 1,
+  "name": "Tarab / Arrangement Test 01 (BC edge)",
+  "description": "Batch tarab_test_01: five takes of the same score (moon_101_v2), same seed 101, same cap and lyrics; only the style prompt and lyric stage-directions change. The hypothesis: the B track's 'teamwork' (voice stops, band answers) is described in the training caption ('forward vocals pulling instrumentation down on sustained phrases then band re-enters between lines'), but the moon prompts omitted it. The target is the BC edge: a lead voice that is clearly the star, with a band/second voice that answers in the gaps and never competes. Score each take on its own; do not compare from memory. تقييم الحزمة على محور B–C: صوت رئيسي واضح، وفرقة تجيب في الفراغات ولا تنافس.",
+  "summary_metric": "bc_edge",
+  "criteria": [
+    {
+      "key": "bc_edge",
+      "label": "Closeness to the BC edge",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "A — generic out-of-the-box take",
+        "2": "band present but not with the voice",
+        "3": "halfway — either the star or the answer, not both",
+        "4": "close — lead in front, band answers",
+        "5": "B/C level — memorable and clearly a lead voice with a responsive band"
+      },
+      "help": "The target, in one sentence: a lead singer who is unmistakably the star, plus a band or second voice that answers only in the gaps. Not A's default. This is the metric the batch is ranked by."
+    },
+    {
+      "key": "overall",
+      "label": "Overall quality",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Unusable",
+        "3": "Okay",
+        "5": "Excellent — would play it for someone"
+      },
+      "help": "Your gut call on the whole take, independent of the hypothesis."
+    },
+    {
+      "key": "lead_front",
+      "label": "Is the lead singer the star?",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Buried in a group / choir",
+        "3": "Shared with the band",
+        "5": "Alone in front, loud and clear"
+      },
+      "help": "Ignore whether you like the tune. Just: who owns the track? C is 5. A is around 2–3."
+    },
+    {
+      "key": "band_answers",
+      "label": "When the singer pauses, does the band answer before he returns?",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Never — the gap stays empty or the band noodles",
+        "3": "Sometimes",
+        "5": "Every line — a short, clear answer in the gap"
+      },
+      "help": "This is the B behaviour at 0:43.7–0:46.1: the voice stops, the guitar answers for 1–2 seconds, then gets out of the way. Count the answers, not the length of the solos."
+    },
+    {
+      "key": "sparse",
+      "label": "Is the arrangement sparse enough for the voice?",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Crowded — everyone playing all the time",
+        "3": "Sometimes busy",
+        "5": "Sparse — the band leaves room"
+      },
+      "help": "C was praised as 'not a busy song'. A busy mix can still be loud; this asks whether there is room around the voice."
+    },
+    {
+      "key": "second_voice",
+      "label": "Is there a second voice?",
+      "type": "choice",
+      "required": true,
+      "options": [
+        {"v": "none", "t": "None — only the lead"},
+        {"v": "faint", "t": "Faint / felt more than heard"},
+        {"v": "answers", "t": "Clear backing that answers the lead"},
+        {"v": "choir", "t": "Full choir around the lead"},
+        {"v": "overwhelms", "t": "Backing overwhelms the lead"}
+      ],
+      "help": "B's description: backing vocals come and go, felt more than seen, trading half-lines with the lead. C has none. Tick what you actually hear."
+    },
+    {
+      "key": "tarab",
+      "label": "Does the vocal feel tarab / Arabic in character?",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Generic Western rock vocal",
+        "3": "Some colour — occasional Arabic inflection",
+        "5": "Unmistakably tarab, no traditional instruments needed"
+      },
+      "help": "The feeling, not theory. Do not name a maqam or count accidentals. B is the reference; C's chorus is the other reference."
+    },
+    {
+      "key": "distinct",
+      "label": "Different from the usual out-of-the-box take?",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Indistinguishable from the LoRA average",
+        "3": "A little different",
+        "5": "Its own thing — would not guess it came from the same batch"
+      },
+      "help": "Your 5-star sentence was 'the music feels different'. This asks how different, relative to the A family."
+    },
+    {
+      "key": "memorable",
+      "label": "Is there a moment you would replay or hum?",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Nothing sticks",
+        "3": "One moment, weak",
+        "5": "A specific line or fill I would replay"
+      },
+      "help": "Name the timestamp in Notes if you can. For B this was the line at 1:51.6 and the fill at 0:43.7."
+    },
+    {
+      "key": "diction",
+      "label": "Diction / pronunciation",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Whole lines unintelligible",
+        "3": "Mostly clear",
+        "5": "Every word clear, no mispronunciation"
+      },
+      "help": "Whole-line collapse is an automatic low score here, regardless of how good the music is."
+    },
+    {
+      "key": "mix",
+      "label": "Mix quality",
+      "type": "rating",
+      "max": 5,
+      "required": true,
+      "scale_labels": {
+        "1": "Muddy / harsh / detached",
+        "3": "Acceptable",
+        "5": "Clean, vocal-forward, wide and open"
+      },
+      "help": "Balance, clarity, reverb, stereo width. Judge the sound, not the composition."
+    },
+    {
+      "key": "artifacts",
+      "label": "Artifacts",
+      "type": "choice",
+      "required": true,
+      "options": [
+        {"v": "none", "t": "None"},
+        {"v": "minor", "t": "Minor"},
+        {"v": "major", "t": "Major"},
+        {"v": "broken", "t": "Broken / unusable"}
+      ]
+    },
+    {
+      "key": "keep",
+      "label": "Would you keep this take?",
+      "type": "choice",
+      "required": true,
+      "options": [
+        {"v": "yes", "t": "Yes"},
+        {"v": "maybe", "t": "Maybe"},
+        {"v": "no", "t": "No"}
+      ]
+    },
+    {
+      "key": "notes",
+      "label": "Notes",
+      "type": "notes",
+      "required": false,
+      "help": "Timestamps, which line stuck, where the band answered, wrong words, anything. Plain words."
+    }
+  ]
+}
