@@ -40,7 +40,13 @@ ORIGINALITY_K = 8
 # Texture thresholds, from the 177 reference tracks (see the spec's table).
 # A phrase is a line of lyrics: notes separated by rests of a beat or more.
 PHRASE_GAP = 1.0            # beats of rest that end a phrase
-LINE_BEATS = (7.0, 14.0)    # one lyric line occupies this many beats (median 10)
+# One lyric line occupies about 10 beats in 4/4 and 6 in 2/4 (78 of the 177
+# reference tracks are 2/4). The band must scale with the meter, not assume 4/4.
+def line_beats(beats_per_bar: float) -> tuple[float, float]:
+    target = 6.0 if beats_per_bar < 3.0 else 10.0
+    return (0.7 * target, 1.4 * target)
+
+
 MIN_SILENCE = 0.25          # rests as a share of the sung span (corpus 30%)
 MIN_OFFBEAT = 0.25          # note starts not on a beat (corpus 64%)
 MAX_PHRASE_OVERLAP = 0.35   # shared 3-interval material between neighbours (corpus 5%)
@@ -86,6 +92,16 @@ def lyric_stats(path: pathlib.Path) -> dict:
 def tempo(sc) -> float:
     m = re.search(r"1/4=(\d+)", sc.headers.get("Q", ""))
     return float(m.group(1)) if m else 110.0
+
+
+def beats_per_bar(sc) -> float:
+    """Quarter-note beats in one bar of the score's (single) meter."""
+    value = sc.meter_changes[0][0] if sc.meter_changes else "4/4"
+    try:
+        num, den = (int(x) for x in value.split("/"))
+        return 4.0 * num / den
+    except (ValueError, ZeroDivisionError):
+        return 4.0
 
 
 def phrases(notes, gap: float = PHRASE_GAP) -> list[list]:
@@ -231,8 +247,11 @@ def main(argv=None) -> int:
     if not vocal:
         print("FAIL  no Vocal notes in the score")
         return 1
-    bars = vocal[-1].bar if vocal else 0
-    budget = round((111.1 + 0.3126 * ly["letters"]) * bpm / 240 / 4) * 4
+    bpb = beats_per_bar(sc)
+    bars = sc.n_bars
+    score_beats = bars * bpb
+    budget_beats = (111.1 + 0.3126 * ly["letters"]) * bpm / 60.0
+    line_range = line_beats(bpb)
     results = []
 
     def check(name, ok, detail="", hard=True):
@@ -245,8 +264,8 @@ def main(argv=None) -> int:
           f"{len(sc.meter_changes)} M: fields")
     check("one voice", len([v for v in sc.voices if v != "default"]) == 1,
           f"voices={sc.voices}")
-    check("bar budget", abs(bars - budget) <= BUDGET_TOLERANCE * budget,
-          f"{bars} bars vs budget {budget}")
+    check("bar budget", abs(score_beats - budget_beats) <= BUDGET_TOLERANCE * budget_beats,
+          f"{score_beats:.0f} beats ({bars} bars) vs budget {budget_beats:.0f} beats")
     check("notes per line", ly["lines"] and 12 <= len(vocal) / ly["lines"] <= 22,
           f"{len(vocal) / ly['lines']:.1f} notes/line over {ly['lines']} lines")
     check("syllabic setting",
@@ -257,9 +276,9 @@ def main(argv=None) -> int:
     ph = phrases(vocal)
     if ph:
         med_beats = median([phrase_beats(p) for p in ph])
-        check("line length", LINE_BEATS[0] <= med_beats <= LINE_BEATS[1],
+        check("line length", line_range[0] <= med_beats <= line_range[1],
               f"median phrase {med_beats:.1f} beats over {len(ph)} phrase(s)"
-              f" (need {LINE_BEATS[0]:.0f}-{LINE_BEATS[1]:.0f})")
+              f" (need {line_range[0]:.1f}-{line_range[1]:.1f})")
     else:
         check("line length", False,
               "no phrase boundaries: add a rest of a beat or more between lines")
@@ -289,10 +308,13 @@ def main(argv=None) -> int:
         check("descending phrases", desc >= MIN_DESCENDING,
               f"{desc:.0%} descending (need >= {MIN_DESCENDING:.0%})")
 
-    # melody: large leaps, at most LEAP_ALLOWANCE_PER_SECTION per section
+    # melody: large leaps, at most LEAP_ALLOWANCE_PER_SECTION per section.
+    # Measure inside phrases, as the corpus does: a leap across a rest of a beat
+    # or more starts a new phrase and is not a melodic leap.
     leaps = []
     for a, b in zip(vocal, vocal[1:]):
-        if a.section == b.section and abs(b.pitch - a.pitch) > MAX_LEAP:
+        if (a.section == b.section and b.rest_before < PHRASE_GAP
+                and abs(b.pitch - a.pitch) > MAX_LEAP):
             leaps.append((a.section, a.bar, b.pitch - a.pitch))
     per_sec = {}
     for s, _, _ in leaps:

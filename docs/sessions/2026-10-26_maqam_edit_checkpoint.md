@@ -2,7 +2,9 @@
 
 Read this first when resuming. It is the state of play, not a narrative.
 
-**Status:** session paused with the user running the seed-313 Claude pass.
+**Status:** all three round-2 seeds checked (§3a–§3c). 313 and 101 are clean;
+577 is within the count budget but **verse-only** (no chorus cadence) and has one
+G-ending colour. Next: build `moon_edit2.json`, dry-run, render, listen in trios.
 Round 2 = three Claude sessions (spec v3 + calibrated prompt) to produce six
 reference sheets, then six renders, then one listening test that decides whether
 the whole in-house plan is worth building.
@@ -80,9 +82,198 @@ Round 1 numbers in the commit message of `4ddb025` are wrong (they say 0/5–7/
   is unstable; that is expected, and it means round 2 is about the *policy*, not
   the output.
 
+### 3a. Seed 313 — verified result (2026-10-26)
+
+Files in `local_workspace/moon_edit/edited2/313/`. The chat export is not in
+`local_workspace/claude_chat/round2/`, so the `INPUTS` gate is **not yet
+verified**; the CHANGES form ledger suggests it fired, but that is inference.
+
+Recomputed from the ABC (parser, not CHANGES):
+
+| number | measured | target |
+|---|---:|---|
+| phrases coloured | 5 / 28 | 4–6 of ~26 |
+| notes pitched | 13 / 443 = 2.9% | 10–18 |
+| accidentals | 10 (2 per coloured phrase) | 10–18 |
+| register shift | verse +0.01, chorus −0.07; max 0.07 | ±2 |
+| unchosen phrases | 0 pitch changes | 0 |
+| rhythm | 0 onset/duration/bar changes vs CLEAN | 0 |
+| hard checks | 13/14 pass; 1 source-related | all pass |
+
+`bars complete` passes. The 10 "incomplete" bars were tie continuations the
+parser forgot to add to the current bar (one-line fix in the local parser; note
+data unchanged). The one remaining failure is `leaps <= 7`: 4 leaps of 8
+semitones at bars 25/33/51/96, all real melodic leaps in the source. Smoothing
+them is forbidden by spec §6, so the CLEAN correctly keeps them. They are
+identical in the CLEAN, the MID, the round-1 sheets and the source.
+
+CLEAN and MID have the same 443 notes, bars, onsets, durations and sections; the
+edit changes pitch only (new pitch classes: Eb, F#; none lost). **The edit
+introduces no new hard failure: all 14 `check_abc.py` outcomes are identical
+between CLEAN and MID, and all 16 spec §8 checks pass.** The leap failure is an
+extra heuristic in the checker, not a §8 check, and it is a property of the
+source preserved by the CLEAN.
+
+All five coloured phrases cadence on D, with a consistent tail. (Phrase numbers
+are the checker's: it drops fragments shorter than 3 notes, so they run one
+behind CHANGES; bars are the parser's, one behind CHANGES' 1-based count.)
+
+| phrase | section | phrase bars | tail (MID) | CLEAN cadence |
+|---|---|---|---|---:|
+| 2 | verse 1 | 14–16 | E F# Eb D | D |
+| 8 | verse 1 | 33–36 | F F# Eb D | E → D |
+| 12 | chorus 1 | 50–52 | A F# Eb D | F → D |
+| 17 | verse 2 | 76–79 | E F# Eb D | D |
+| 20 | verse 2 | 86–88 | E F# Eb D | D |
+
+No two coloured phrases are adjacent; chorus 2, the outro and the other 23
+phrases are untouched. Each edit is one augmented second (F#–Eb) resolving to D.
+
+Bookkeeping corrections to CHANGES: `notes_out` is 453 written / 443 parsed
+(10 tied continuations merged by the parser); `phrases_total` is 30 by its
+4-beat rest rule vs 28 by the checker's 1-beat rule (the two missing are <3
+notes). Neither changes the five coloured phrases. CHANGES quotes register
+against the input; the table measures against CLEAN, which is the specified
+comparison.
+
+Key caveat: the prompt's form rule reads `K:D#m` on plain letters as Dm ("no
+transposition"), and CHANGES follows it. Written pitch is unchanged, but a
+literal D#m reading sounds a semitone higher; `key.lab` says D#:minor at 0.01
+confidence. Round 1 made the same call, so clean-vs-mid is unaffected, but keep
+it in mind if vanilla-vs-clean sounds a semitone apart.
+
+**Verdict:** the "spec worked" row, on the conservative side. The dose sits just
+above v1 (7–9 accidentals) and far below v2 (134); placement is the variable
+that changed, which is the point of the test.
+
+### 3b. Seed 101 — verified result (2026-10-26)
+
+Files in `local_workspace/moon_edit/edited2/101/`. The chat export is also not in
+`claude_chat/round2/`, so its `INPUTS` gate is unverified. Recomputed from the
+ABC:
+
+| number | measured | target |
+|---|---:|---|
+| phrases coloured | 5 / 25 | 4–6 |
+| notes pitched | 10 / 390 = 2.6% | 10–18 |
+| accidentals | 10 (5 `^`, 5 `_`) | 10–18 |
+| register shift | 0.00 in every section | ±2 |
+| unchosen phrases | 0 pitch changes | 0 |
+| rhythm | 0 changes vs CLEAN | 0 |
+| hard checks | 13/14 pass; 1 writer check | all pass |
+
+All 16 spec §8 checks pass. The CLEAN is a faithful copy: 0 pitch changes vs
+input, 0 notes removed (7 tied continuations merged by the parser, hence 390 vs
+397 written). The edit is five cadences, two notes each, all ending on D:
+
+| phrase | section | phrase bars | tail (MID) |
+|---|---|---|---|
+| 2 | verse 1 | 15–18 | F E **F# Eb** D |
+| 11 | chorus 1 | 57–60 | E **F# Eb** D D |
+| 17 | verse 2 | 93–95 | F G **F# Eb** D |
+| 21 | chorus 2 | 106–109 | E **F# Eb** D D |
+| 22 | chorus 3 | 121–122 | F G **F# Eb** D |
+
+Phrase numbers are the checker's; CHANGES runs one ahead on 21/23 because it
+keeps a one-note fragment. Every figure enters F# by step and leaves Eb by step
+to D; the closest pair of coloured cadences is 23.5 beats apart, across the
+11-bar interlude. This is the floor of the budget: 10 notes, 2 per cadence,
+10/390 = 2.6%, below the spec's 3–5% share row. The count is at the 10-note
+floor; CHANGES does not flag the share, a minor self-report omission. The
+phrases are 6.0 beats (the 2/4 corpus median), against 11.5 for 313.
+
+101-specific form fix: the source has one `M:5/8` bar. The CLEAN splits it into
+two 2/4 bars and fills the second with `z12`; every note keeps its bar-relative
+position, and the extra 1.5 beats fall inside an existing 2-bar silence. Absolute
+onsets after that bar are +12 units, identical in CLEAN and MID. This is the
+prompt's prescribed repair, not a rhythm edit.
+
+`check_abc.py` still reports one failure, `bar budget`: 268 beats vs the
+95th-percentile cap of 328. The source audio is 217.3 s = 264 beats at 73 BPM,
+so the transcription is faithful and the song is simply 18% shorter than the
+cap. The bar budget is a writer check from the from-scratch spec; edit spec §3
+says keep the section layout, so length is not ours to change. Not an edit
+defect.
+
+**Verdict:** compliant, but at the conservative end — 10 notes, 10 accidentals,
+exactly the floor. If 101 is inaudible while 313 is not, the variable is dose,
+not placement. That is the useful comparison in the listening test.
+
+### 3c. Seed 577 — verified result (2026-10-26)
+
+Files in `local_workspace/moon_edit/edited2/577/`. Chat export still pending;
+`INPUTS` gate unverified. Recomputed from the ABC:
+
+| number | measured | target |
+|---|---:|---|
+| phrases coloured | 4 / 24 | 4–6 |
+| notes pitched | 10 / 379 = 2.6% (11 vs input, incl. the CLEAN final note) | 10–18 |
+| accidentals | 11 (10 new + the transcript's own `^c`); plus one `=e` | 10–18 |
+| register shift | 0.00 every section vs CLEAN | ±2 |
+| unchosen phrases | 0 pitch changes | 0 |
+| rhythm | 0 vs CLEAN; CLEAN keeps 380/390 (7 echo notes removed) | 0 |
+| hard checks | 11/14; 3 source/writer | all §8 pass |
+
+All 10 hard §8 checks pass. The CLEAN is more processed than the other two:
+7 echo notes collapsed (1.8%, inside the 2% cap), 3 surviving notes lengthened
+to cover them, and the final note moved Bb4→D5 (the nearest tonic; D4 is 8
+semitones away). 390 written / 386 parsed in, 383 / 379 out (4 tied pairs). The
+transcript's own `^c` is kept and counts against the budget.
+
+Only four phrases can take the figure:
+
+| phrase | section | phrase bars | tail (MID) | ends |
+|---|---|---|---|---|
+| 5 | verse 1 | 13–15 | D E **Eb F#** F# G | G |
+| 14 | verse 2 | 36–39 | G G **F# F# Eb** D | D |
+| 17 | verse 2 | 43–45 | E E F **F# Eb** D | D |
+| 24 | verse 3 | 65–66 | A A **F# Eb** D D | D |
+
+Three are the textbook descending F#–Eb–D cadence. The first is an ascending
+Eb–F#–G colour and **ends on G, not D or A** — a reported §5.3 deviation. The
+larger deviation is placement: **no pre-chorus and no chorus is coloured**.
+Every pre-chorus and chorus tail ends C–Bb–A, with no E/F pair near the cadence;
+reaching F#–Eb would need a leap or a new note, both forbidden. The model left
+them plain and says §5.1 item 3 is not met. That is a material limitation, not a
+budget overrun.
+
+`check_abc.py` reports three failures, all source/writer:
+
+- `bar budget` 276 beats vs 310. The audio is 237.8 s = 273.5 beats at 69 BPM;
+  the transcription is faithful and the song is 12% under the cap.
+- `line length` 6.2 beats. 577 is a 4/4 outlier; the source is also 6.2, and
+  rhythm preservation forbids changing phrase length.
+- `leaps` 4 source leaps (two A4→F5 pickups, the A5→A4 drop, one more A4→F5),
+  identical in the source and the CLEAN.
+
+Plus a soft `chorus at least as high as verse` warning: verse max 82, chorus max
+81. That is the source's register, not the edit's; the MID's section means are
+0.00.
+
+**Verdict:** compliant but the weakest of the three. It tests **verse-only**
+colour, with three proper cadences and one ascending colour ending on G. Accept
+it for the listening test, but do not treat 577 as comparable to 313/101 on
+placement. If 577 is inaudible while 313 is not, the likely cause is the missing
+chorus, not the dose. The policy question for the skill: when no chorus cadence
+can take the figure without a leap or a new note, is verse-only colour the right
+fallback, or should the brief allow a chorus colour with a leap? 577 is the
+evidence for that decision.
+
+### Round-2 summary
+
+| seed | meter / BPM | phrases | notes pitched | accidentals | register | placement | `check_abc` residual |
+|---|---|---:|---:|---:|---|---|---|
+| 313 | 4/4, 112 | 5/28 | 13 (2.9%) | 10 | +0.01 / −0.07 | 2 verse, 1 chorus, 2 verse | 4 source leaps |
+| 101 | 2/4, 73 | 5/25 | 10 (2.6%) | 10 | 0.00 | 2 verse, 3 chorus | writer bar budget |
+| 577 | 4/4, 69 | 4/24 | 10 (2.6%) | 11 | 0.00 | 4 verse, no chorus | bar budget, line length, 4 source leaps |
+
+All three: CLEAN and MID have identical `check_abc.py` outcomes, and the edit
+introduces no new hard failure. 313 and 101 are the clean comparison; 577 is the
+verse-only case.
+
 ## 4. Then
 
-1. 101 and 577, same prompt, same order (`<SEED>` → `101`, `577`).
+1. ~~577~~ done (§3c).
 2. Build `moon_edit2.json`: six scores (`clean`, `mid` × three seeds), same seeds
    as the source takes (101 / 313 / 577), `cot: melody`, `quantile 0.975`,
    lyrics inline. Model it on `moon_edit.json`. Score files to `scores/moon_<seed>_
@@ -157,12 +348,26 @@ the skill loads in this harness. Single source of truth is the repo file.
 
 1. `check_abc.py` cannot run on a fresh clone: its parser lives in the gitignored
    `datasets/five_stars/measure/`. Track or vendor it. **The in-house agent
-   depends on it.**
+   depends on it.** Local fix applied 2026-10-26: a tied continuation now adds
+   its duration to the current bar (every tied bar looked incomplete; 10 in the
+   313 score). Note data is unchanged; the fix is still untracked.
 2. Archive the three round-1 session exports to
    `gs://akbar-december-2024-backup/arabmaqamrock/reference/claude_chat/round1/`.
 3. Verify the 177 transcripts in `datasets/five_stars/transcripts/` against the
    GCS archive checksums.
 4. Snapshot the round-1 rendered WAVs; tag `checkpoint-2026-10-26`.
+5. Checker corrections made during the 101 check, matched to the corpus method
+   rather than loosened to pass:
+   - line length is meter-aware: 2/4 target 6.0 beats (band 4.2–8.4), 4/4 stays
+     7–14. The old band failed 71 of 78 2/4 corpus tracks; the 2/4 median is 6.0.
+   - leaps are measured inside phrases: a leap after a rest of ≥1 beat starts a
+     new phrase, matching `measure/structure.py` ("rests do not create phantom
+     leaps"). 101's 12-semitone jump is across a 1.5-beat rest.
+   - bar budget compares beats, not 2/4 bar counts against a 4/4-derived budget.
+   After these, 313 fails only `leaps` (4 real source leaps); 101 fails only
+   `bar budget` (writer-only; the source is 18% under the 95th-percentile cap);
+   577 fails `bar budget`, `line length` and `leaps` — all source properties
+   (12% under the cap, 6.2-beat 4/4 phrases, 4 source leaps).
 
 ## 8. Rules of engagement
 

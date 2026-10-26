@@ -1,0 +1,43 @@
+X:1
+T:
+M:4/4
+L:1/16
+Q:1/4=69
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+K:Dm
+% intro
+V: Vocal
+z8z2D2D2F2|G2AzA2A2A2A2G2F2|G2G4z8z2|E2E2G2G2A2G2E2F2|
+D2E2C2B,2A,z6z|Z|Z|Z|
+Z|z12z2A2|
+% verse
+V: Vocal
+d2dd2eedd3AA2GG|A4cBB2z8|cc2de3dd2c2B2c2|A2AGAGGF3z4zA|
+dd2dd2def2f2f2ed|e_e^f^fg4z8|ee2de2edd2c2e3c|B2ccBAAz8A|
+% pre-chorus
+V: Vocal
+f2ed2d2ef2zf2fee|d2deeez8zc|e2dd2c2de2d2c2BB|c2BBAAz8zA|
+f2ed2d2ef2zf2f2e|d2de2decz6zc|e2ee2e2ga2agf2zg|b2ba3a8A2|
+% chorus
+V: Vocal
+d2de2f2ga2ffee2d|e4cBBAAz6z|cc2de3dd2c2B2cB|B2c2B2AAAz6z|
+% interlude
+V: Vocal
+Z|Z|Z|z12z2A2|
+% verse
+V: Vocal
+f2ee2d2ef2e2d2dd|dd2ef2g2e4z3c|e2ddc3edccz4c|B3cB2A3B^cde3f|
+ff2ef2edf2edz2f2-|fegg^f^f_e2d2z4=e2|e2ed2c2de2d2c2BB|c3BA2A4z4zA-|
+Af2ee2d2z3aa2g2|e2dde2eddcz4zc|e2ee2e2ga2agg2ee|f3^f_e2d2z6zA|
+f2ee2d2ee2z2f2e2|c2e3ccz6zcf-|feeee2a2g3a4b|agb3ba3z4zA2|
+% chorus
+V: Vocal
+d2de2f2ga2ffeedd|e4cBBAz8|Ac2de3dd2c2B2cB|z2c2B2AAAz6z|
+% interlude
+V: Vocal
+Z|Z|Z|Z|
+Z|Z|Z|z12z3A|
+% verse
+V: Vocal
+f2eedd2fe2z2f2e2|c2e2d2z8c2|e2e2e2azg2z6|g2a2b2g2b4a2a2-|
+a4^f2_e4d2dz3|Z|Z|
