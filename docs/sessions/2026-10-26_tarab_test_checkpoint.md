@@ -4,9 +4,24 @@ Read this first when resuming. State of play, not narrative.
 
 **Status:** the project pivoted this session from "edit the melody for maqam" to
 "what made Baghdad Moon stick, and can we aim at it". The new target is the
-**BC edge** (§2). The test batch is written and pushed (`fa02387`), the rating
-scorecard is written and pushed (`585bfae`). The user will render the batch in
-Colab and bring blind ratings to the next session. Nothing else is in flight.
+**BC edge** (§2). The test batch was rendered and **rated** on 2026-10-26
+17:33–18:02 UTC.
+
+**Result, in one line:** `t1_template` — the plain full training caption, nothing
+added — produced B's line-splitting call-and-response with zero diction faults
+(8.5/10). Every attempt to *ask* for that behaviour removed it: t2 (explicit
+backing sentence) went flat at 7.5, t3 (the sentence as a fragment) gave
+chorus-only backing at 7.5, t4 (stage directions in the lyric brackets) bought
+the batch's best arrangement with a text collapse and is gated out.
+
+Full analysis, scores, resolved decision rules and the next batch:
+**`eval/tarab_test_01/FINDINGS.md`**. Raw report:
+`eval/tarab_test_01/rating_20261026-2102.md`.
+
+Two things are in flight: t1 has **n=1 at seed 101**, so it may be another happy
+accident rather than a knob; and the app was run with the **default** scorecard
+and `blind: false`, so the `bc_edge` numbers do not exist yet. Both are addressed
+in FINDINGS §5–§6. Do not extend to seeds 313/577 until t1 replicates.
 
 ## 1. Why the pivot
 
