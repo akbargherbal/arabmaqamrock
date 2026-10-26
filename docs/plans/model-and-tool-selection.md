@@ -109,20 +109,26 @@ The agent does not write ABC. It declares an edit:
 }
 ```
 
-`apply` refuses to write if any of these is true, and says which:
+`apply` refuses only on **structural breakage** — cases where the file would not
+be a valid score or would not be the same song:
 
 - phrase index unknown, or note index outside the phrase;
-- a changed note is not within the phrase's last four;
-- a raised note is not the maqam's characteristic degree (or not paired with it);
-- the phrase's final degree is not the tonic or fifth after the edit;
-- more than 6 phrases, or more than 18 altered notes;
-- accidentals exceed the budget, net of the transcript's own;
-- the section's mean pitch moves more than ±2 semitones;
-- any pitch changes outside the declared phrases;
-- the result does not validate.
+- a pitch list whose length differs from the phrase's note count;
+- a tie joining two different pitches after substitution;
+- a bar that no longer sums, a note count that changed, or syntax this dialect
+  cannot express;
+- a change outside the phrases declared in the edit.
 
-This inverts the failure mode we saw. Claude wrote the score first and discovered
-the damage afterwards; here the damage cannot be written.
+Everything else — how many phrases, how many accidentals, how far the register
+moved — is **measured and reported, not refused**. `validate` prints the numbers
+and their distance from the spec's starting point; `decisions.json` records
+deviations with the agent's reason. A hard budget wall would hardcode a musical
+decision we are not sure about; a measured deviation is visible, comparable across
+tracks, and reversible.
+
+This still inverts the failure mode we saw. Claude wrote the score first and
+discovered the damage afterwards; here the damage that invalidates the file
+cannot be written, and the damage that is merely bad taste is loud.
 
 ### 2.4 `validate` — prints the report
 
@@ -140,12 +146,15 @@ parsing ABC by eye.
 
 ### 2.6 What is deliberately *not* a tool
 
-- **Which phrases to colour.** Judgement. If this ever stabilises, it becomes
-  `candidates` ranking harder — not a new agent job.
-- **What figure to write.** Judgement, constrained by `figures` (the catalogue)
-  and by the rails in 2.3.
-- **Rewriting the melody.** Not offered at all. There is no `maqam rewrite`
-  subcommand, because the v2 failure was exactly that.
+- **Which phrases to colour.** Judgement. The `candidates` output is a suggestion
+  with reasons, and the agent may ignore it. If this ever stabilises, it becomes
+  a better ranking — not a new agent job.
+- **What figure to write.** Judgement, informed by `figures` and by the measured
+  numbers.
+- **Rewriting the melody.** Not offered as a tool of convenience. There is no
+  `maqam rewrite` subcommand, and the skill explains why: it was tried twice in
+  the reference sessions and failed both times. That is project history, not a
+  taste rule.
 
 ## 3. Ground truth: playbook, not the model's memory
 
