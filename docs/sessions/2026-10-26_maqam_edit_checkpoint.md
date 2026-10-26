@@ -1,13 +1,15 @@
-# Session — maqam edit checkpoint, round 2 pending (2026-10-26)
+# Session — maqam edit, round 2 complete, render/listening pending (2026-10-26)
 
 Read this first when resuming. It is the state of play, not a narrative.
 
-**Status:** all three round-2 seeds checked (§3a–§3c). 313 and 101 are clean;
-577 is within the count budget but **verse-only** (no chorus cadence) and has one
-G-ending colour. Next: build `moon_edit2.json`, dry-run, render, listen in trios.
-Round 2 = three Claude sessions (spec v3 + calibrated prompt) to produce six
-reference sheets, then six renders, then one listening test that decides whether
-the whole in-house plan is worth building.
+**Status:** all three round-2 sheets are checked (§3a–§3c) and the six-track
+render spec is built, dry-run, and pushed as `920b0d9`. The user is rendering in
+Colab. **Next session: listen in trios, decide G1, then distil the three Claude
+chat logs into `skills/maqam-edit/SKILL.md`.** 313 and 101 are clean; 577 is
+verse-only (no chorus cadence) and has one G-ending colour. Round 2 = three
+Claude sessions (spec v3 + calibrated prompt) -> six reference sheets -> six
+renders -> one listening test that decides whether the in-house plan is worth
+building.
 
 ## 1. Where we are in one paragraph
 
@@ -21,25 +23,32 @@ quality test, and told the model to raise the chorus. Spec v3 replaces that with
 a measured budget and cadence placement, and a calibrated prompt now gates the
 inputs. Round 2 tests whether the middle ground exists.
 
-## 2. What the user is doing right now
+## 2. What is running right now
 
-Pasting, in this order, into a fresh Claude conversation:
+The user is running the six-track render in Colab:
 
-1. `prompts/arabmaqamrock_abc_edit_spec.md`
-2. `local_workspace/claude_prompt.md` with `<SEED>` replaced by `313`
-3. `local_workspace/moon_edit/baghdad_moon_vanilla_02_313/score.abc`
-4. `local_workspace/baghdad_moon_lyrics.txt`
+```bash
+git pull          # 920b0d9
+python3 generate.py moon_edit2.json
+```
 
-Expected: an `INPUTS` block first, then `CLEAN` + `MID` sheets and a
-`CHANGES.txt`, returned as three attached files named
-`baghdad_moon_313_{CLEAN,MID}.abc` and `baghdad_moon_313_CHANGES.txt`.
+- `moon_edit2.json`: six tracks, `cot: melody`, `quantile: 0.975`, lyrics inline.
+- Dry-run: 6 tracks, ~39 min on T4, caps 7000, headroom 892–1493 frames.
+- Output: `out/<timestamp>_moon_edit2/`.
+- Scores: `scores/moon_<seed>_{clean,mid}2.abc`, tracked.
+- Listening trios, per seed: round-1 vanilla WAV -> clean2 -> mid2. The vanilla
+  WAVs are the source takes (`baghdad_moon_vanilla_0{1,2,3}_{101,313,577}.wav`).
 
-If it starts writing ABC without the `INPUTS` block, the gate did not fire —
-that is a finding about the prompt, not about the take.
+The three Claude sessions are done. Their chat exports are still pending; the
+sheets are in `local_workspace/moon_edit/edited2/<seed>/` and the zips in
+`local_workspace/moon_edit/`.
 
-## 3. First task when the 313 result arrives
+## 3. How the round-2 sheets were checked
 
-Put the files in `local_workspace/moon_edit/edited2/313/` and the chat export in
+Done for all three seeds; kept as the verification recipe. The results are in
+§3a–§3c, the comparison in §3d.
+
+Put the files in `local_workspace/moon_edit/edited2/<seed>/` and the chat export in
 `local_workspace/claude_chat/round2/`, then run:
 
 ```bash
@@ -259,7 +268,7 @@ can take the figure without a leap or a new note, is verse-only colour the right
 fallback, or should the brief allow a chorus colour with a leap? 577 is the
 evidence for that decision.
 
-### Round-2 summary
+### 3d. Round-2 summary
 
 | seed | meter / BPM | phrases | notes pitched | accidentals | register | placement | `check_abc` residual |
 |---|---|---:|---:|---:|---|---|---|
@@ -274,13 +283,13 @@ verse-only case.
 ## 4. Then
 
 1. ~~577~~ done (§3c).
-2. Build `moon_edit2.json`: six scores (`clean`, `mid` × three seeds), same seeds
-   as the source takes (101 / 313 / 577), `cot: melody`, `quantile 0.975`,
-   lyrics inline. Model it on `moon_edit.json`. Score files to `scores/moon_<seed>_
-   {clean,mid}2.abc` so round 1 is not overwritten.
-3. Dry-run `python3 generate.py moon_edit2.json --dry-run`, check headroom.
-4. Render, ~45 min.
-5. **Listen in trios**: original vanilla → clean → mid, per seed.
+2. ~~Build `moon_edit2.json`~~ done: six scores (`clean`, `mid` × three seeds),
+   same seeds as the source takes, `cot: melody`, `quantile 0.975`, lyrics
+   inline. Score files are `scores/moon_<seed>_{clean,mid}2.abc`. Pushed as
+   `920b0d9`.
+3. ~~Dry-run~~ passed: 6 tracks, ~39 min on T4, cap 7000, headroom 892–1493.
+4. **Render** — running in Colab (`python3 generate.py moon_edit2.json`).
+5. **Listen in trios** — next session: original vanilla → clean → mid, per seed.
 
 ### Gate G1 — the decision that matters
 
@@ -385,3 +394,88 @@ the skill loads in this harness. Single source of truth is the repo file.
   not ready after G2, narrow its job, do not go back to manual sessions.
 - **Verify, do not trust reports.** Every sheet gets `check_abc.py` plus a
   recomputed diff against its own CLEAN.
+
+## 9. Next session — listening review, then skill distillation
+
+### 9.1 First: the listening review
+
+The user brings per-seed impressions of the trios. Capture, per seed:
+
+- **MID vs CLEAN:** same band, same vocal character? Is the maqam audible, and
+  where? Does the cadence land?
+- **CLEAN vs vanilla:** any audible ABC-conditioning effect (timing, register,
+  final note, echo removal)?
+- **Placement:** 313 and 101 have a chorus cadence; 577 does not, and its first
+  colour is ascending and ends on G.
+
+Then apply G1 (table in §4). The decision is not "did Claude follow the spec" —
+it did. It is whether the middle ground exists: mid sounds like the band and
+carries the maqam / mid is inaudible / mid is a different band / clean differs
+from vanilla.
+
+Keep the dose differences in view: 313 = 13 notes (5 cadences, 1 chorus); 101 =
+10 notes (5 cadences, 3 chorus, at the floor); 577 = 10 notes (4 verse cadences,
+no chorus). If 101 is inaudible and 313 is not, the variable is dose. If 577 is
+the odd one out, the missing chorus is the likely cause.
+
+### 9.2 Second: distil the three Claude chats into `skills/maqam-edit/SKILL.md`
+
+The chat exports are still pending. Export all three to
+`local_workspace/claude_chat/round2/` before closing the tabs. They are the
+source for the *thinking process*, not just the outputs.
+
+For each session, extract:
+
+- the `INPUTS` block and what it caught (gate evidence);
+- the phrase table and the chosen phrases with reasons, especially the rejected
+  cadences;
+- the form decisions (key, meter, units, final note, echo policy);
+- the conflicts and how they were resolved: 313's 36 echo runs vs the 2% cap;
+  101's 5/8 bar; 577's no-chorus and G-ending colour; 577's final-note fix;
+- any gap between what CHANGES claims and what the ABC shows.
+
+Then update the skill, preserving its current shape (gate -> phrase table ->
+CLEAN -> choose -> pitch lists -> verify/report):
+
+- Add the traps proven this round:
+  * a tie continuation still occupies time in the bar; count it in bar sums (the
+    parser bug that made 10 bars look incomplete);
+  * echo collapse is capped by the 2% note-count rule; the cap outranks "merge
+    every run" (313 kept 35/36; 577 removed 7 notes = 1.8%);
+  * line length is meter-aware (2/4 6.0 beats, 4/4 10); a 4/4 outlier like 577
+    (6.2 beats) is a source property, not an edit defect;
+  * a leap after a rest of >=1 beat starts a new phrase, not a melodic leap;
+  * the bar budget is a writer check; an edit inherits the transcript's length;
+  * when no chorus/pre-chorus cadence can take the figure without a leap or a new
+    note, verse-only is a legitimate fallback — but say so, and do not claim
+    §5.1 placement was met;
+  * the 4-phrase minimum can force an ascending Eb-F#-G colour ending on G;
+    report it as a cadence deviation, not a qarar;
+  * the D#m->Dm rule lives in the calibration prompt, not the spec; decide
+    whether it belongs in the skill;
+  * fix the `edit.json` example: `E4, F#4, Eb4, D4` (step in, augmented second
+    down, step out to D), not `E4, Eb4, F#4, D4`.
+- Do not overfit: §6 (the corpus is diatonic; no web; no general-maqam-theory
+  dosing) stays.
+
+The goal is Claude's *process*, not a transcription of its three answers. If a
+step is proven, keep it; if a step was improvised and worked, name the condition.
+Do this **regardless of the G1 outcome**: even if the render fails, the
+transcripts show which moves were proven and which were improvised, and that is
+what stops the next attempt from reinventing them.
+
+### 9.3 State and open items
+
+- **Render:** `moon_edit2.json`, six tracks, `out/<timestamp>_moon_edit2/`.
+  Record the run dir and confirm all six WAVs landed.
+- **Chat exports:** 313/101/577 pending; the `INPUTS` gate is unverified for all
+  three.
+- **Parser:** the tie fix is local-only (`datasets/` is gitignored);
+  `check_abc.py` still cannot run on a fresh clone. The render does not need it.
+  Track/vendor before the agent.
+- **Unchanged:** round-1 exports to GCS; 177 transcript checksums; round-1 WAV
+  snapshot/tag.
+- **Session delta:** `920b0d9` is the render spec (sheets, `moon_edit2.json`,
+  checker fixes, §3a–§3d); this checkpoint update is the doc commit that follows.
+  Local: `edited2/`, `claude_prompt_{101,577}.md`, and the empty
+  `claude_chat/round2/`.
