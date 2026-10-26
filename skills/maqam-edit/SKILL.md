@@ -4,9 +4,8 @@ description: >-
   Use when editing an ABC melody transcription for the arabmaqamrock project —
   given a SheetSage2 transcript, a maqam, a style prompt and lyrics, produce a
   CLEAN sheet (mechanical repair) and an MID sheet (a small, cadence-placed maqam
-  edit). Carries the method distilled from three reference Claude sessions, the
-  tool contracts those sessions converged on, and the project's verification
-  rules.
+  edit). Describes a working method, the tool contracts it relies on, and the
+  project's verification rules.
 ---
 
 # arabmaqamrock — melody edit
@@ -14,35 +13,18 @@ description: >-
 You are editing a melody, not composing one. Read this whole file before you
 touch a score.
 
-The task brief for the current take is in `prompts/arabmaqamrock_abc_edit_spec.md`
-(and, for a Claude run, `local_workspace/claude_prompt.md`). Where the two
-disagree, the spec wins. This file is about **how** to do the work; the spec is
-about **what** the result must satisfy.
+**What the result must satisfy** is in `prompts/arabmaqamrock_abc_edit_spec.md`.
+That spec governs the output. This file governs the process — how to get there
+without breaking the file or losing track of what you changed.
 
-## 0. Provenance — why this method and not another
-
-This method is not invented. It was extracted from three reference sessions of
-another agent doing this exact task on three takes. Across those sessions,
-~1,385 lines of throwaway Python were written for three songs, and the same six
-operations were rebuilt every time. Those six are the constants. Everything else
-— which phrases to colour, which pitches to write — differed every session and is
-therefore **yours to decide**.
-
-What did *not* work in those sessions, and is now out of scope:
-
-- rewriting each phrase onto the maqam's scale, phrase by phrase (~150 altered
-  notes). Recognisably Arabic; the band disappeared behind it.
-- colouring two cadences with 7–9 notes, buried mid-phrase. Musically correct;
-  inaudible.
-
-The reference sessions failed on the *brief*, not on the method. If your output
-starts to look like either of those, stop and re-read the spec.
+This is a method that has worked, not the only method. If you can satisfy §4 and
+§5 another way, do that instead; the checks are the contract, the steps are not.
 
 ## 1. The gate
 
 Before any work, confirm you have all four inputs:
 
-1. the spec (sections §0–§10);
+1. the spec;
 2. the style block and the task;
 3. the transcription (`X:`, `M:`, `L:`, `Q:`, `V: Vocal`, `V: Ins`, `K:`, `%`
    section markers);
@@ -50,13 +32,14 @@ Before any work, confirm you have all four inputs:
 
 If any is missing or truncated, stop and ask — naming exactly which one. Do not
 reconstruct a missing input, and do not guess a key, a meter or a section that is
-not written down. Also compare the score's `%` section markers against the
-lyrics' sections and report any mismatch before proceeding.
+not written down. Compare the score's `%` section markers against the lyrics'
+sections, and report any mismatch before proceeding.
+
+State what you received in a short `INPUTS` block, including the score's bar
+count, note count per voice, meters and sections, so a truncated score is caught
+at the door.
 
 ## 2. The method
-
-Seven steps. The order matters; each exists because a reference session lost time
-without it.
 
 **1. Parse to a flat timeline.** Turn the ABC into a sequence of notes and rests,
 each with a duration in sixteenths, carrying its bar index and section. Assert
@@ -68,9 +51,9 @@ markers. For each phrase, print: index, section, start position, note count,
 total duration, and the pitch list with durations and ties. This table is where
 your judgement happens — read it, don't read the ABC.
 
-Optionally annotate each phrase with: contour (rising / falling / arch),
-mean pitch and its offset from the section mean, whether the final note is the
-tonic or its fifth, and the rest that follows. Useful, not mandatory.
+Optionally annotate each phrase with: contour (rising / falling / arch), mean
+pitch and its offset from the section mean, whether the final note is the tonic or
+its fifth, and the rest that follows. Useful, not mandatory.
 
 **3. Clean (pass 1).** Merge echo runs (three or more identical adjacent pitches),
 merge adjacent rests, fix octave slips, complete short bars, collapse to one
@@ -79,21 +62,21 @@ tonic. Re-assert every bar sum after cleaning.
 
 **4. Read the anomalies before editing.** Print runs of repeated pitches, the
 transcript's own accidentals, any bar that does not sum, and any note that jumps
-an octave and back. Decide each case explicitly; write down what you decided.
+an octave and back. Decide each case explicitly and write down what you decided.
 
 **5. Choose the phrases to colour.** This is the musical decision, and it is
 yours. State a list of phrase indices with a one-line reason each, *before*
-writing any pitch. The spec gives a starting budget (about five phrases, the last
-two to four notes of each). Treat it as a starting point, not a cage: if your
-reading of the melody needs a different count or a different placement, do it and
-justify it in the report. What you may not do is colour secretly — every changed
-note must fall in a phrase you listed.
+writing any pitch. The spec gives a starting budget — roughly five phrases, the
+last two to four notes of each. Treat it as a starting point, not a cage: if your
+reading of the melody needs a different count or placement, do it and justify it
+in the report. What you may not do is colour secretly — every changed note must
+fall in a phrase you listed.
 
-**6. Express the edit as pitch lists, not as prose.** For each chosen phrase,
-supply a list of pitches of exactly the same length as the phrase's notes.
-Substitute. Assert length equality and tie consistency (a tie joins two identical
-pitches after substitution). This is how all three reference sessions expressed
-edits, independently: it makes the rhythm structurally impossible to disturb.
+**6. Express the edit as pitch lists.** For each chosen phrase, supply a list of
+pitches of exactly the same length as the phrase's notes, and substitute. Assert
+length equality and tie consistency (a tie must join two identical pitches after
+substitution). Expressing the edit this way makes the rhythm structurally
+impossible to disturb, which is the property you want.
 
 **7. Write, verify, report.** Serialise back to ABC, then verify §4. Report from
 tool output, never from memory.
@@ -101,9 +84,8 @@ tool output, never from memory.
 ## 3. Tools
 
 Use these. If one is missing or broken, say so and stop — do not write a
-replacement inline. The reference sessions each rebuilt the parser three times and
-then trusted the numbers it printed; that is the origin of every count that was
-wrong.
+replacement inline. Duplicated or ad-hoc parsers are where counting errors enter,
+and once the counts are wrong everything downstream is wrong.
 
 | tool | must return |
 |---|---|
@@ -125,9 +107,7 @@ wrong.
 ```
 
 Pitch spelling, accidental state within a bar, octave marks and tie handling are
-the tool's job. They were a separate debugging episode in every reference session
-(the "natural needed after an accidental" trap, key-signature B♭ in Dm, `^/2`
-being unparseable). Do not hand-write ABC to work around a spelling problem — say
+the tool's job. Do not hand-write ABC to work around a spelling problem — say
 what you wanted and let the tool report what it could not express.
 
 ## 4. Verification
@@ -140,17 +120,17 @@ what you wanted and let the tool report what it could not express.
    syllable);
 4. section order and count unchanged;
 5. no microtonal syntax, no chords, tuplets, grace notes, embedded lyrics;
-6. ties consistent, accents/spelling valid in this ABC dialect;
+6. ties consistent, accents and spelling valid in this ABC dialect;
 7. ends on the tonic;
 8. every changed note lies inside a phrase you declared in step 5.
 
-**Measured — report the number and, if it is outside the spec, the reason:**
+**Measured — report the number, and if it is outside the spec, the reason:**
 
-| | spec starting point | why it matters |
+| | starting point | why it matters |
 |---|---|---|
-| phrases coloured | about 5 of ~25 | 7–9 notes in 2 phrases was inaudible |
-| notes altered | 10–18 | ~150 altered notes erased the band |
-| accidentals | 10–18, net of the transcript's own | corpus median 0.38 per 100 notes, p90 2.4 |
+| phrases coloured | about 5 of ~25 | edits confined to one or two phrases are not reliably audible in the render |
+| notes altered | 10–18 | a wholesale re-mapping changes the vocal's character enough to displace the arrangement |
+| accidentals | 10–18, net of the transcript's own | corpus: median 0.38 per 100 notes, p90 2.4 |
 | register shift per section | within ±2 semitones | a lifted vocal makes the guitars read as a bed |
 | augmented second per coloured phrase | appears once, entered and left by step | the interval is the maqam's signature |
 | unchosen phrases | zero pitch changes | contrast is what makes five cadences audible |
@@ -166,13 +146,13 @@ accidentals, bars, sections, phrases_total, phrases_coloured, coloured_bars,
 plain_phrases_untouched, rhythm_kept, register_shift, maqam_figures`.
 
 `decisions.json` alongside it: the phrase list from step 5 with reasons, the edit
-as applied, any deviation from the measured table above with its justification,
-and the anomalies you decided in step 4.
+as applied, any deviation from the measured table with its justification, and the
+anomalies you decided in step 4.
 
 ## 6. Where your knowledge is welcome, and where it is not
 
-This corpus is **diatonic**: 0.83 accidentals per 100 notes, median track 0.38,
-74 of 177 tracks with none, and 0 of 177 Hijaz-shaped even when the production
+The corpus is **diatonic**: 0.83 accidentals per 100 notes, median track 0.38,
+74 of 177 tracks with none, 0 of 177 Hijaz-shaped even where the production
 prompt says "Maqam Hijaz". arabmaqamrock is a minor rock band with maqam accents,
 not a maqam ensemble.
 
@@ -180,19 +160,19 @@ not a maqam ensemble.
   hearing whether a line wants to settle or climb, knowing what makes Hijaz
   recognisable as Hijaz.
 - **Not welcome:** general maqam theory as a rule for how much colour belongs in
-  this material, or a scale as a target to re-map onto. That is precisely the
-  edit that failed. The spec's budget and the corpus's measured distributions
-  outrank a remembered convention.
+  this material, or a scale as a target to re-map onto. The spec's budget and the
+  corpus's measured distributions outrank a remembered convention.
 
 No web research during the edit. Everything needed is in the repo.
 
-## 7. Known traps, from the reference sessions
+## 7. Known traps
 
 - Writing the score first and checking it afterwards. Check at every step instead.
 - Counting bars or notes by hand, then reporting the hand count. Use the tool.
-- Merging repeated notes without respecting bar lines — this produces notes that
+- Merging repeated notes without respecting bar lines: this produces notes that
   straddle a bar, and every later count is off by one.
-- Restoring accents that a previous bar set and the current bar must clear.
+- Accidental state persisting within a bar, or a natural that a previous
+  accidental made necessary and a later bar must clear.
 - Trying to express a neutral second or quarter tone. `^/2` does not parse; use the
   nearest semitone.
 - "Fixing" the transcript's own accidentals. If the singer sang it, it stays; it
