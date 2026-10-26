@@ -1,0 +1,12 @@
+model,passes,runs,cost_usd_total,cost_usd_per_pass,latency_s_total,out_tokens_total,resolved_backend
+deepseek-flash (direct),3,3,0.00310,0.00103,31,4944,deepseek-flash
+deepseek-v4.1-flash,3,3,0.00314,0.00105,29,5012,deepseek-v4-1-flash
+deepseek-v4-flash,3,3,0.01189,0.00396,75,8729,deepseek-v4-flash
+deepseek-v4-pro,3,3,0.02307,0.00769,93,5548,deepseek-v4-pro
+glm-5.3-flash,2,3,0.01024,0.00512,464,20320,None|glm-5-3-flash
+glm-5.2,2,3,0.05659,0.02830,160,12593,glm-5.2
+dola-seed-2.0-code,3,3,0.12983,0.04328,560,43112,dola-seed-2.0-code
+dola-seed-2.0-pro,3,3,0.02990,0.00997,170,9803,dola-seed-2.0-pro
+bytedance-seed-code,2,3,0.01743,0.00872,134,8592,dola-seed-2.0-lite
+kimi-k2.5,3,3,0.03142,0.01047,155,10307,dola-seed-2-0-pro
+ark-code-latest,3,3,0.00000,0.00000,34,7316,auto

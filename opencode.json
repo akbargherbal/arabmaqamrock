@@ -1,17 +1,17 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "byteplus-plan/ark-code-latest",
+  "model": "byteplus-plan/deepseek-v4.1-flash",
   "provider": {
     "byteplus-plan": {
       "npm": "@ai-sdk/openai",
-      "name": "BytePlus (Responses API)",
+      "name": "BytePlus ModelArk (Coding Plan)",
       "options": {
         "baseURL": "https://ark.ap-southeast.bytepluses.com/api/coding/v3",
         "apiKey": "{file:~/.secrets/byteplus-key}"
       },
       "models": {
         "ark-code-latest": {
-          "name": "ark-code-latest",
+          "name": "ark-code-latest (router, backend varies)",
           "limit": {
             "context": 256000,
             "output": 32000
@@ -88,7 +88,7 @@
           }
         },
         "bytedance-seed-code": {
-          "name": "bytedance-seed-code",
+          "name": "bytedance-seed-code (serves dola-seed-2.0-lite)",
           "limit": {
             "context": 1024000,
             "output": 65536
@@ -96,13 +96,6 @@
         },
         "dola-seed-2.0-pro": {
           "name": "dola-seed-2.0-pro",
-          "limit": {
-            "context": 256000,
-            "output": 32000
-          }
-        },
-        "dola-seed-2.0-lite": {
-          "name": "dola-seed-2.0-lite",
           "limit": {
             "context": 256000,
             "output": 32000
@@ -116,7 +109,7 @@
           }
         },
         "kimi-k2.5": {
-          "name": "kimi-k2.5",
+          "name": "kimi-k2.5 (serves dola-seed-2.0-pro)",
           "limit": {
             "context": 256000,
             "output": 32000
