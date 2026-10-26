@@ -1,46 +1,128 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "deepseek/deepseek-flash",
-  "permissions": [
-    {
-      "action": "external_directory",
-      "resource": "*",
-      "effect": "allow"
-    },
-    {
-      "action": "read",
-      "resource": "*.env",
-      "effect": "allow"
-    },
-    {
-      "action": "read",
-      "resource": "*.env.*",
-      "effect": "allow"
-    }
-  ],
-  "agents": {
-    "build": {
-      "model": {
-        "providerID": "deepseek",
-        "model": "deepseek-flash",
-        "variant": "high"
-      }
-    },
-    "plan": {
-      "model": {
-        "providerID": "deepseek",
-        "model": "deepseek-flash",
-        "variant": "high"
-      }
-    }
-  },
-  "plugins": [
-    {
-      "package": "opencode-tts",
+  "model": "byteplus-plan/ark-code-latest",
+  "provider": {
+    "byteplus-plan": {
+      "npm": "@ai-sdk/openai",
+      "name": "BytePlus (Responses API)",
       "options": {
-        "voice": "en-US-AvaNeural",
-        "rate": "+25%"
+        "baseURL": "https://ark.ap-southeast.bytepluses.com/api/coding/v3",
+        "apiKey": "{file:~/.secrets/byteplus-key}"
+      },
+      "models": {
+        "ark-code-latest": {
+          "name": "ark-code-latest",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "glm-5.2": {
+          "name": "glm-5.2",
+          "limit": {
+            "context": 1024000,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "glm-5.3-flash": {
+          "name": "glm-5.3-flash",
+          "limit": {
+            "context": 1024000,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "deepseek-v4-flash": {
+          "name": "deepseek-v4-flash",
+          "limit": {
+            "context": 1024000,
+            "output": 65536
+          }
+        },
+        "deepseek-v4-pro": {
+          "name": "deepseek-v4-pro",
+          "limit": {
+            "context": 1024000,
+            "output": 65536
+          }
+        },
+        "deepseek-v4.1-flash": {
+          "name": "deepseek-v4.1-flash",
+          "limit": {
+            "context": 1024000,
+            "output": 65536
+          },
+          "modalities": {
+            "input": [
+              "text",
+              "image"
+            ],
+            "output": [
+              "text"
+            ]
+          }
+        },
+        "bytedance-seed-code": {
+          "name": "bytedance-seed-code",
+          "limit": {
+            "context": 1024000,
+            "output": 65536
+          }
+        },
+        "dola-seed-2.0-pro": {
+          "name": "dola-seed-2.0-pro",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          }
+        },
+        "dola-seed-2.0-lite": {
+          "name": "dola-seed-2.0-lite",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          }
+        },
+        "dola-seed-2.0-code": {
+          "name": "dola-seed-2.0-code",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          }
+        },
+        "kimi-k2.5": {
+          "name": "kimi-k2.5",
+          "limit": {
+            "context": 256000,
+            "output": 32000
+          }
+        }
       }
     }
-  ]
+  }
 }
