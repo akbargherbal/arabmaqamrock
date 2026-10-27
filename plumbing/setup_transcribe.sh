@@ -10,13 +10,15 @@
 # is incompatible with SheetSage2's custom code. Upstream pins Python 3.10/3.11,
 # torch 2.8.0 and transformers 4.45.2. The venv lives in the repo and is ignored
 # by git. CPU is the default because transcription should not hold the GPU that
-# generation needs; CUDA is opt-in.
+# generation needs; CUDA is opt-in. With CUDA wheels installed, `--device auto`
+# (the default) uses the GPU, so pass `--device cpu` to keep it free.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="${TRANSCRIBE_VENV:-$REPO_ROOT/.venv-sheetsage2}"
 PY="$VENV/bin/python"
 TORCH_INDEX="https://download.pytorch.org/whl/cpu"
+TORCH_SPEC="2.8.0+cpu"
 DOCTOR=0
 FORCE=0
 WARM=0
@@ -27,8 +29,8 @@ usage() {
 
 while [ $# -gt 0 ]; do
   case "$1" in
-    --cpu)       TORCH_INDEX="https://download.pytorch.org/whl/cpu"; shift ;;
-    --cuda)      TORCH_INDEX="https://download.pytorch.org/whl/cu126"; shift ;;
+    --cpu)       TORCH_INDEX="https://download.pytorch.org/whl/cpu"; TORCH_SPEC="2.8.0+cpu"; shift ;;
+    --cuda)      TORCH_INDEX="https://download.pytorch.org/whl/cu126"; TORCH_SPEC="2.8.0+cu126"; shift ;;
     --doctor)    DOCTOR=1; shift ;;
     --force)     FORCE=1; shift ;;
     --warm)      WARM=1; shift ;;
@@ -77,8 +79,17 @@ fi
 
 echo "== torch =="
 echo "  index: $TORCH_INDEX"
-uv pip install --python "$PY" -q \
-  torch==2.8.0 torchaudio==2.8.0 --index-url "$TORCH_INDEX"
+# `torch==2.8.0` is already satisfied by a `+cpu` local build, so uv would
+# silently keep CPU wheels when switching to --cuda. Compare versions and
+# force a reinstall when the flavor differs.
+INSTALLED=$("$PY" -c "import torch; print(torch.__version__)" 2>/dev/null || true)
+if [ "$INSTALLED" = "$TORCH_SPEC" ]; then
+  echo "  already $TORCH_SPEC"
+else
+  echo "  installing $TORCH_SPEC (installed: ${INSTALLED:-none})"
+  uv pip install --python "$PY" -q --reinstall \
+    "torch==$TORCH_SPEC" "torchaudio==$TORCH_SPEC" --index-url "$TORCH_INDEX"
+fi
 
 echo "== SheetSage2 dependencies =="
 uv pip install --python "$PY" -q \

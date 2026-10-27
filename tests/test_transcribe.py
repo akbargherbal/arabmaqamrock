@@ -35,10 +35,12 @@ class FakeModel:
         self.fail_stems = fail_stems or set()
         self.tag = tag
         self.calls: list[str] = []
+        self.dtypes: list[str] = []
 
-    def transcribe(self, src, output_dir, melody_only=True):
+    def transcribe(self, src, output_dir, melody_only=True, dtype="bf16"):
         stem = Path(src).stem
         self.calls.append(stem)
+        self.dtypes.append(dtype)
         if stem in self.fail_stems:
             raise RuntimeError(f"fake failure for {stem}")
         out = Path(output_dir)
@@ -51,7 +53,8 @@ class FakeModel:
 def runtime(cfg):
     return {
         "python": "test", "torch": "test", "transformers": "test",
-        "device": cfg.device, "threads": cfg.threads, "load_seconds": 0.0,
+        "device": cfg.device, "dtype": cfg.dtype, "threads": cfg.threads,
+        "load_seconds": 0.0,
     }
 
 
@@ -143,6 +146,12 @@ class DiscoveryTests(Base):
         self.assertEqual(rc, 1)
         self.assertIn("out/latest", err)
 
+    def test_dtype_defaults_to_auto(self):
+        self.write("song.wav")
+        rc, out, _ = self.run_cli(self.run_dir, "--dry-run")
+        self.assertEqual(rc, 0)
+        self.assertIn("dtype=auto", out)
+
     def test_duplicate_stem_default_error_and_suffix(self):
         a = self.tmp / "a"
         b = self.tmp / "b"
@@ -159,6 +168,18 @@ class DiscoveryTests(Base):
 
 
 class TranscribeTests(Base):
+    def test_dtype_is_forwarded_and_recorded(self):
+        self.write("take_dtype.wav")
+        fake = FakeModel()
+        with self.model_patch(fake):
+            rc, out, _ = self.run_cli(self.run_dir, "--out-dir", self.out_dir,
+                                      "--dtype", "fp32")
+        self.assertEqual(rc, 0, out)
+        self.assertEqual(fake.dtypes, ["fp32"])
+        meta = json.loads(
+            (self.out_dir / "take_dtype" / "meta.json").read_text())
+        self.assertEqual(meta["dtype"], "fp32")
+
     def test_transcribe_resume_and_provenance(self):
         wav = self.write("take_1.wav")
         (self.run_dir / "batch_manifest.json").write_text(

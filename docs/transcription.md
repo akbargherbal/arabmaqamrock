@@ -80,7 +80,8 @@ Common flags:
 
 | Flag | Meaning |
 |---|---|
-| `--device cpu\|cuda\|auto` | default `cpu`; `auto` chooses CUDA if available |
+| `--device cpu\|cuda\|auto` | default `auto`; `auto` chooses CUDA when `torch.cuda.is_available()` |
+| `--dtype auto\|bf16\|fp32` | CUDA compute dtype; `auto` picks bf16 only on native-bf16 GPUs, fp32 on T4 |
 | `--threads N` | torch CPU threads (default `min(4, CPU count)`) |
 | `--exclude REGEX` | skip matching stems; **no default exclusion** |
 | `--limit N`, `--smoke` | cap the batch / one-track smoke |
@@ -121,9 +122,15 @@ the model.
 | Scenario | Result |
 |---|---|
 | CPU-only machine / Colab CPU runtime | Works with the default CPU wheels; no CUDA runtime |
-| GPU box, transcribing only | Works; CPU default leaves the GPU free |
-| GPU box, generating and transcribing | Run on CPU with `CUDA_VISIBLE_DEVICES=""` to avoid contention |
-| CUDA-accelerated transcription | `setup_transcribe.sh --cuda` then `--device cuda` |
+| GPU box, transcribing only | `auto` uses the GPU once the venv has CUDA wheels; the default install is CPU-only |
+| GPU box, generating and transcribing | Pass `--device cpu` (or `CUDA_VISIBLE_DEVICES=""`) to keep the GPU free |
+| CUDA-accelerated transcription | `setup_transcribe.sh --cuda` then `--device auto` (or `cuda`) |
+
+`--device auto` uses the GPU whenever the venv has a CUDA torch build. The
+default install uses CPU wheels, so check `torch.cuda.is_available()` (or run
+`transcribe.py --doctor`) before expecting GPU speed. On a T4, `--dtype auto`
+falls back to fp32 because Turing only emulates bf16; pass `--dtype bf16` only
+on Ampere or newer.
 
 The audio.cpp SheetSage2 backend is **not** used here. The current
 `bin/audiocpp_cli` is built `--models yue2`, has no SheetSage2 family, and is

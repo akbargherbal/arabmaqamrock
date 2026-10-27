@@ -214,6 +214,7 @@ class Config:
     model: str
     revision: str | None
     device: str
+    dtype: str
     threads: int
     melody_only: bool
     limit: int
@@ -321,6 +322,14 @@ def prepare_environment(cfg: Config) -> None:
         os.environ["HF_HOME"] = str(cache)
 
 
+def native_bf16(torch) -> bool:
+    """True only when the GPU does bf16 in hardware (T4 does not)."""
+    try:
+        return torch.cuda.is_bf16_supported(including_emulation=False)
+    except TypeError:  # older torch without the keyword
+        return torch.cuda.is_bf16_supported()
+
+
 def load_model(cfg: Config):
     """Import torch/transformers and load SheetSage2. Kept out of dry-run."""
     import torch  # noqa: PLC0415
@@ -340,6 +349,16 @@ def load_model(cfg: Config):
     else:
         device = "cpu"
 
+    # SheetSage2 defaults to bf16 autocast on CUDA. Turing-class GPUs (T4)
+    # only emulate bf16, which is slow and can raise in some kernels, so fall
+    # back to fp32 there. dtype is inert on CPU (autocast is disabled).
+    if cfg.dtype != "auto":
+        dtype = cfg.dtype
+    elif device == "cuda":
+        dtype = "bf16" if native_bf16(torch) else "fp32"
+    else:
+        dtype = "fp32"
+
     t0 = time.monotonic()
     kwargs = {"trust_remote_code": True}
     if cfg.revision:
@@ -353,6 +372,8 @@ def load_model(cfg: Config):
         "torch": torch.__version__,
         "transformers": transformers.__version__,
         "device": device,
+        "dtype": dtype,
+        "gpu": (torch.cuda.get_device_name(0) if device == "cuda" else None),
         "threads": cfg.threads,
         "load_seconds": round(time.monotonic() - t0, 1),
     }
@@ -392,6 +413,7 @@ def write_meta(track: Track, cfg: Config, runtime: dict, *,
         "model_revision": cfg.revision,
         "melody_only": cfg.melody_only,
         "device": runtime.get("device"),
+        "dtype": runtime.get("dtype"),
         "threads": runtime.get("threads"),
         "python": runtime.get("python"),
         "torch": runtime.get("torch"),
@@ -419,7 +441,8 @@ def transcribe_track(model, track: Track, cfg: Config, runtime: dict,
         with time_limit(cfg.per_track_timeout):
             result = model.transcribe(
                 str(track.src), output_dir=str(track.out_dir),
-                melody_only=cfg.melody_only)
+                melody_only=cfg.melody_only,
+                dtype=runtime.get("dtype", "bf16"))
     except Exception as exc:  # noqa: BLE001 - one bad track must not kill the batch
         track.seconds = time.monotonic() - t0
         track.status = "timeout" if isinstance(exc, TimeoutError) else "failed"
@@ -493,6 +516,7 @@ def write_outputs(cfg: Config, tracks: list[Track], runtime: dict,
         "torch": runtime.get("torch"),
         "transformers": runtime.get("transformers"),
         "device": runtime.get("device"),
+        "dtype": runtime.get("dtype"),
         "threads": runtime.get("threads"),
         "elapsed_s": round(elapsed_s, 1),
         "stopped_early": stopped_early,
@@ -538,7 +562,7 @@ def print_plan(cfg: Config, tracks: list[Track]) -> None:
     print(f"model   : {cfg.model}  revision={cfg.revision or '(default)'}")
     print(f"input   : {len(tracks)} track(s)")
     print(f"out-dir : {cfg.out_dir}")
-    print(f"device  : {cfg.device}  threads={cfg.threads}  "
+    print(f"device  : {cfg.device}  dtype={cfg.dtype}  threads={cfg.threads}  "
           f"melody_only={cfg.melody_only}")
     for i, t in enumerate(tracks, 1):
         print(f"  {i:>3}  {t.src.name}")
@@ -589,7 +613,7 @@ def doctor(cfg: Config) -> int:
     print(f"python    : {sys.version.split()[0]}  ({sys.executable})")
     print(f"cwd       : {Path.cwd()}")
     print(f"model     : {cfg.model}  revision={cfg.revision or '(default)'}")
-    print(f"device    : {cfg.device}  threads={cfg.threads}")
+    print(f"device    : {cfg.device}  dtype={cfg.dtype}  threads={cfg.threads}")
     print(f"hf modules: {os.environ.get('HF_MODULES_CACHE', '(unset)')}")
     print(f"hf home   : {os.environ.get('HF_HOME', '(default)')}")
     ffmpeg = shutil.which("ffmpeg")
@@ -626,7 +650,15 @@ def doctor(cfg: Config) -> int:
         ok = False
     try:
         import torch  # noqa: PLC0415
-        print(f"cuda      : {torch.cuda.is_available()}")
+        cuda = torch.cuda.is_available()
+        print(f"cuda      : {cuda}")
+        if cuda:
+            print(f"gpu       : {torch.cuda.get_device_name(0)}")
+            if cfg.dtype == "auto":
+                dtype = "bf16" if native_bf16(torch) else "fp32"
+            else:
+                dtype = cfg.dtype
+            print(f"dtype     : {dtype}")
     except Exception:  # noqa: BLE001
         pass
     return 0 if ok and ffmpeg else 1
@@ -649,7 +681,9 @@ def run(cfg: Config, tracks: list[Track]) -> int:
                 emit(traceback.format_exc().rstrip())
             return 1
         emit(f"model loaded in {runtime['load_seconds']}s  "
-             f"torch={runtime['torch']}  transformers={runtime['transformers']}")
+             f"torch={runtime['torch']}  transformers={runtime['transformers']}  "
+             f"device={runtime['device']}  dtype={runtime['dtype']}" +
+             (f"  gpu={runtime['gpu']}" if runtime.get("gpu") else ""))
         t0 = time.monotonic()
         stopped_early = False
         for i, t in enumerate(tracks, 1):
@@ -715,6 +749,9 @@ def parse_args(argv: list[str] | None = None) -> tuple[Config, list[Track]]:
                     default=os.environ.get("SHEETSAGE2_REVISION", DEFAULT_REVISION))
     ap.add_argument("--device", choices=["cpu", "cuda", "auto"], default="auto",
                     help="inference device (default: auto -- GPU if available)")
+    ap.add_argument("--dtype", choices=["auto", "bf16", "fp32"], default="auto",
+                    help="CUDA compute dtype (default: auto -- bf16 on native "
+                         "bf16 GPUs, fp32 elsewhere, e.g. T4)")
     ap.add_argument("--threads", type=int,
                     default=min(4, os.cpu_count() or 1),
                     help="torch CPU threads (default: min(4, CPU count))")
@@ -784,6 +821,7 @@ def parse_args(argv: list[str] | None = None) -> tuple[Config, list[Track]]:
     return Config(
         roots=roots, out_dir=out_dir, model=args.model,
         revision=args.revision or None, device=args.device,
+        dtype=args.dtype,
         threads=args.threads, melody_only=args.melody_only,
         limit=args.limit, force=args.force, verify=args.verify,
         dry_run=args.dry_run, doctor=args.doctor, fail_fast=args.fail_fast,
