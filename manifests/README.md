@@ -21,6 +21,8 @@ the manifest lives in `manifests/`. A manifest with assets next to it can omit
 | Manifest | Songs / takes | Notes |
 |---|---:|---|
 | `songs.example.json` | 2 | Quickstart example: inline lyrics + `lyrics_file`, no score. |
+| `controls.example.json` | 4 | Control sweep: same seed/score-free `cot=full` plan, one variable per take (`guidance_scale`, `semantic_temperature`, adapter scale). |
+| `easygoing-eagle.json` | 9 | Nahawand melody-only control sweep on `VAR_A`, one seed (`2020610301`), one variable per take; plus one score-free plan take for `abc_*`. |
 | `04.json` | 3 | Nahawand `VAR_A/B/C` takes on the dated scores in `scores/30102026/`, `cot=melody`. |
 | `1332683623_baghdad_moon_formatted.json` | 3 | Track 01 takes on `scores/1332683623_refined_score.abc`. |
 | `baghdad_moon_formatted.json` | 2 | Track 02 `v1`/`v2`, octave-fix scores, `cot=full`. |

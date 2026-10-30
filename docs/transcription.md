@@ -206,6 +206,14 @@ Things that are **not** ABC-strength controls:
   own ABC. They are ignored with an external `abc` / `abc_file`.
 - `num_inference_steps` affects NAR rendering quality, not ABC adherence.
 
+In a batch manifest these are ordinary per-song fields: `guidance_scale`,
+`semantic_temperature`, `semantic_top_p`, `semantic_top_k`,
+`semantic_repetition_penalty`, `num_inference_steps`, and — only while the model
+writes its own ABC — `abc_temperature`, `abc_top_p`, `abc_top_k`,
+`abc_repetition_penalty`, `abc_min_tokens`, `abc_max_tokens`. Supplying an
+external `abc_file` while setting any `abc_*` key is a hard error, not a silent
+no-op. See the README's *Sampler and adapter controls*.
+
 **Current binary note:** `bin/audiocpp_cli` in this repo has no
 `semantic_prefix` / `semantic_prefix_file` support (`strings bin/audiocpp_cli |
 grep semantic_prefix` is empty). The hard-lock row needs a newer audio.cpp build;

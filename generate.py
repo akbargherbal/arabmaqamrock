@@ -44,10 +44,22 @@ Schema (strict: unknown keys are an error)
           "seeds":   [1, 2, 3],            # or explicit, all < 2^32
           "seed":    42,                   # or exactly one render
           "cap":     6000,                 # explicit semantic_max_tokens
-          "quantile": 0.975                # xor cap
+          "quantile": 0.975,               # xor cap
+          "guidance_scale": 1.5,           # optional request options, per song (song > defaults);
+          "semantic_temperature": 0.9,     # only keys you set are passed, never defaults.
+          "lora_ar_scale": 0.7,            # adapter blend 0..1.5 (LORA_AR_SCALE/LORA_NAR_SCALE)
+          "lora_nar_scale": 0.7
         }
       ]
     }
+
+Per-song controls map 1:1 to audio.cpp `--request-option` names (allowed keys:
+guidance_scale, semantic_temperature, semantic_top_p, semantic_top_k,
+semantic_repetition_penalty, num_inference_steps, abc_temperature, abc_top_p,
+abc_top_k, abc_repetition_penalty, abc_min_tokens, abc_max_tokens) plus the two
+adapter scales. `semantic_max_tokens` stays the `cap` field. abc_* only act in
+the plan stage and are rejected with cot=off or an external score. Setting any
+control key is mutually exclusive with the batch-global EXTRA_REQUEST_OPTS.
 
 Precedence: song field > CLI flag > "defaults" > built-in default. For `lora`
 there is no CLI flag: song > `defaults.lora` > the `--lora-ar`/`--lora-nar` pair.
@@ -101,7 +113,7 @@ import subprocess
 import sys
 import time
 import wave
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, TextIO
@@ -144,6 +156,44 @@ DEFAULT_KEYS = {"style", "style_file", "repeat", "quantile", "lora",
                 "abc_file", "score", "cot"}
 LORA_SPEC_KEYS = {"dir", "ar", "nar"}
 
+# Per-song generation controls. Each key maps 1:1 to an audio.cpp
+# `--request-option` (see src/models/yue2/request.cpp); the bounds below are the
+# runtime's own, not ours. Nothing is emitted unless a manifest sets it, so an
+# absent key leaves the binary on its built-in default. `semantic_max_tokens`
+# stays the `cap` field, and `semantic_min_tokens` / `semantic_prefix(_file)`
+# are deliberately not exposed.
+CONTROL_SPECS = {
+    "guidance_scale":             ("float", 0.0, 20.0, True,  True),
+    "semantic_temperature":       ("float", 0.0, 5.0,  True,  True),
+    "semantic_top_p":             ("float", 0.0, 1.0,  False, True),
+    "semantic_top_k":             ("int",   1,   None, True,  True),
+    "semantic_repetition_penalty": ("float", 0.0, None, False, True),
+    "num_inference_steps":        ("int",   1,   None, True,  True),
+    "abc_temperature":            ("float", 0.0, 5.0,  True,  True),
+    "abc_top_p":                  ("float", 0.0, 1.0,  False, True),
+    "abc_top_k":                  ("int",   1,   None, True,  True),
+    "abc_repetition_penalty":     ("float", 0.0, None, False, True),
+    "abc_min_tokens":             ("int",   0,   None, True,  True),
+    "abc_max_tokens":             ("int",   1,   None, True,  True),
+}
+LORA_SCALE_SPEC = ("float", 0.0, 1.5, True, True)
+CONTROL_SHORT = {
+    "guidance_scale": "g",
+    "semantic_temperature": "t",
+    "semantic_top_p": "p",
+    "semantic_top_k": "k",
+    "semantic_repetition_penalty": "rp",
+    "num_inference_steps": "steps",
+    "abc_temperature": "abc.t",
+    "abc_top_p": "abc.p",
+    "abc_top_k": "abc.k",
+    "abc_repetition_penalty": "abc.rp",
+    "abc_min_tokens": "abc.min",
+    "abc_max_tokens": "abc.max",
+}
+SONG_KEYS |= set(CONTROL_SPECS) | {"lora_ar_scale", "lora_nar_scale"}
+DEFAULT_KEYS |= set(CONTROL_SPECS) | {"lora_ar_scale", "lora_nar_scale"}
+
 
 class PlanError(Exception):
     """Invalid input JSON, bad CLI use, or failed preflight."""
@@ -164,6 +214,8 @@ class Song:
     score_alias: str | None = None  # alias into input.scores, if one was used
     cot: str = "off"  # off | melody | full
     score_s: float | None = None  # parsed score length, if the ABC is simple enough
+    controls: dict = field(default_factory=dict)  # resolved request options (per song)
+    lora_scale: dict = field(default_factory=dict)  # {"ar": x, "nar": y} when set
 
 
 @dataclass
@@ -182,6 +234,8 @@ class Track:
     score_alias: str | None = None  # for the sidecar
     score_s: float | None = None  # for the plan table
     score_label: str | None = None  # alias or file name, for the plan table
+    controls: dict = field(default_factory=dict)  # resolved request options
+    lora_scale: dict = field(default_factory=dict)  # {"ar": x, "nar": y} when set
 
 
 @dataclass
@@ -615,6 +669,101 @@ def _cap_settings(raw: dict, base_q: float, n_letters: int, where: str) -> tuple
     return q, cap
 
 
+def _number(value, spec: tuple, where: str):
+    """Validate one numeric control against the runtime's own bounds."""
+    kind, lo, hi, lo_inc, hi_inc = spec
+    if kind == "int":
+        check(isinstance(value, int) and not isinstance(value, bool),
+              f"{where}: integer required (got {value!r})")
+        v = int(value)
+    else:
+        check(isinstance(value, (int, float)) and not isinstance(value, bool)
+              and math.isfinite(float(value)),
+              f"{where}: finite number required (got {value!r})")
+        v = float(value)
+    if lo is not None:
+        check(v >= lo if lo_inc else v > lo,
+              f"{where}: must be {'>=' if lo_inc else '>'} {lo} (got {value!r})")
+    if hi is not None:
+        check(v <= hi if hi_inc else v < hi,
+              f"{where}: must be {'<=' if hi_inc else '<'} {hi} (got {value!r})")
+    return v
+
+
+def _controls(raw: dict, defaults: dict, where: str, cot: str,
+              has_abc: bool) -> dict:
+    """Resolve and validate per-song request options (song > defaults).
+
+    Nothing is filled in: a key that neither the song nor `defaults` sets is
+    omitted, leaving the binary on its built-in default. Mixing these keys with
+    the batch-global EXTRA_REQUEST_OPTS is a hard error (no silent precedence).
+    """
+    out: dict = {}
+    src: dict = {}
+    for key, spec in CONTROL_SPECS.items():
+        if key in raw:
+            out[key] = _number(raw[key], spec, f"{where}.{key}")
+            src[key] = f"{where}.{key}"
+        elif key in defaults:
+            out[key] = _number(defaults[key], spec, f"input.defaults.{key}")
+            src[key] = f"input.defaults.{key}"
+    if not out:
+        return out
+    env = os.environ.get("EXTRA_REQUEST_OPTS", "").strip()
+    if env:
+        first = next(iter(out))
+        fail(f"{src[first]} cannot be combined with EXTRA_REQUEST_OPTS "
+             f"({env!r}); use one or the other")
+    abc_keys = sorted(k for k in out if k.startswith("abc_"))
+    if abc_keys:
+        check(cot != "off",
+              f"{src[abc_keys[0]]} has no effect with cot=off "
+              f"(no plan stage); use cot=melody or cot=full")
+        check(not has_abc,
+              f"{src[abc_keys[0]]} is ignored when a score is supplied "
+              f"(the plan stage is skipped); remove it")
+    if "abc_min_tokens" in out and "abc_max_tokens" in out:
+        check(out["abc_max_tokens"] >= out["abc_min_tokens"],
+              f"{where}: abc_max_tokens must be >= abc_min_tokens")
+    return out
+
+
+def _lora_scale(raw: dict, defaults: dict, where: str) -> dict:
+    """Resolve per-song adapter scales to {"ar": x, "nar": y}."""
+    out: dict = {}
+    pairs = (("lora_ar_scale", "ar", "LORA_AR_SCALE"),
+             ("lora_nar_scale", "nar", "LORA_NAR_SCALE"))
+    for key, side, _ in pairs:
+        if key in raw:
+            out[side] = _number(raw[key], LORA_SCALE_SPEC, f"{where}.{key}")
+        elif key in defaults:
+            out[side] = _number(defaults[key], LORA_SCALE_SPEC,
+                                f"input.defaults.{key}")
+    if out:
+        # One source for adapter strength: any env-provided scale would leak into
+        # the side this manifest does not set, so refuse the mix outright.
+        for _, _, env_name in pairs:
+            env = os.environ.get(env_name, "").strip()
+            if env:
+                fail(f"{where}: adapter scales cannot be combined with "
+                     f"{env_name}={env!r}; use one or the other")
+    return out
+
+
+def _fmt_num(value) -> str:
+    return str(value) if isinstance(value, int) else f"{value:g}"
+
+
+def _opts_string(controls: dict) -> str:
+    return " ".join(f"{k}={_fmt_num(v)}" for k, v in controls.items())
+
+
+def _short_controls(track) -> str:
+    parts = [f"{CONTROL_SHORT.get(k, k)}={_fmt_num(v)}" for k, v in track.controls.items()]
+    parts += [f"{side}={_fmt_num(v)}" for side, v in track.lora_scale.items()]
+    return " ".join(parts) if parts else "-"
+
+
 def _seed_spec(raw: dict, defaults: dict, where: str) -> tuple:
     has_list = "seeds" in raw
     has_one = "seed" in raw
@@ -714,10 +863,14 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
                      f"{need} frames; cap {cap} leaves no headroom "
                      f"(suggest \"cap\": {need + 250})")
 
+        controls = _controls(raw, defaults, where, cot, abc_text is not None)
+        lora_scale = _lora_scale(raw, defaults, where)
+
         songs.append(Song(name, style_text, lyrics_text, cap, quantile, n_letters,
                           _seed_spec(raw, defaults, where),
                           _lora_alias(raw, defaults, loras or {}, where),
-                          abc_text, abc_source, score_alias, cot, score_s))
+                          abc_text, abc_source, score_alias, cot, score_s,
+                          controls, lora_scale))
     return songs
 
 
@@ -758,7 +911,8 @@ def build_tracks(songs: list[Song], limit: int | None = None,
                                 song.quantile, song.n_letters, song.lora, ar, nar,
                                 song.cot, song.score_alias, song.score_s,
                                 song.score_alias or (song.abc_source.name
-                                                     if song.abc_source else None)))
+                                                     if song.abc_source else None),
+                                song.controls, song.lora_scale))
     return tracks
 
 
@@ -1002,6 +1156,7 @@ def materialize(run_dir: Path, songs: list[Song], raw_input: bytes,
             "lyrics_file": p["lyrics_file"], "lyrics_sha256": p["lyrics_sha256"],
             "cot": p["cot"], "abc_file": p["abc_file"], "abc_sha256": p["abc_sha256"],
             "score_alias": p["score_alias"],
+            "controls": t.controls, "lora_scale": t.lora_scale,
         })
     (run_dir / "batch_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -1122,6 +1277,12 @@ def sidecar_fields(t: Track, prompt_info: dict, fp: dict, gpu: dict) -> dict:
         "vae_gguf_sha256": fp["vae_gguf_sha256"],
         "attention": "flash",
         "cot": t.cot,
+        "controls": t.controls,
+        "lora_scale": t.lora_scale,
+        # Batch-global env opts still drive the render when no control keys are
+        # set; record them so an env-driven run is replayable too.
+        "request_opts_env": (None if t.controls
+                             else (os.environ.get("EXTRA_REQUEST_OPTS", "").strip() or None)),
         "checkpoint_step": fp["checkpoint_step"],
         "audio_cpp_commit": fp["audio_cpp_commit"],
         "gpu": gpu["name"],
@@ -1158,8 +1319,10 @@ def run_batch(run_dir: Path, tracks: list[Track], prompt_info: dict, fp: dict,
 
             lora_tag = f" lora={t.lora}" if t.lora else ""
             cot_tag = f" cot={t.cot}" if t.cot != "off" else ""
+            ctrl_tag = f" controls='{_opts_string(t.controls)}'" if t.controls else ""
             print(f"[{t.idx}/{total}] {t.name} take={t.take} seed={t.seed} cap={t.cap} "
-                  f"(q={t.quantile}, N={t.n_letters}){lora_tag}{cot_tag} start={utcnow()}")
+                  f"(q={t.quantile}, N={t.n_letters}){lora_tag}{cot_tag}{ctrl_tag} "
+                  f"start={utcnow()}")
             fields = sidecar_fields(t, prompt_info, fp, gpu)
             _write_sidecar(sidecar, fields)
 
@@ -1183,6 +1346,13 @@ def run_batch(run_dir: Path, tracks: list[Track], prompt_info: dict, fp: dict,
                 plan_dir = run_dir / "plans" / f"{t.name}_{t.seed}"
                 plan_dir.mkdir(parents=True, exist_ok=True)
                 env["PLAN_DIR"] = str(plan_dir)
+            # Per-track controls override the inherited (batch-global) env only
+            # when the manifest sets them; validation already refused mixing.
+            if t.controls:
+                env["EXTRA_REQUEST_OPTS"] = _opts_string(t.controls)
+            for side, env_name in (("ar", "LORA_AR_SCALE"), ("nar", "LORA_NAR_SCALE")):
+                if side in t.lora_scale:
+                    env[env_name] = _fmt_num(t.lora_scale[side])
             cmd = ["bash", str(RUN_ONE), t.name, str(t.seed), str(t.cap)]
 
             t0 = time.monotonic()
@@ -1269,12 +1439,15 @@ def print_plan(songs: list[Song], tracks: list[Track], run_dir: Path, dry_run: b
     print(f"plan: {len(songs)} song(s), {len(tracks)} track(s); "
           f"projected ~{est_min:.0f} min on a T4 (~{SEC_PER_TRACK:.0f} s/track)")
     print(f"run dir: {run_dir}" + ("   [dry-run: nothing will be written]" if dry_run else ""))
+    env_opts = os.environ.get("EXTRA_REQUEST_OPTS", "").strip()
+    if env_opts and not any(t.controls for t in tracks):
+        print(f"env: EXTRA_REQUEST_OPTS={env_opts!r}  (batch-global)")
     print(f"{'idx':>4}  {'name':<28}  {'take':>4}  {'seed':>10}  {'cap':>5}  {'q':>5}  "
-          f"{'cot':<6}  {'score':<34}  lora")
+          f"{'cot':<6}  {'score':<34}  {'lora':<6}  controls")
     for t in tracks:
         seed = str(t.seed) if t.seed is not None else "<random>"
         print(f"{t.idx:>4}  {t.name:<28}  {t.take:>4}  {seed:>10}  {t.cap:>5}  {t.quantile:>5}  "
-              f"{t.cot:<6}  {t.score_label or '-':<34}  {t.lora or '-'}")
+              f"{t.cot:<6}  {t.score_label or '-':<34}  {t.lora or '-':<6}  {_short_controls(t)}")
     scored = [s for s in songs if s.abc_text is not None]
     if scored:
         print()

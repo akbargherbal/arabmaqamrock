@@ -1,0 +1,34 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "style_file": "prompts/Hijaz_style.txt",
+    "cot": "full",
+    "quantile": 0.95
+  },
+  "songs": [
+    {
+      "name": "ctrl_base",
+      "lyrics_file": "prompts/example_lyrics.txt",
+      "seed": 20261030
+    },
+    {
+      "name": "ctrl_cfg15",
+      "lyrics_file": "prompts/example_lyrics.txt",
+      "seed": 20261030,
+      "guidance_scale": 1.5
+    },
+    {
+      "name": "ctrl_temp08",
+      "lyrics_file": "prompts/example_lyrics.txt",
+      "seed": 20261030,
+      "semantic_temperature": 0.8
+    },
+    {
+      "name": "ctrl_lora07",
+      "lyrics_file": "prompts/example_lyrics.txt",
+      "seed": 20261030,
+      "lora_ar_scale": 0.7,
+      "lora_nar_scale": 0.7
+    }
+  ]
+}

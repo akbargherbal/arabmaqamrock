@@ -105,9 +105,11 @@ Per-song fields (`strict` — unknown keys are an error):
 | `lora` | optional alias into the top-level `loras` map (see below) |
 | `abc_file` / `score` | optional ABC score: a path, or an alias into the top-level `scores` map (mutually exclusive) |
 | `cot` | `off` (default) / `melody` / `full`; required when a score is given |
+| `guidance_scale`, `semantic_*`, `abc_*` | optional per-song sampler controls (see below) |
+| `lora_ar_scale` / `lora_nar_scale` | optional adapter blend, 0.0–1.5 (default 1.0) |
 
-`defaults` supplies `style`/`style_file`, `repeat`, `quantile`, `lora`, and
-`score`/`abc_file`/`cot` for every song. The trigger word **`arabmaqamrock`** is
+`defaults` supplies `style`/`style_file`, `repeat`, `quantile`, `lora`,
+`score`/`abc_file`/`cot`, and any control key for every song. The trigger word **`arabmaqamrock`** is
 prepended to any style that lacks it (every training caption carried it; disable
 with `--no-trigger`).
 
@@ -155,13 +157,52 @@ carries no score id, so use a new `--out-dir`/`--label` (one folder per score
 batch) or `--force`.
 
 Useful flags: `--dry-run`, `--limit N`, `--label`, `--out-dir`, `--force`,
-`--lora-ar` / `--lora-nar`, `--no-trigger`. Sampler knobs
-(`guidance_scale`, `semantic_temperature`, `semantic_repetition_penalty`) pass through
-the `EXTRA_REQUEST_OPTS` environment variable, e.g.:
+`--lora-ar` / `--lora-nar`, `--no-trigger`.
 
-```bash
-EXTRA_REQUEST_OPTS="guidance_scale=1.5" python3 generate.py my_songs.json
+### Sampler and adapter controls
+
+Generation controls are normal per-song fields, validated against the runtime's
+own bounds and recorded in the sidecar and `batch_manifest.json`. Only the keys
+you write are passed — an absent key leaves the binary on its built-in default,
+so a manifest without them renders exactly as before.
+
+```json
+{
+  "defaults": { "style_file": "prompts/Hijaz_style.txt", "cot": "full",
+                "guidance_scale": 1.5, "semantic_temperature": 0.9 },
+  "songs": [
+    { "name": "tight",  "lyrics_file": "l.txt", "seed": 7, "guidance_scale": 2.0 },
+    { "name": "wilder", "lyrics_file": "l.txt", "seed": 7, "semantic_temperature": 1.15 },
+    { "name": "half",   "lyrics_file": "l.txt", "seed": 7,
+      "lora_ar_scale": 0.7, "lora_nar_scale": 0.5 }
+  ]
+}
 ```
+
+| Key | Default | Bounds | Acts on |
+|---|---|---|---|
+| `guidance_scale` | 1.0 when a score/plan is used (CFG off), else 1.01 | 0–20 | text adherence: **tags + lyrics together**; never the ABC |
+| `semantic_temperature` | 1.0 | 0–5 (0 = greedy) | randomness of the vocal/melody token stream |
+| `semantic_top_p` / `semantic_top_k` | 0.95 / 100 | (0,1] / ≥1 | candidate truncation |
+| `semantic_repetition_penalty` | 1.2 | > 0 | literal loops / repeated syllables |
+| `num_inference_steps` | 8 | ≥ 1 | NAR audio detail (not adherence) |
+| `abc_temperature`, `abc_top_p`, `abc_top_k`, `abc_repetition_penalty`, `abc_min_tokens`, `abc_max_tokens` | 0.7 / 0.9 / 30 / 1.005 / 32 / 4096 | see runtime | the model's **own** ABC plan only |
+| `lora_ar_scale` / `lora_nar_scale` | 1.0 | 0–1.5 | adapter blend: AR plan/vocals, NAR rendered audio |
+
+Rules that keep it predictable:
+
+- `abc_*` requires `cot=melody|full` **and** no external score; otherwise the
+  key would be ignored, so it is a hard error.
+- Setting any control key is mutually exclusive with the batch-global
+  `EXTRA_REQUEST_OPTS` environment variable (hard error, no silent precedence).
+  A manifest without control keys can still use the env var as before; the same
+  applies to `LORA_AR_SCALE` / `LORA_NAR_SCALE`.
+- `semantic_max_tokens` is not a control key: it is the `cap` field.
+
+`manifests/controls.example.json` is a four-take sweep (same seed, one variable
+each) to compare against. `--dry-run` prints the resolved values per track;
+semantics and code references are in
+[docs/suno-generation-controls.md](docs/suno-generation-controls.md) Appendix D.
 
 ## Maqams
 
