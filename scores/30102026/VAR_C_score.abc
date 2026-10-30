@@ -1,0 +1,143 @@
+X:1
+T:
+M:2/4
+L:1/32
+Q:1/4=61
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+V: Ins clef=treble name="Ins Melody" snm="Inst."
+K:D#m
+% VARIANT C of 04-مناجاة-ديار-الأنس-ورجاء-التلاقي_381822375 | Nahawand on D# | recipe: Reimagine
+% intro
+V: Vocal
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+Z|Z|
+V: Ins
+d4e4f4e4|d8c4B4|A4B4d4c4|B8z8|
+G4A4B4A4|G8F4E4|D4E4F4E4|D16-|
+D16|Z|
+% verse
+V: Vocal
+% line 1
+A4B2A2G8|F4E4D4E4|F4G4A4G4|F2E2D4E8|
+D16|
+% line 2
+A4G4F4G4|A4B2A2G8|F4E4D4E4|D4E4F2E2D4|
+D16|
+% line 3
+A4B2A2G2F6|E4F4G4F4|A2B2A4G2F6|E4D4E4F4|
+A16|
+% line 4
+A4G4F4G4|A2B2A2G2F8|E2F2G4F2E6|D4E4F4E4|
+E16|
+% line 5
+D4E4F4G4|A4G2F2E4D4|D4E2F2G2A6|B2A2G4F8|
+D16|
+% line 6
+G4A4B4A4|G4F2E2D8|D4E2F2G4F4|E2F2E4D4D4|
+D16|
+% line 7
+A4G4F4E4|D2E2F4G2F6|E4F2E2D4D4|D16|
+% line 8
+F4G4A4G4|F2E2D4E4D4|D4E4F4E4|E2F2D4E4D4|
+D16|
+V: Ins
+Z|Z|Z|Z|
+Z|
+Z|Z|Z|Z|
+Z|
+Z|Z|Z|Z|
+Z|
+Z|Z|Z|Z|
+Z|
+Z|Z|Z|Z|
+Z|
+Z|Z|Z|Z|
+Z|
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+Z|
+% chorus
+V: Vocal
+% line 1 (same shape as line 1, a 4th up)
+d4e2d2c8|B4A4G4A4|B4c4d4c4|B2A2G4A8|
+% line 2
+G4F4E4D4|A4B4d4c4|B2A2G2F2E8|D8z8|
+D16|
+V: Ins
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+D4E4F4E4|
+% interlude
+V: Vocal
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+V: Ins
+A4B4d4c4|B8A4G4|F4E4D4E4|D16|
+G4A4B4A4|G8F4E4|D4E4F4E4|D16|
+% verse
+V: Vocal
+% line 1
+A4G4F4G4|A4B2A2G8|F2E2D4E4D4|D16|
+% line 2
+G4A4B4A4|G4F2E2D8|D4E4F4E4|E16|
+% line 3
+A4B2A2G8|F4G4A4G4|F2E2D4E4D4|D16|
+% line 4
+G4F4E4F4|G4A4B4A4|G2F2E2D2E8|D16|
+V: Ins
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+% chorus
+V: Vocal
+% line 1
+A4B2A2G8|B4c4d4e4|d4e2d2c8|B2c2d4e2f6|
+% line 2
+e4d4c4B4|B4A2G2A8|G4A4B4c4|
+% line 3
+d4c2B2A8|B2A2G2F2E8|G4F4E4D4|
+% line 4
+A4B4d4c4|B2A2G4F8|E4F4E4D4|D8z8|
+% line 1 again
+d4e2d2c8|B4A4G4A4|B4c4d4c4|B2A2G4A8|
+% line 2 again
+G4F4E4D4|A4B4d4c4|B2A2G2F2E8|D8z8|
+D16|
+V: Ins
+Z|Z|Z|Z|
+Z|Z|Z|
+Z|Z|Z|
+Z|Z|Z|D4E4F4E4|
+Z|Z|Z|Z|
+Z|Z|Z|Z|
+D16|
+% interlude
+V: Vocal
+% tag
+D4E4F4E4|Z|
+% tag
+A4G4F4E4|Z|
+% tag
+D4E4F4E4|Z|
+% tag
+F2E2D4E4D4|D16|
+V: Ins
+Z|Z|
+Z|Z|
+Z|Z|
+A4B4d4c4|D16|
+% outro
+V: Vocal
+% line 1
+A4G4F4E4|D8z8|Z|F4E4D4E4|
+D16|
+% line 2
+Z|F2E2D4E4D4|Z|E4F4E4D4|
+D16-|D16|
+V: Ins
+D4E4F4E4|Z|A4B4d4c4|Z|
+Z|
+G4F4E4D4|Z|Z|Z|
+D16|Z|
