@@ -1,0 +1,170 @@
+X:1
+T:
+M:2/4
+L:1/32
+Q:1/4=65
+V: Vocal clef=treble name="Vocal Melody" snm="Vocal"
+V: Ins clef=treble name="Ins Melody" snm="Inst."
+K:D#m
+% VARIANT C (r2) | New hook: the opening phrase returns as the chorus, an octave up, with a guitar answer
+% intro
+V: Vocal
+"D#m"z16|
+V: Ins
+Z|
+V: Vocal
+M:3/8
+"D#m"z12|
+V: Ins
+M:3/8
+A,4D4E4|
+V: Vocal
+M:2/4
+"D#m"z16|"D#m"z16|"G#m"z16|"G#m"z16|
+V: Ins
+M:2/4
+F8z2E2E2z2|z4A,4D4F4|B6z2B8-|B4G4B4d4|
+V: Vocal
+"C#"z16|"C#"z16|"D#m"z16|"D#m"z16|
+V: Ins
+e4c4G4c4|G4E4C4D4|F12z2E2|E4C4A,8|
+% verse
+V: Vocal
+"D#m"D4F4G4A4|"D#m"A4A4A4G4|"D#m"F4G4"B"F4F4|"C#"A4F4E4z4|
+V: Ins
+Z4|
+V: Vocal
+"C#"z4F4G4E4|"C#"E4D4"D#m"C4E4|
+V: Ins
+Z2|
+V: Vocal
+M:1/4
+"D#m"D2z6|
+V: Ins
+M:1/4
+Z|
+V: Vocal
+M:2/4
+"D#m"z16|"D#m"z4A2d4c2e4|"D#m"d4A2A2A4c4|"D#m"c4A2G2F4G4|
+V: Ins
+M:2/4
+D2E2F2D2E2F2D2E2|A4z12|Z2|
+V: Vocal
+"G#m"G4G4A2A2G2F2|"C#"E4z8E4|"C#"G4G2G2c8|"C#"B4G2B2"F#"B4A4-|
+V: Ins
+Z4|
+V: Vocal
+"D#m"A4z12|"D#m"z2A2d2e2f4e4|"D#m"e4d4A6A2|"D#m"d4e2e2d2c2z4|
+V: Ins
+z6E2F2A2F2E2|A2z12z2|Z2|
+V: Vocal
+"C#"z2c2c2d2e4e2d2|"C#"c2c2c2c2d2c2B2B2|"C#"A4c4d2c2c2B2|"B"z16|
+V: Ins
+Z4|
+V: Vocal
+"D#m"z2A2d4e2f4f2-|"D#m"f2e2e4d4d4|"G#m"c2B2A4c2B2B2A2|"G#m"z16|
+V: Ins
+Z4|
+V: Vocal
+"C#"z2c2e4e2e4e2-|"C#"e2e2e2c2c4d4|"B"f2g2f4g2g2a2a2-|"D#m"a8-a2z2a4|
+V: Ins
+Z4|
+V: Vocal
+"D#m"a4f2f4e2d2e2-|"D#m"e2f4z4f4a2|"G#m"a2b4a2a2g2g4-|"G#m"g2f2e2f2e4z2e2|
+V: Ins
+Z4|
+V: Vocal
+"C#"e4f2g4e4d2|"C#"e4d2c2d2e4c2|"B"B4z2c2e4d2e2|"D#m"d12d4|
+V: Ins
+Z4|
+% chorus
+V: Vocal
+% CHANGED: chorus 1 is the verse's opening phrase, an octave up (a refrain)
+"D#m"d4f2g4a4g2|"D#m"a4z2a4a4g2|"G#m"f2g2f2f2a4f4|"C#"e4f2g4z4a2|
+V: Ins
+Z4|
+V: Vocal
+"C#"a4b2d2b2a4g2|"B"a2g4z8z2|"G#m"z6a2"A#m"g4f2e2|"D#m"d16|
+V: Ins
+Z4|
+V: Vocal
+"D#m"d16|
+V: Ins
+% CHANGED: guitar answers the held note (the source had silence)
+z4D4F4E4|
+% interlude
+V: Vocal
+"D#m"z16|"D#m"z16|"B"z16|"B"z16|
+V: Ins
+d4f2e2e2d2c2d2|z2A2d2e2f2a2d2e2|f4f2e2e2d2c2d2|z2d2d2e2f2e2d2c2|
+V: Vocal
+"C#"z16|"B"z16|"G#m"z8"F#maj7"z8|"D#m"z8"C#"z6A2|
+V: Ins
+d2c2c2c2c4e2f2|g2a8z6|g2b2d'2a4b2g4|z2f4e2e2d2c2z2|
+% verse
+V: Vocal
+"D#m"d4A2A4A4A2-|"D#m"A2d4d4e2e4|"D#m"d4f4g2f2e2z2|"D#m"z12z2A2|
+V: Ins
+Z4|
+V: Vocal
+"D#m"d4f4f2e4e2-|"D#m"e2d2c4z6d2|"C#"e4e4"D#m"d4c4|"D#m"z12z2A2|
+V: Ins
+Z4|
+V: Vocal
+"D#m"d4d2d4d2d2f2-|"D#m"f2e4d4c2d4|"D#m"d4c2B2"C#"c2c2c2z2|"C#"z8z2c2e4|
+V: Ins
+Z3|e2f2e2d2c2z6|
+V: Vocal
+"C#"e2d2d2c2e4d2c2|"B"B2z4B2d4d4|"D#m"d4z12|"D#m"z2A4d4e2f4|
+V: Ins
+Z4|
+% chorus
+V: Vocal
+"D#m"g4a2a4a4a2-|"D#m"a2f2f4g2a2b4|"C#"z16|"C#"z2e2e2f2g4a4|
+V: Ins
+Z2|z4e2f2e2d2c2d2|Z|
+V: Vocal
+"B"f2e4e4e4d2|"C#"e4f2e2"D#m"d2d2z4|"D#m"z12z2A2|"D#m"d4e2f4f2f2g2|
+V: Ins
+Z4|
+V: Vocal
+"D#m"a6a4a4f2|"G#m"a2b6a2g2g2g2-|"C#/G#"g2f2e2f2e4z2e2|"C#"e4f2g4e2d2e2-|
+V: Ins
+Z4|
+V: Vocal
+% CHANGED: the refrain returns
+"C#"e2e2d2c2c2c2c2c2|"B"B4z2d2e4f2e2|"D#m"d4f2g4a4g2|"D#m"a4z2a4a4g2|
+V: Ins
+Z4|
+V: Vocal
+"G#m"f2g2f2f2a4f4|"C#"e4f2g4z4a2|"C#"a4b2d2b2a4g2|"B"a2g4z8z2|
+V: Ins
+Z4|
+V: Vocal
+"G#m"z6a2"A#m"g4f2e2|"D#m"d16|"D#m"d16|
+V: Ins
+Z|Z|z4D4F4E4|
+% interlude
+V: Vocal
+"D#m"d6e2f4e2g2|"D#m"f4z12|"B"d6e2f4e2g2|"B"f4z12|
+V: Ins
+Z4|
+V: Vocal
+"C#"c6d2e4d2f2|"C#"e4z12|"B"z16|"D#m"z12z2A2|
+V: Ins
+Z4|
+% outro
+V: Vocal
+"D#m"d4d2A2-"G#m"A2B2A2G2|"G#m"G2z6G2G2F2F2|"G#m"G4G4"C#"G4F4|"C#"z8E4F4|
+V: Ins
+Z4|
+V: Vocal
+% CHANGED: final note resolved to the tonic
+"C#"G4z4"B"z8|"G#m"c4f4"D#m"d2z6|"D#m"z16|"D#m"z16|
+V: Ins
+% CHANGED: the hook, low, under the last line
+Z|Z|D4F4E4D4|Z|
+V: Vocal
+"D#m"z16|"D#m"z16|"D#m"z12z2z2|
+V: Ins
+Z3|
