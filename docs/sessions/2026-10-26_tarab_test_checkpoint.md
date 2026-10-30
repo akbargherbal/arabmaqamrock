@@ -109,7 +109,7 @@ The five audio files are in `local_workspace/listen/` with `LISTEN.md`:
 `A1_vanilla_seed101.wav`, `A2_vanilla_seed313.wav`, `A3_vanilla_seed577.wav`,
 `B_baghdad_moon.wav`, `C1_v2_seed101.wav`.
 
-## 4. The test batch: `tarab_test_01.json`
+## 4. The test batch: `manifests/tarab_test_01.json`
 
 Same score (`moon_101_v2`, sha `e5748c62`), same seed 101, same cap 7000, same
 lyrics. **Only the conditioning text changes.**
@@ -176,7 +176,7 @@ Scorecard keys, in order:
 
 ## 7. Open items
 
-- Render `tarab_test_01.json` in Colab; confirm **all five WAVs** landed. The
+- Render `manifests/tarab_test_01.json` in Colab; confirm **all five WAVs** landed. The
   run is resumable with `--out-dir`.
 - Copy the scorecard into the app repo before launching.
 - The scorecard snapshot and report go in `eval/tarab_test_01/` after the

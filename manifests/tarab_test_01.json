@@ -1,4 +1,5 @@
 {
+  "base_dir": "..",
   "scores": {
     "moon_101_v2": "scores/moon_101_v2.abc"
   },

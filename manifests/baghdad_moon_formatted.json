@@ -1,4 +1,5 @@
 {
+  "base_dir": "..",
   "scores": {
     "v1": "scores/score_v1_octave_fix.abc",
     "v2": "scores/score_v2_octave_fix_plus_resolutions.abc"

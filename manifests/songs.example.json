@@ -1,4 +1,5 @@
 {
+  "base_dir": "..",
   "defaults": {
     "style_file": "prompts/Hijaz_style.txt",
     "quantile": 0.95

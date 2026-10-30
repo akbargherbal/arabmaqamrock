@@ -9,6 +9,9 @@ folder under out/. Random seeds by default.
 Schema (strict: unknown keys are an error)
 
     {
+      "base_dir": "..",                     # optional; relative asset paths resolve here
+                                            # (default: this JSON's own directory). Use ".." for
+                                            # manifests kept in manifests/ with repo-relative paths.
       "loras": {                            # optional alias registry, per-song adapters
         "v3":     { "dir": "loras" },       # -> loras/arabmaqamrock-v3-{ar,nar}.safetensors
         "quran":  { "dir": "loras/quran" }, # -> loras/quran/arabmaqamrock-v3-{ar,nar}.safetensors
@@ -16,7 +19,7 @@ Schema (strict: unknown keys are an error)
       },                                    # "dir" -> <dir>/arabmaqamrock-v3-{ar,nar}.safetensors,
                                             # or explicit "ar"+"nar"; relative paths resolve here
       "scores": {                           # optional alias registry, ABC score files
-        "v1": "scores/score_v1.abc",        # relative paths resolve against this JSON's dir
+        "v1": "scores/score_v1.abc",        # relative paths resolve against base_dir
         "v2": "scores/score_v2.abc"
       },
       "defaults": {                        # optional; per-song fields win
@@ -282,6 +285,23 @@ def _abs_path(value, base_dir: Path, where: str) -> Path:
     check(isinstance(value, str) and value.strip(), f"{where}: non-empty string required")
     p = Path(value).expanduser()
     return p if p.is_absolute() else base_dir / p
+
+
+def resolve_base_dir(data: dict, input_path: Path) -> Path:
+    """Directory that relative asset paths resolve against.
+
+    Defaults to the manifest's own directory. An optional top-level
+    "base_dir" (itself relative to the manifest) lets manifests live in
+    manifests/ while their scores/, prompts/ and loras/ paths stay written
+    from the repo root.
+    """
+    json_dir = input_path.resolve().parent
+    raw = data.get("base_dir")
+    if raw is None:
+        return json_dir
+    p = _abs_path(raw, json_dir, "input.base_dir").resolve()
+    check(p.is_dir(), f"input.base_dir: not a directory: {p}")
+    return p
 
 
 def resolve_loras(data: dict, base_dir: Path) -> dict[str, tuple[Path, Path]]:
@@ -638,7 +658,7 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
                   cli_cot: str | None = None) -> list[Song]:
     """Validate the input JSON and resolve every song (no writes, no GPU)."""
     check(isinstance(data, dict), "input: top level must be a JSON object")
-    _unknown_keys(data, {"defaults", "songs", "loras", "scores"}, "input")
+    _unknown_keys(data, {"base_dir", "defaults", "songs", "loras", "scores"}, "input")
     defaults = data.get("defaults", {})
     check(isinstance(defaults, dict), "input.defaults: must be an object")
     _reject_inline_abc(defaults, "input.defaults")
@@ -1315,8 +1335,8 @@ def main(argv: list[str] | None = None) -> int:
         input_path = Path(args.json)
         lora_ar = Path(args.lora_ar).expanduser() if args.lora_ar else LORA_AR
         lora_nar = Path(args.lora_nar).expanduser() if args.lora_nar else LORA_NAR
-        base_dir = input_path.resolve().parent
         data, raw = load_input(input_path)
+        base_dir = resolve_base_dir(data, input_path)
         loras = resolve_loras(data, base_dir)
         scores = resolve_scores(data, base_dir)
         songs = resolve_songs(data, base_dir, args.quantile,

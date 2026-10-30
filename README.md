@@ -35,8 +35,8 @@ cd arabmaqamrock
 
 ./install.sh                        # stage the binary + fetch the model & LoRA
 
-python3 generate.py songs.example.json --dry-run   # validate + print the plan (no GPU, writes nothing)
-python3 generate.py songs.example.json             # the real run  → out/<timestamp>_.../  (a .wav)
+python3 generate.py manifests/songs.example.json --dry-run   # validate + print the plan (no GPU, writes nothing)
+python3 generate.py manifests/songs.example.json             # the real run  → out/<timestamp>_.../  (a .wav)
 ```
 
 `install.sh` stages `audiocpp_cli` for your GPU's arch — from this project's GCS
@@ -56,7 +56,7 @@ Colab wipes `/content` on VM loss, so this repo fetches fast and backs up its ou
 git clone https://github.com/akbargherbal/arabmaqamrock.git /content/arabmaqamrock
 cd /content/arabmaqamrock
 ./setup_colab.sh    # binary (prebuilt, arch-selected) + model + LoRA + backup sidecar
-python3 generate.py songs.example.json
+python3 generate.py manifests/songs.example.json
 ```
 
 `setup_colab.sh` wants `gcloud auth login` (to read the prebuilt binary and write
@@ -88,12 +88,17 @@ python3 generate.py my_songs.json               # generate
 python3 generate.py my_songs.json --out-dir out/20261013_mysongs   # resume later (skips finished takes)
 ```
 
+Manifests live in [`manifests/`](manifests/). Relative asset paths are resolved
+against the manifest's own directory by default; the repo manifests set
+`"base_dir": ".."` so `scores/...`, `prompts/...` and `loras/...` stay written
+from the repo root. Omit `base_dir` for a manifest whose assets sit next to it.
+
 Per-song fields (`strict` — unknown keys are an error):
 
 | Field | Meaning |
 |---|---|
 | `name` | required slug (letters/digits, `-`/`_`); the output filename prefix |
-| `style` / `style_file` | exactly one — the style text, or a path (relative to the JSON) |
+| `style` / `style_file` | exactly one — the style text, or a path (relative to `base_dir`) |
 | `lyrics` / `lyrics_file` | exactly one — the lyrics |
 | `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`) |
 | `cap` / `quantile` | explicit token cap, or a quantile (0.90 / 0.95 / 0.975, default 0.95) |
@@ -132,7 +137,7 @@ guitar fills) without regenerating the song blind.
 
 | Field | Meaning |
 |---|---|
-| `abc_file` | path to an ABC file (relative to the JSON) |
+| `abc_file` | path to an ABC file (relative to `base_dir`) |
 | `score` | alias into the top-level `scores` map |
 | `cot` | `off` (default) / `melody` (melody-only; the cover path) / `full` (melody + chord symbols) |
 

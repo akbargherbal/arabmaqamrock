@@ -89,8 +89,8 @@ fi
 
 echo
 echo "Ready. Validate then generate:"
-echo "  python3 generate.py songs.example.json --dry-run"
-echo "  python3 generate.py songs.example.json"
+echo "  python3 generate.py manifests/songs.example.json --dry-run"
+echo "  python3 generate.py manifests/songs.example.json"
 if [ "$WITH_TRANSCRIBE" = 1 ]; then
   echo "  ./transcribe.sh out/latest --dry-run"
 else

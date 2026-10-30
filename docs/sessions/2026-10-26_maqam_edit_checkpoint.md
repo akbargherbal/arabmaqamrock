@@ -29,10 +29,10 @@ The user is running the six-track render in Colab:
 
 ```bash
 git pull          # 920b0d9
-python3 generate.py moon_edit2.json
+python3 generate.py manifests/moon_edit2.json
 ```
 
-- `moon_edit2.json`: six tracks, `cot: melody`, `quantile: 0.975`, lyrics inline.
+- `manifests/moon_edit2.json`: six tracks, `cot: melody`, `quantile: 0.975`, lyrics inline.
 - Dry-run: 6 tracks, ~39 min on T4, caps 7000, headroom 892–1493 frames.
 - Output: `out/<timestamp>_moon_edit2/`.
 - Scores: `scores/moon_<seed>_{clean,mid}2.abc`, tracked.
@@ -283,12 +283,12 @@ verse-only case.
 ## 4. Then
 
 1. ~~577~~ done (§3c).
-2. ~~Build `moon_edit2.json`~~ done: six scores (`clean`, `mid` × three seeds),
+2. ~~Build `manifests/moon_edit2.json`~~ done: six scores (`clean`, `mid` × three seeds),
    same seeds as the source takes, `cot: melody`, `quantile 0.975`, lyrics
    inline. Score files are `scores/moon_<seed>_{clean,mid}2.abc`. Pushed as
    `920b0d9`.
 3. ~~Dry-run~~ passed: 6 tracks, ~39 min on T4, cap 7000, headroom 892–1493.
-4. **Render** — running in Colab (`python3 generate.py moon_edit2.json`).
+4. **Render** — running in Colab (`python3 generate.py manifests/moon_edit2.json`).
 5. **Listen in trios** — next session: original vanilla → clean → mid, per seed.
 
 ### Gate G1 — the decision that matters
@@ -336,8 +336,8 @@ Tracked:
 | `docs/plans/inhouse-maqam-editor.md` | agent plan, phases 0–5, gates G0–G3 |
 | `docs/plans/model-and-tool-selection.md` | tool surface + model benchmark protocol |
 | `scores/moon_<seed>_{clean,v1,v2}.abc` | round 1 sheets, 9 files |
-| `moon_edit.json` | round 1 render spec (9 tracks) |
-| `baghdad_moon_spec.json` | the original A/B spec (6 tracks) |
+| `manifests/moon_edit.json` | round 1 render spec (9 tracks) |
+| `manifests/baghdad_moon_spec.json` | the original A/B spec (6 tracks) |
 
 Local only (gitignored):
 
@@ -466,7 +466,7 @@ what stops the next attempt from reinventing them.
 
 ### 9.3 State and open items
 
-- **Render:** `moon_edit2.json`, six tracks, `out/<timestamp>_moon_edit2/`.
+- **Render:** `manifests/moon_edit2.json`, six tracks, `out/<timestamp>_moon_edit2/`.
   Record the run dir and confirm all six WAVs landed.
 - **Chat exports:** 313/101/577 pending; the `INPUTS` gate is unverified for all
   three.
@@ -475,7 +475,7 @@ what stops the next attempt from reinventing them.
   Track/vendor before the agent.
 - **Unchanged:** round-1 exports to GCS; 177 transcript checksums; round-1 WAV
   snapshot/tag.
-- **Session delta:** `920b0d9` is the render spec (sheets, `moon_edit2.json`,
+- **Session delta:** `920b0d9` is the render spec (sheets, `manifests/moon_edit2.json`,
   checker fixes, §3a–§3d); this checkpoint update is the doc commit that follows.
   Local: `edited2/`, `claude_prompt_{101,577}.md`, and the empty
   `claude_chat/round2/`.

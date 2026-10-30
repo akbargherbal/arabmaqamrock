@@ -1,4 +1,5 @@
 {
+  "base_dir": "..",
   "scores": {
     "v_a": "scores/30102026/VAR_A_score.abc",
     "v_b": "scores/30102026/VAR_B_score.abc",
