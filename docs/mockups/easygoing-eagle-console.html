@@ -1,0 +1,1780 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Easygoing Eagle — Control Room · Interactive</title>
+<meta name="description" content="An interactive, audio-free explainer for the nine-take Easygoing Eagle control sweep. Move a control, select a take, and see what it touches.">
+<meta name="theme-color" content="#140f0d">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&amp;family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;0,6..96,600;1,6..96,400;1,6..96,500&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=Noto+Naskh+Arabic:wght@400;600&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          room: '#140f0d',
+          panel: '#1d1612',
+          cream: '#efe6d5',
+          muted: '#b7a894',
+          dim: '#8a7968',
+          brass: '#b07c42',
+          brasshi: '#e2b577',
+          copper: '#9c4a32',
+          verd: '#4e7b6b',
+          amber: '#dfa23f',
+          rust: '#a93a2c'
+        },
+        fontFamily: {
+          sans: ['Archivo', 'system-ui', 'sans-serif'],
+          display: ['"Bodoni Moda"', 'Georgia', 'serif'],
+          arabic: ['"Noto Naskh Arabic"', 'serif'],
+          mono: ['"IBM Plex Mono"', 'monospace']
+        }
+      }
+    }
+  }
+</script>
+<style>
+  :root{
+    --room:#140f0d;
+    --panel:#1d1612;
+    --plate:#d8cbb5;
+    --plate-hi:#e8ddca;
+    --plate-lo:#c3b39a;
+    --edge:#9b8a72;
+    --ink:#241c16;
+    --ink-2:#5b4b3c;
+    --cream:#efe6d5;
+    --muted:#b7a894;
+    --dim:#8a7968;
+    --brass:#b07c42;
+    --brass-hi:#e2b577;
+    --copper:#9c4a32;
+    --verd:#4e7b6b;
+    --amber:#dfa23f;
+    --rust:#a93a2c;
+  }
+
+  html{ -webkit-text-size-adjust:100%; color-scheme:dark; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(1100px 620px at 48% -12%, #3a271e 0%, rgba(58,39,30,0) 62%),
+      radial-gradient(820px 520px at 96% 8%, #2a2a22 0%, rgba(42,42,34,0) 58%),
+      radial-gradient(900px 700px at 2% 42%, #1a2320 0%, rgba(26,35,32,0) 55%),
+      var(--room);
+    color:var(--cream);
+    font-family:'Archivo', system-ui, sans-serif;
+    overflow-x:hidden;
+  }
+
+  /* room grain */
+  .grain{
+    position:fixed; inset:0; z-index:50; pointer-events:none; opacity:.055; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  ::selection{ background:var(--brass); color:#1a120c; }
+
+  .skip{
+    position:absolute; left:-9999px; top:0; z-index:60;
+    background:var(--cream); color:var(--ink); padding:.6rem 1rem; border-radius:4px; font-size:.85rem;
+  }
+  .skip:focus{ left:1rem; top:.7rem; }
+
+  :where(a,button,[tabindex]):focus-visible{
+    outline:2px solid var(--brass-hi);
+    outline-offset:3px;
+  }
+
+  /* ---------- rail ---------- */
+  .rail{ border-bottom:1px solid #33251d; background:rgba(20,15,13,.72); backdrop-filter:blur(8px); }
+  .logo-mark{
+    width:17px; height:17px; display:inline-block; position:relative;
+    background:linear-gradient(135deg, var(--brass-hi), var(--brass) 55%, #7b542a);
+    clip-path:polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+    box-shadow:0 0 12px rgba(226,181,119,.18);
+  }
+  .wordmark{ font-weight:600; font-size:13.5px; letter-spacing:.02em; }
+  .rail-sub{ font-size:11.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .rail-div{ width:1px; height:12px; background:#3b2b22; display:inline-block; }
+  .preview-tag{
+    font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--brass-hi);
+    border:1px solid rgba(176,124,66,.55); padding:3px 7px; border-radius:2px; white-space:nowrap;
+  }
+  .take-counter{ font-size:11px; letter-spacing:.12em; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .take-counter b{ color:var(--cream); font-weight:600; }
+
+  /* ---------- intro ---------- */
+  h1{
+    font-family:'Bodoni Moda', Georgia, serif;
+    font-weight:500;
+    font-size:clamp(2.9rem, 5.1vw, 4.15rem);
+    line-height:.94;
+    letter-spacing:-.025em;
+    margin:0;
+  }
+  .lede{
+    font-family:'Bodoni Moda', Georgia, serif;
+    font-style:italic;
+    font-size:clamp(1.15rem, 1.7vw, 1.45rem);
+    color:#dccdb6;
+    margin:.85rem 0 0;
+    letter-spacing:.002em;
+  }
+  .body-copy{ font-size:.92rem; line-height:1.7; color:var(--muted); }
+  .start-note{
+    display:inline-flex; align-items:center; gap:.55rem; margin-top:1.05rem;
+    font-size:.78rem; color:#d9c9b1;
+  }
+  .start-note .pip{ width:6px; height:6px; border-radius:50%; background:var(--brass-hi); box-shadow:0 0 0 3px rgba(176,124,66,.16); }
+  .kicker-italic{
+    font-family:'Bodoni Moda', Georgia, serif; font-style:italic; font-size:1.02rem;
+    color:var(--brass-hi); margin:0 0 .5rem;
+  }
+  .arabic{
+    font-family:'Noto Naskh Arabic', serif; font-size:1.28rem; line-height:1.85; color:#e6d8c2;
+    margin:0; direction:rtl; text-align:right;
+  }
+  .translit{ font-family:'Bodoni Moda', Georgia, serif; font-style:italic; font-size:.8rem; color:var(--dim); margin:.35rem 0 0; }
+  .mini{ font-size:.74rem; line-height:1.6; color:var(--dim); margin:.45rem 0 0; }
+
+  /* ---------- console shell ---------- */
+  .console-wrap{ padding-bottom:1px; }
+  .console{
+    position:relative;
+    border-radius:11px;
+    padding-bottom:12px;
+    background:
+      radial-gradient(120% 90% at 12% -10%, #f0e5d2 0%, rgba(240,229,210,0) 55%),
+      linear-gradient(178deg, #e0d4c0 0%, #d6c8b1 48%, #c9baa2 100%);
+    background-color:#d8cbb5;
+    border:1px solid #6f5f4b;
+    box-shadow:
+      0 1px 0 rgba(255,248,235,.85) inset,
+      0 -2px 0 rgba(104,86,65,.55) inset,
+      0 40px 80px -30px rgba(0,0,0,.9),
+      0 8px 24px rgba(0,0,0,.35);
+  }
+  .console::before{
+    content:""; position:absolute; inset:9px; border:1px solid rgba(88,69,49,.22); border-radius:6px; pointer-events:none; z-index:2;
+  }
+  .screw{
+    position:absolute; width:10px; height:10px; border-radius:50%; z-index:4;
+    background:radial-gradient(circle at 34% 28%, #f3e8d5 0%, #b8a58b 42%, #77654e 78%, #55452f 100%);
+    box-shadow:inset 0 0 0 1px rgba(40,30,18,.4), 0 1px 0 rgba(255,255,255,.45);
+  }
+  .screw::after{
+    content:""; position:absolute; left:2px; right:2px; top:4.5px; height:1px;
+    background:rgba(43,31,18,.6); transform:rotate(-24deg);
+  }
+
+  /* brand plate */
+  .console-brand{
+    position:relative; z-index:3;
+    margin:14px 14px 0;
+    border-radius:5px;
+    background:linear-gradient(180deg, #2f231c 0%, #241a15 55%, #1b1310 100%);
+    border:1px solid #4a3629;
+    box-shadow:inset 0 1px 0 rgba(255,220,170,.13), 0 2px 5px rgba(50,36,24,.35);
+    padding:9px 14px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  .brand-name{
+    font-family:'Bodoni Moda', Georgia, serif; font-size:1.12rem; letter-spacing:.015em; color:#f1e5d1;
+  }
+  .brand-meta{ font-size:9px; letter-spacing:.17em; text-transform:uppercase; color:#a08d75; }
+  .brand-right{ display:flex; align-items:center; gap:8px; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:#c9b494; }
+  .led{ width:7px; height:7px; border-radius:50%; display:inline-block; box-shadow:inset 0 0 0 1px rgba(0,0,0,.4); }
+  .led-amber{ background:radial-gradient(circle at 35% 30%, #ffe0a0, #dfa23f 55%, #8a5c16); box-shadow:0 0 8px rgba(223,162,63,.55), inset 0 0 0 1px rgba(70,45,12,.5); }
+  .led-rust{ background:radial-gradient(circle at 35% 30%, #f3a08e, #a93a2c 58%, #5e1c13); box-shadow:0 0 7px rgba(169,58,44,.45), inset 0 0 0 1px rgba(60,14,10,.5); }
+  .led.is-off{
+    background:radial-gradient(circle at 35% 30%, #5c4c3e, #3b2e24 58%, #231a14);
+    box-shadow:inset 0 0 0 1px rgba(20,14,9,.6);
+  }
+
+  /* modules */
+  .console-grid{ position:relative; z-index:3; display:grid; grid-template-columns:1fr; }
+  @media (min-width:1024px){
+    .console-grid{ grid-template-columns:.96fr 1.3fr .96fr; }
+    .module + .module{ border-left:1px solid rgba(88,69,49,.28); box-shadow:1px 0 0 rgba(255,248,235,.35) inset; }
+  }
+  .module{ padding:16px 20px 18px; position:relative; }
+  .module + .module{ border-top:1px solid rgba(88,69,49,.28); }
+  @media (min-width:1024px){ .module + .module{ border-top:0; } }
+
+  .module-head{ display:flex; align-items:flex-start; gap:12px; min-height:52px; }
+  .stage-no{
+    font-family:'Bodoni Moda', Georgia, serif; font-size:1.7rem; line-height:1; color:#8c7454;
+    font-variant-numeric:tabular-nums; margin-top:1px; min-width:30px;
+  }
+  .stage-title{
+    font-size:10.5px; letter-spacing:.17em; text-transform:uppercase; font-weight:600; color:#3d2f23;
+    margin:3px 0 0;
+  }
+  .stage-desc{ font-size:.74rem; line-height:1.35; color:#6b5843; margin:3px 0 0; max-width:24ch; }
+  .status{
+    margin-left:auto; align-self:flex-start; display:inline-flex; align-items:center; gap:6px;
+    font-size:8.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:600;
+    border:1px solid rgba(70,52,35,.4); color:#4a3a2a; padding:3px 6px; border-radius:2px; white-space:nowrap;
+  }
+  .status.is-on{ border-color:rgba(154,110,45,.6); color:#7a4f12; background:rgba(223,162,63,.08); }
+  .status.is-muted{ border-color:rgba(169,58,44,.55); color:#8c2b20; background:rgba(169,58,44,.07); }
+  .status.is-neutral{ color:#5e4c38; }
+  .status.is-awake{ border-color:rgba(78,123,107,.6); color:#315a4c; background:rgba(78,123,107,.08); }
+
+  /* the changed stage gets a thin brass live edge */
+  .module.is-live::before{
+    content:""; position:absolute; left:0; right:0; top:0; height:2px; z-index:2;
+    background:linear-gradient(90deg, rgba(176,124,66,0), rgba(226,181,119,.95), rgba(176,124,66,0));
+  }
+  .module.is-live .stage-no{ color:#8c5a2c; }
+  .module.is-live .stage-title::after{
+    content:""; display:inline-block; width:5px; height:5px; border-radius:50%;
+    margin-left:7px; vertical-align:1px; background:var(--amber);
+    box-shadow:0 0 6px rgba(223,162,63,.65);
+  }
+
+  .module-body{ margin-top:14px; position:relative; }
+  .module.is-muted .knob-row{ opacity:.55; filter:saturate(.6); position:relative; }
+  .module.is-muted .knob-row::after{
+    content:""; position:absolute; inset:-4px; pointer-events:none;
+    background:repeating-linear-gradient(135deg, rgba(96,74,50,.07) 0 1px, transparent 1px 7px);
+    border-radius:3px;
+  }
+
+  /* knobs */
+  .knob-row{ display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+  .knob-wrap{ text-align:center; }
+  .knob{ position:relative; width:92px; height:92px; margin:0 auto; }
+  .knob-scale{ position:absolute; inset:0; width:100%; height:100%; }
+  .knob-scale path{ fill:none; stroke:rgba(72,55,37,.42); stroke-width:1.25; stroke-dasharray:1.4 5.6; }
+  .knob-body{
+    position:absolute; inset:18px; border-radius:50%;
+    background:
+      radial-gradient(circle at 36% 27%, #6d5943 0%, #443528 34%, #2c2119 68%, #19120d 100%);
+    box-shadow:
+      0 4px 7px rgba(58,42,27,.36),
+      0 1px 0 rgba(255,246,228,.5),
+      inset 0 0 0 1px rgba(20,14,9,.65),
+      inset 0 1px 1px rgba(255,225,180,.22);
+  }
+  .knob-body::after{
+    content:""; position:absolute; left:13px; right:13px; top:10px; height:34%;
+    border-radius:50%; background:linear-gradient(180deg, rgba(255,236,205,.16), rgba(255,236,205,0));
+    pointer-events:none;
+  }
+  .knob-pointer{ position:absolute; inset:0; border-radius:50%; transform:rotate(var(--angle)); }
+  .knob-pointer::before{
+    content:""; position:absolute; left:calc(50% - 1px); top:9%; width:2px; height:19px;
+    border-radius:1px; background:linear-gradient(180deg, #f6d9a6, #b07c42);
+    box-shadow:0 0 5px rgba(226,181,119,.45);
+  }
+  .knob-notch{
+    position:absolute; left:50%; top:50%; width:3px; height:3px; border-radius:50%;
+    background:var(--verd); transform:translate(-50%,-50%) rotate(var(--notch)) translateY(-45px);
+    box-shadow:0 0 0 1.5px rgba(216,203,181,.75);
+  }
+  .knob-read{ margin-top:2px; display:flex; align-items:baseline; justify-content:center; gap:4px; }
+  .knob-value{ font-size:1.02rem; font-weight:600; color:#2a2019; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+  .knob-range{ font-size:8px; color:#8a765c; font-variant-numeric:tabular-nums; }
+  .knob-label{
+    font-size:8.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:600; color:#4a3a2a;
+    margin:3px 0 1px; line-height:1.25;
+  }
+  .knob-sub{ font-size:.64rem; color:#6b5540; margin:0; line-height:1.3; }
+
+  /* faders */
+  .fader-block{ margin-top:2px; }
+  .fader-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .fader-label{ font-size:8.5px; letter-spacing:.13em; text-transform:uppercase; font-weight:600; color:#4a3a2a; }
+  .value-chip{
+    background:#2a1e17; color:#f2dfbd; border:1px solid #5a452f; border-radius:3px;
+    padding:1px 6px 2px; font-size:.78rem; font-weight:600; font-variant-numeric:tabular-nums;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.5);
+  }
+  .fader{ position:relative; height:56px; margin-top:8px; }
+  .fader-track{
+    position:absolute; left:0; right:0; top:15px; height:6px; border-radius:3px; overflow:hidden;
+    background:linear-gradient(180deg, #ab9a81, #c4b59d);
+    box-shadow:inset 0 1px 2px rgba(45,32,20,.5), 0 1px 0 rgba(255,250,238,.45);
+  }
+  .fader-fill{ position:absolute; left:0; top:0; bottom:0; background:linear-gradient(180deg, #b66146, #8e3c2a); }
+  .fader-zone{ position:absolute; top:0; bottom:0; }
+  .fader-zone.is-warn{ background:repeating-linear-gradient(135deg, rgba(169,58,44,.32) 0 2px, rgba(169,58,44,.06) 2px 5px); }
+  .fader-zone.is-stiff{ background:repeating-linear-gradient(135deg, rgba(154,110,45,.28) 0 2px, rgba(154,110,45,.05) 2px 5px); }
+  .fader-cap{
+    position:absolute; top:0px; width:21px; height:36px; transform:translateX(-50%);
+    border-radius:3px; z-index:3;
+    background:linear-gradient(90deg, #8a673d 0%, #d9aa6b 42%, #efd3a1 50%, #b8874e 60%, #7c5a33 100%);
+    border:1px solid #6b4e2c;
+    box-shadow:0 3px 7px rgba(48,33,19,.45), inset 0 1px 0 rgba(255,246,225,.65), inset 0 -1px 0 rgba(60,40,20,.35);
+  }
+  .fader-cap::after{
+    content:""; position:absolute; left:2px; right:2px; top:50%; height:1px; background:rgba(45,29,13,.55);
+  }
+  .fader-notch{
+    position:absolute; top:11px; height:14px; width:2px; transform:translateX(-50%);
+    background:var(--verd); z-index:2; border-radius:1px;
+    box-shadow:0 0 0 1px rgba(216,203,181,.35);
+  }
+  .tick{
+    position:absolute; top:38px; transform:translateX(-50%); text-align:center;
+    font-size:8px; line-height:1; color:#6b5540; font-variant-numeric:tabular-nums;
+  }
+  .tick.is-start{ transform:none; text-align:left; }
+  .tick.is-end{ transform:translateX(-100%); text-align:right; }
+  .tick::before{
+    content:""; display:block; width:1px; height:4px; background:rgba(90,70,47,.45); margin:0 auto 3px;
+  }
+  .tick.is-start::before{ margin-left:0; }
+  .tick.is-end::before{ margin-right:0; }
+  .tick.is-default{ color:var(--verd); font-weight:700; }
+  .tick.is-edge{ color:#8d6a43; }
+  .fader-sub{ font-size:.67rem; line-height:1.4; color:#6b5540; margin:0; }
+
+  /* real range inputs sit invisibly over the custom hardware */
+  .ctrl-range{
+    position:absolute; inset:0; width:100%; height:100%; margin:0; z-index:5;
+    opacity:0; cursor:grab; -webkit-appearance:none; appearance:none; background:transparent;
+  }
+  .ctrl-range:active{ cursor:grabbing; }
+  .ctrl-range[data-locked="true"]{ cursor:not-allowed; }
+  .ctrl-range:focus-visible{ outline:none; }
+  .knob:focus-within .knob-body{
+    box-shadow:
+      0 0 0 2px rgba(226,181,119,.85),
+      0 0 0 5px rgba(176,124,66,.22),
+      0 4px 7px rgba(58,42,27,.36),
+      inset 0 0 0 1px rgba(20,14,9,.65);
+  }
+  .fader:focus-within .fader-cap{
+    outline:2px solid var(--brass-hi); outline-offset:2px;
+  }
+  .knob-wrap .ctrl-range{ border-radius:50%; }
+
+  .dual-tag{
+    display:inline-flex; align-items:center; gap:4px; font-size:7.5px; letter-spacing:.1em; text-transform:uppercase;
+    color:#4c6c60; border:1px solid rgba(78,123,107,.45); padding:1px 4px; border-radius:2px; margin-left:5px;
+    vertical-align:1px;
+  }
+
+  .module-note{
+    margin-top:12px; padding-top:9px; border-top:1px solid rgba(88,69,49,.22);
+    font-size:.69rem; line-height:1.5; color:#634d37;
+  }
+  .module-note b{ color:#8c2b20; font-weight:600; }
+
+  /* score card */
+  .score-card{
+    margin-top:10px; border-radius:3px; padding:7px 9px 8px;
+    background:linear-gradient(180deg, #2b1f18, #1d1511);
+    border:1px solid #4b3729;
+    box-shadow:inset 0 1px 0 rgba(255,220,170,.08);
+  }
+  .score-card .sc-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .score-card .sc-label{ font-size:7.5px; letter-spacing:.15em; text-transform:uppercase; color:#b09573; }
+  .score-card .sc-flag{ font-size:7px; letter-spacing:.1em; text-transform:uppercase; color:#d59a8c; border:1px solid #6d352b; padding:1px 4px; border-radius:2px; }
+  .score-card pre{
+    margin:5px 0 0; font-family:'IBM Plex Mono', monospace; font-size:7.8px; line-height:1.55;
+    color:#d8c2a0; white-space:pre-wrap; word-break:break-word;
+  }
+  .score-card .sc-foot{ margin:4px 0 0; font-size:7.2px; color:#8f7a60; letter-spacing:.03em; }
+  .score-card.is-awake{ border-color:#3f6154; box-shadow:inset 0 1px 0 rgba(150,210,180,.12), 0 0 0 1px rgba(78,123,107,.12); }
+  .score-card.is-awake .sc-label{ color:#9fc7b8; }
+  .score-card.is-awake .sc-flag{ color:#8fc0b0; border-color:#3f6154; }
+  .module-note.is-awake b{ color:#315a4c; }
+  .sc-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:7px; padding-top:6px; border-top:1px solid #3b2a20; }
+  .sc-hint{ font-size:7px; letter-spacing:.08em; text-transform:uppercase; color:#7d684f; }
+  .sc-toggle{
+    font:inherit; font-size:7px; letter-spacing:.12em; text-transform:uppercase; font-weight:600;
+    color:#f0d8b4; background:linear-gradient(180deg,#3a2a1e,#291c14);
+    border:1px solid #6b4e2c; border-radius:2px; padding:4px 7px; cursor:pointer; white-space:nowrap;
+  }
+  .sc-toggle:hover{ border-color:#b07c42; color:#fff1d8; }
+  .refusal{
+    margin:8px 0 0; border-left:2px solid #a93a2c; background:rgba(169,58,44,.09);
+    padding:5px 8px; font-size:.69rem; line-height:1.45; color:#7f281e;
+  }
+  .refusal[hidden]{ display:none; }
+
+  /* pass ladder */
+  .pass-ladder{ display:flex; gap:2px; margin-top:6px; }
+  .pass-ladder i{ flex:1; height:5px; border-radius:1px; background:#392a21; box-shadow:inset 0 1px 0 rgba(255,255,255,.04); }
+  .pass-ladder i.on{ background:linear-gradient(180deg,#e8b76c,#b97a2e); box-shadow:0 0 6px rgba(223,162,63,.18); }
+  .ladder-label{ display:flex; justify-content:space-between; font-size:7px; letter-spacing:.11em; text-transform:uppercase; color:#8a765c; margin-top:5px; }
+
+  /* readout */
+  .readout{
+    position:relative; z-index:3; margin:0 14px 14px; border-radius:5px;
+    background:linear-gradient(180deg, #2b2019, #1d1511);
+    border:1px solid #4a3629;
+    box-shadow:inset 0 1px 0 rgba(255,220,170,.1), 0 2px 5px rgba(50,36,24,.3);
+    display:grid; grid-template-columns:1fr; gap:0;
+    color:#e9dcc7;
+  }
+  @media (min-width:768px){ .readout{ grid-template-columns:1.1fr 1.3fr .8fr; } }
+  .readout > div{ padding:12px 16px; }
+  .readout > div + div{ border-top:1px solid #3b2a20; }
+  @media (min-width:768px){ .readout > div + div{ border-top:0; border-left:1px solid #3b2a20; } }
+  .ro-label{ font-size:8px; letter-spacing:.18em; text-transform:uppercase; color:#9a856b; margin:0 0 4px; }
+  .ro-take{ display:flex; align-items:baseline; gap:8px; }
+  .ro-take-id{ font-family:'Bodoni Moda', Georgia, serif; font-size:1.5rem; line-height:1; color:#f4e7d2; }
+  .ro-chip{ font-size:8px; letter-spacing:.1em; text-transform:uppercase; color:#d8bd90; border:1px solid #6a4f33; border-radius:2px; padding:2px 5px; }
+  .ro-move{ display:flex; align-items:center; gap:9px; font-size:.82rem; color:#e4d4bd; flex-wrap:wrap; }
+  .ro-move code{ font-family:'IBM Plex Mono', monospace; font-size:.74rem; color:#efd6ac; }
+  .arrow{ color:var(--brass-hi); font-size:1rem; }
+  .ro-cost{ display:flex; align-items:center; gap:8px; font-size:.72rem; color:#cbb596; }
+  .ro-cost strong{ font-weight:600; color:#f0d8b4; }
+
+  .legend-line{
+    margin:9px 20px 0; display:flex; flex-wrap:wrap; gap:12px 18px; align-items:center;
+    font-size:9px; letter-spacing:.09em; text-transform:uppercase; color:#7a654d;
+  }
+  .legend-line span{ display:inline-flex; align-items:center; gap:6px; }
+  .lg-cap{ width:8px; height:14px; border-radius:1px; background:linear-gradient(90deg,#8a673d,#e2b577); display:inline-block; }
+  .lg-notch{ width:2px; height:11px; background:var(--verd); display:inline-block; }
+  .lg-hatch{ width:14px; height:9px; background:repeating-linear-gradient(135deg, rgba(169,58,44,.4) 0 2px, transparent 2px 4px); border:1px solid rgba(169,58,44,.25); display:inline-block; }
+  .lg-drag{ width:12px; height:12px; border-radius:50%; border:1px dashed rgba(122,101,77,.7); display:inline-block; }
+
+  /* ---------- explain band ---------- */
+  .explain{ border-top:1px solid #33251d; border-bottom:1px solid #33251d; background:rgba(29,22,18,.55); }
+  .explain-grid{ display:grid; grid-template-columns:1fr; }
+  @media (min-width:900px){ .explain-grid{ grid-template-columns:repeat(3,1fr); } }
+  .explain-item{ padding:22px 0; }
+  .explain-item + .explain-item{ border-top:1px solid #33251d; }
+  @media (min-width:900px){
+    .explain-item{ padding:26px 30px; }
+    .explain-item + .explain-item{ border-top:0; border-left:1px solid #33251d; }
+    .explain-item:first-child{ padding-left:0; }
+    .explain-item:last-child{ padding-right:0; }
+  }
+  .explain-title{
+    font-family:'Bodoni Moda', Georgia, serif; font-style:italic; font-size:1.12rem; color:var(--brass-hi); margin:0 0 .5rem;
+  }
+  .explain p{ font-size:.84rem; line-height:1.68; color:var(--muted); margin:0; }
+  .explain p strong{ color:#eadbc4; font-weight:500; }
+
+  /* ---------- section type ---------- */
+  .sec-title{
+    font-family:'Bodoni Moda', Georgia, serif; font-weight:500; font-size:clamp(1.85rem,3vw,2.5rem);
+    line-height:1.05; letter-spacing:-.015em; margin:0;
+  }
+  .sec-copy{ font-size:.86rem; line-height:1.65; color:var(--muted); margin:.55rem 0 0; max-width:56ch; }
+
+  /* ---------- sweep ---------- */
+  .sweep-scroll{
+    display:flex; gap:8px; overflow-x:auto; padding:4px 0 10px;
+    scrollbar-width:thin; scrollbar-color:#4a3629 transparent;
+  }
+  @media (min-width:1280px){ .sweep-scroll{ display:grid; grid-template-columns:repeat(9,1fr); overflow:visible; } }
+  .take{
+    flex:0 0 148px; min-width:0; text-align:left; cursor:pointer;
+    background:linear-gradient(180deg, #221914, #1a1210);
+    border:1px solid #3d2c23; border-radius:3px;
+    padding:10px 10px 9px;
+    color:var(--cream);
+    position:relative;
+    transition:transform .18s ease, border-color .18s ease, background-color .18s ease;
+  }
+  .take:hover{ transform:translateY(-2px); border-color:#6b5138; }
+  .take:active{ transform:translateY(0); }
+  .take.is-active{
+    background:linear-gradient(180deg, #e6dbc8, #d2c2aa);
+    border-color:#8f795a; color:#241c16;
+    box-shadow:0 10px 22px -10px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,250,238,.7);
+    transform:translateY(-3px);
+  }
+  .take.is-active::before{
+    content:""; position:absolute; left:-1px; right:-1px; top:-1px; height:3px; background:linear-gradient(90deg,#8a673d,#e2b577,#8a673d); border-radius:2px 2px 0 0;
+  }
+  .take-top{ display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .take-id{ font-size:.76rem; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+  .take-score{ font-size:7.5px; letter-spacing:.08em; text-transform:uppercase; color:#a48a68; border:1px solid #4d382a; padding:1px 3px; border-radius:2px; }
+  .take.is-active .take-score{ color:#6f5434; border-color:#a08a68; }
+  .take-score.is-none{ color:#d28a7c; border-color:#6d352b; background:rgba(169,58,44,.12); }
+  .take.is-active .take-score.is-none{ color:#8c2b20; border-color:#a95344; background:rgba(169,58,44,.1); }
+  .take-name{
+    font-family:'Bodoni Moda', Georgia, serif; font-style:italic; font-size:1.02rem; margin:7px 0 1px; line-height:1.1;
+  }
+  .take-desc{ display:block; font-size:.64rem; line-height:1.35; color:#a08c75; min-height:2.5em; }
+  .take.is-active .take-desc{ color:#5b4732; }
+  .take-bars{ display:flex; gap:3px; margin-top:7px; }
+  .take-bars i{
+    flex:1; height:3px; background:#36271f; border-radius:1px; font-style:normal;
+  }
+  .take-bars i.on{ background:var(--brass); }
+  .take.is-active .take-bars i{ background:#b9a88f; }
+  .take.is-active .take-bars i.on{ background:#8c5a2c; }
+  .take-stage-key{ font-size:7px; letter-spacing:.1em; color:#7c674f; text-transform:uppercase; margin-top:5px; display:flex; justify-content:space-between; }
+  .take.is-active .take-stage-key{ color:#5f4a35; }
+
+  /* ---------- method ---------- */
+  .step{ display:grid; grid-template-columns:36px 1fr; gap:12px; padding:14px 0; border-top:1px solid #33251d; }
+  .step:first-of-type{ border-top:0; }
+  .step-no{ font-family:'Bodoni Moda', Georgia, serif; font-size:1.35rem; color:var(--brass); line-height:1; font-variant-numeric:tabular-nums; }
+  .step h3{ font-size:.88rem; font-weight:600; margin:0 0 3px; color:#eadcc6; }
+  .step p{ font-size:.8rem; line-height:1.6; color:var(--muted); margin:0; }
+
+  .blind-deck{
+    position:relative; border:1px solid #4a3629; border-radius:6px; padding:18px;
+    background:
+      radial-gradient(90% 70% at 50% 0%, #2c211b 0%, rgba(44,33,27,0) 65%),
+      #191210;
+    box-shadow:inset 0 1px 0 rgba(255,220,170,.08), 0 24px 40px -24px rgba(0,0,0,.9);
+  }
+  .blind-head{ display:flex; justify-content:space-between; align-items:center; font-size:8px; letter-spacing:.16em; text-transform:uppercase; color:#9a856b; }
+  .pads{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+  .pad{
+    border:1px solid #4a3629; border-radius:3px; background:linear-gradient(180deg,#241a15,#1b1310);
+    padding:12px; position:relative; min-height:118px;
+    display:flex; flex-direction:column; justify-content:space-between;
+  }
+  .pad-letter{ font-family:'Bodoni Moda', Georgia, serif; font-size:2rem; line-height:1; color:#d9c6a9; }
+  .pad-meta{ font-size:8px; letter-spacing:.12em; text-transform:uppercase; color:#8a7660; }
+  .pad-wave{ width:100%; height:28px; display:block; opacity:.85; }
+  .reveal-card{
+    position:absolute; left:50%; top:63%; transform:translate(-50%,-50%) rotate(-5deg);
+    width:104px; min-height:78px; background:linear-gradient(180deg,#e8ddca,#d2c2aa);
+    border:1px solid #8f795a; border-radius:3px; z-index:2; padding:9px 8px;
+    box-shadow:0 10px 18px -8px rgba(0,0,0,.8);
+    text-align:center; color:#2a2019;
+  }
+  .reveal-card .q{ font-family:'Bodoni Moda', Georgia, serif; font-size:1.6rem; line-height:1; }
+  .reveal-card .reveal-copy{ display:block; font-size:7px; letter-spacing:.1em; text-transform:uppercase; margin:5px 0 0; color:#6b573f; line-height:1.4; }
+  .blind-foot{ margin-top:12px; display:flex; justify-content:space-between; gap:10px; font-size:8px; letter-spacing:.08em; text-transform:uppercase; color:#7c674f; }
+  .blind-note{ margin:10px 0 0; font-size:.7rem; line-height:1.5; color:#7c674f; }
+  .deal-btn{
+    font:inherit; font-size:7.5px; letter-spacing:.12em; text-transform:uppercase; font-weight:600;
+    color:#d8bd90; background:transparent; border:1px solid #6a4f33; border-radius:2px;
+    padding:3px 7px; cursor:pointer;
+  }
+  .deal-btn:hover{ border-color:#b07c42; color:#f0d8b4; }
+  button.reveal-card{ font:inherit; color:#2a2019; cursor:pointer; appearance:none; }
+  button.reveal-card:hover{ transform:translate(-50%,-50%) rotate(-3deg) translateY(-2px); }
+  button.reveal-card:focus-visible{ outline:2px solid var(--brass-hi); outline-offset:3px; }
+  .reveal-card .q{ white-space:nowrap; }
+  .reveal-card .reveal-copy{ transition:none; }
+  @media (max-width:640px){
+    .reveal-card{ top:50%; }
+  }
+
+  /* ---------- hard stops ---------- */
+  .stop{
+    position:relative; border:1px solid #3d2c23; border-left:2px solid #7d2e24; border-radius:2px;
+    background:linear-gradient(180deg, #201713, #1a1210); padding:16px 16px 15px;
+  }
+  .stop h3{ margin:0 0 5px; font-size:.88rem; font-weight:600; color:#efdfc9; display:flex; gap:8px; align-items:baseline; }
+  .stop h3 span{ font-family:'Bodoni Moda', Georgia, serif; font-style:italic; color:#c9806f; font-size:.78rem; font-weight:400; }
+  .stop p{ margin:0; font-size:.76rem; line-height:1.6; color:#b09d88; }
+  .stop code{ font-family:'IBM Plex Mono', monospace; font-size:.7rem; color:#e3c79b; }
+
+  /* ---------- footer ---------- */
+  .foot{ border-top:1px solid #33251d; }
+  .foot a{ color:#cbb28a; text-decoration:underline; text-decoration-color:rgba(203,178,138,.35); text-underline-offset:3px; }
+  .foot a:hover{ color:#f0d8b4; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; animation:none !important; scroll-behavior:auto !important; }
+  }
+
+  @media (max-width:639px){
+    .rail-sub, .take-counter, .brand-right{ display:none; }
+    .brand-name{ font-size:1.05rem; }
+  }
+
+  @media (max-width:420px){
+    .knob{ width:78px; height:78px; }
+    .knob-notch{ transform:translate(-50%,-50%) rotate(var(--notch)) translateY(-38px); }
+    .knob-body{ inset:15px; }
+    .knob-pointer::before{ height:15px; }
+    .stage-desc{ display:none; }
+    .status{ font-size:7.5px; padding:2px 4px; }
+    .module{ padding:14px 15px 16px; }
+    .console{ border-radius:8px; }
+    .brand-meta{ display:none; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#console">Skip to the console</a>
+<div class="grain" aria-hidden="true"></div>
+
+<!-- ── rail ─────────────────────────────────────────────────────────── -->
+<header class="rail">
+  <div class="mx-auto flex h-14 max-w-[1440px] items-center justify-between gap-4 px-5 sm:px-8">
+    <div class="flex items-center gap-3">
+      <span class="logo-mark" aria-hidden="true"></span>
+      <span class="wordmark">ArabMaqamRock</span>
+      <span class="rail-div" aria-hidden="true"></span>
+      <span class="rail-sub">Control room</span>
+    </div>
+    <div class="hidden items-center gap-2 md:flex">
+      <span class="rail-sub">Easygoing Eagle</span>
+      <span class="rail-div" aria-hidden="true"></span>
+      <span class="rail-sub">9 takes</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class="preview-tag">Interactive · no audio</span>
+      <span class="take-counter" id="take-counter">Take <b>03</b> / 09</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- ── intro ──────────────────────────────────────────────────────── -->
+  <section class="mx-auto max-w-[1440px] px-5 pb-8 pt-10 sm:px-8 sm:pt-12">
+    <div class="grid gap-10 lg:grid-cols-12 lg:gap-12">
+      <div class="lg:col-span-7">
+        <h1>Easygoing Eagle</h1>
+        <p class="lede">Nine takes. One control moved at a time.</p>
+        <p class="body-copy mt-5 max-w-[60ch]">
+          This is not a quality panel. It is a listening test with the sound removed: what
+          remains is the routing. Every take repeats the same lyrics, style and seed; all but
+          e09 share the same score. Select a take to see where the one changed control lives,
+          then move any control yourself to see what it touches — and what it leaves alone.
+        </p>
+        <p class="start-note"><span class="pip" aria-hidden="true"></span>Start at e01_base. Then put e03 on the desk and compare the two readings.</p>
+      </div>
+
+      <div class="lg:col-span-5">
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-1 lg:gap-5">
+          <div>
+            <p class="kicker-italic">the constant</p>
+            <p class="arabic" lang="ar" dir="rtl">بِاللَّهِ يَا مَنْزِلَ الْعَيْشِ ٱلَّذِي دَرَسَتْ آثَارُهُ</p>
+            <p class="translit">“By God, O home of a life whose traces have faded…”</p>
+            <p class="mini">The same words, style, seed and score in every take — except e09, where the score is removed. No audio is played here; every value mirrors the manifest.</p>
+          </div>
+          <div class="sm:border-l sm:border-[#33251d] sm:pl-6 lg:border-l-0 lg:border-t lg:border-[#33251d] lg:pl-0 lg:pt-4">
+            <p class="kicker-italic">the variable</p>
+            <p class="font-display text-[1.28rem] leading-snug text-[#e6d8c2]">One control per take.</p>
+            <p class="mini">Six takes isolate one knob. e08 moves a matched pair. e09 moves the planner and leaves the score behind.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── console ────────────────────────────────────────────────────── -->
+  <section id="console" class="console-wrap mx-auto max-w-[1440px] px-4 sm:px-8" aria-labelledby="console-caption">
+    <h2 id="console-caption" class="sr-only">The control desk, showing take e03_cfg20</h2>
+    <div class="console">
+      <span class="screw" style="left:12px;top:12px" aria-hidden="true"></span>
+      <span class="screw" style="right:12px;top:12px" aria-hidden="true"></span>
+      <span class="screw" style="left:12px;bottom:12px" aria-hidden="true"></span>
+      <span class="screw" style="right:12px;bottom:12px" aria-hidden="true"></span>
+
+      <!-- brand plate -->
+      <div class="console-brand">
+        <div class="flex items-center gap-3">
+          <span class="brand-name">Easygoing Eagle</span>
+          <span class="brand-meta">Sweep desk · one variable at a time</span>
+        </div>
+        <div class="brand-right">
+          <span class="led led-rust" id="brand-score-led" aria-hidden="true"></span>
+          <span id="brand-score">Score v_a</span>
+          <span class="text-[#5a4634]" aria-hidden="true">/</span>
+          <span class="led led-amber" id="brand-cfg-led" aria-hidden="true"></span>
+          <span id="brand-cfg">CFG on</span>
+        </div>
+      </div>
+
+      <div class="console-grid">
+        <!-- PLAN -->
+        <section class="module is-muted" id="plan-module" aria-labelledby="plan-title">
+          <div class="module-head">
+            <span class="stage-no">01</span>
+            <div>
+              <h2 class="stage-title" id="plan-title">Planning</h2>
+              <p class="stage-desc">The model writes its own ABC score before it sings.</p>
+            </div>
+            <span class="status is-muted" id="plan-status">Score lock</span>
+          </div>
+          <div class="module-body">
+            <div class="knob-row">
+              <div class="knob-wrap">
+                <div class="knob" data-control="abc_temperature" data-kind="knob" style="--angle:-97deg" role="img" aria-label="ABC temperature: 0.7, default 0.7, range 0 to 5">
+                  <svg class="knob-scale" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M20.3 79.7 A42 42 0 1 1 79.7 79.7" pathLength="100"/>
+                  </svg>
+                  <div class="knob-body"><span class="knob-pointer"></span></div>
+                  <span class="knob-notch" style="--notch:-97deg" aria-hidden="true"></span>
+                </div>
+                <div class="knob-read"><span class="knob-value">0.7</span><span class="knob-range">0–5</span></div>
+                <p class="knob-label">ABC temperature</p>
+                <p class="knob-sub">the composer’s nerve</p>
+              </div>
+
+              <div class="knob-wrap">
+                <div class="knob" data-control="abc_top_k" data-kind="knob" style="--angle:-36deg" role="img" aria-label="ABC top-k: 30 candidates, default 30, range 1 and up">
+                  <svg class="knob-scale" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M20.3 79.7 A42 42 0 1 1 79.7 79.7" pathLength="100"/>
+                  </svg>
+                  <div class="knob-body"><span class="knob-pointer"></span></div>
+                  <span class="knob-notch" style="--notch:-36deg" aria-hidden="true"></span>
+                </div>
+                <div class="knob-read"><span class="knob-value">30</span><span class="knob-range">1–80</span></div>
+                <p class="knob-label">ABC top-k</p>
+                <p class="knob-sub">how many melodies it considers</p>
+              </div>
+            </div>
+            <p class="module-note" id="plan-note"><b>External score v_a replaces the plan.</b> These two knobs do nothing on e01–e08. Only e09 has no score, so only e09 wakes this module.</p>
+            <p class="refusal" id="plan-refusal" role="status" aria-live="polite" hidden></p>
+            <div class="score-card" id="score-card">
+              <div class="sc-head"><span class="sc-label" id="score-label">score v_a · supplied</span><span class="sc-flag" id="score-flag">not the planner</span></div>
+              <pre id="score-pre">X:1  M:2/4  L:1/32  Q:1/4=65
+K:D#m · Nahawand on D#
+V:Vocal
+D4E2F2E4D4|E2F2G2F2E8
+G4A4F4E4|F2G2A4G2F6|</pre>
+              <p class="sc-foot" id="score-foot">The plan is read, not written. abc_* stays idle.</p>
+              <div class="sc-actions">
+                <span class="sc-hint">demo the lock</span>
+                <button class="sc-toggle" id="score-toggle" type="button">Release score v_a</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SING -->
+        <section class="module" id="sing-module" aria-labelledby="sing-title">
+          <div class="module-head">
+            <span class="stage-no">02</span>
+            <div>
+              <h2 class="stage-title" id="sing-title">Voice · AR</h2>
+              <p class="stage-desc">Lyrics plus the plan become a sung performance.</p>
+            </div>
+            <span class="status is-on" id="sing-status"><span class="led led-amber" id="sing-led" aria-hidden="true" style="width:5px;height:5px"></span><span id="sing-status-text">CFG on</span></span>
+          </div>
+          <div class="module-body">
+            <!-- guidance -->
+            <div class="fader-block">
+              <div class="fader-head">
+                <span class="fader-label">Guidance scale</span>
+                <span class="value-chip">2.0</span>
+              </div>
+              <div class="fader" data-control="guidance_scale" data-kind="fader" role="img" aria-label="Guidance scale: 2.0, default 1.0 which bypasses CFG, range 0 to 20">
+                <div class="fader-track">
+                  <div class="fader-zone is-stiff" style="left:62%;right:0" aria-hidden="true"></div>
+                  <div class="fader-fill" style="width:34%"></div>
+                </div>
+                <div class="fader-notch" style="left:18%"></div>
+                <div class="fader-cap" style="left:34%"></div>
+                <span class="tick is-edge is-start" style="left:0%">0</span>
+                <span class="tick is-default" style="left:18%">1.0</span>
+                <span class="tick" style="left:34%">2</span>
+                <span class="tick" style="left:62%">5</span>
+                <span class="tick is-edge is-end" style="left:100%">20</span>
+              </div>
+              <p class="fader-sub"><b style="color:#4c6c60">1.0 bypasses CFG entirely.</b> Above 1, style tags and lyrics pull harder; the voice path is also run twice.</p>
+            </div>
+
+            <!-- small trims -->
+            <div class="mt-2 grid grid-cols-2 gap-2">
+              <div class="knob-wrap">
+                <div class="knob" data-control="semantic_temperature" data-kind="knob" style="--angle:-81deg;width:70px;height:70px" role="img" aria-label="Semantic temperature: 1.0, default 1.0">
+                  <svg class="knob-scale" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M20.3 79.7 A42 42 0 1 1 79.7 79.7" pathLength="100"/>
+                  </svg>
+                  <div class="knob-body"><span class="knob-pointer"></span></div>
+                  <span class="knob-notch" style="--notch:-81deg" aria-hidden="true"></span>
+                </div>
+                <div class="knob-read"><span class="knob-value" style="font-size:.86rem">1.0</span><span class="knob-range">0–5</span></div>
+                <p class="knob-label" style="font-size:8px">Semantic temp</p>
+                <p class="knob-sub">the singer’s nerve</p>
+              </div>
+              <div class="knob-wrap">
+                <div class="knob" data-control="semantic_repetition_penalty" data-kind="knob" style="--angle:45deg;width:70px;height:70px" role="img" aria-label="Semantic repetition penalty: 1.2, default 1.2">
+                  <svg class="knob-scale" viewBox="0 0 100 100" aria-hidden="true">
+                    <path d="M20.3 79.7 A42 42 0 1 1 79.7 79.7" pathLength="100"/>
+                  </svg>
+                  <div class="knob-body"><span class="knob-pointer"></span></div>
+                  <span class="knob-notch" style="--notch:45deg" aria-hidden="true"></span>
+                </div>
+                <div class="knob-read"><span class="knob-value" style="font-size:.86rem">1.2</span><span class="knob-range">0.1–2</span></div>
+                <p class="knob-label" style="font-size:8px">Rep. penalty</p>
+                <p class="knob-sub">punish literal loops</p>
+              </div>
+            </div>
+
+            <!-- lora ar -->
+            <div class="fader-block mt-4">
+              <div class="fader-head">
+                <span class="fader-label">LoRA · voice <span class="dual-tag">also feeds 01</span></span>
+                <span class="value-chip">1.0</span>
+              </div>
+              <div class="fader" data-control="lora_ar_scale" data-kind="fader" role="img" aria-label="LoRA voice adapter: 1.0, default 1.0, guard rail 1.5">
+                <div class="fader-track">
+                  <div class="fader-zone is-warn" style="left:67%;right:0" aria-hidden="true"></div>
+                  <div class="fader-fill" style="width:67%"></div>
+                </div>
+                <div class="fader-notch" style="left:67%"></div>
+                <div class="fader-cap" style="left:67%"></div>
+                <span class="tick is-edge is-start" style="left:0%">0</span>
+                <span class="tick" style="left:47%">0.7</span>
+                <span class="tick is-default" style="left:67%">1.0</span>
+                <span class="tick is-edge is-end" style="left:100%">1.5</span>
+              </div>
+              <p class="fader-sub">Weight blending, not prompt weight. Past 1.0 is not “more style” — it is instability.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- RENDER -->
+        <section class="module" id="render-module" aria-labelledby="render-title">
+          <div class="module-head">
+            <span class="stage-no">03</span>
+            <div>
+              <h2 class="stage-title" id="render-title">Render · NAR</h2>
+              <p class="stage-desc">The performance becomes timbre, mix and detail.</p>
+            </div>
+            <span class="status is-neutral" id="render-status"><span class="led led-amber is-off" id="render-led" aria-hidden="true" style="width:5px;height:5px"></span><span id="render-status-text">8 passes</span></span>
+          </div>
+          <div class="module-body">
+            <div class="fader-block">
+              <div class="fader-head">
+                <span class="fader-label">Inference steps</span>
+                <span class="value-chip">8</span>
+              </div>
+              <div class="fader" data-control="num_inference_steps" data-kind="fader" role="img" aria-label="Inference steps: 8, default 8, e07 uses 16">
+                <div class="fader-track">
+                  <div class="fader-fill" style="width:26%"></div>
+                </div>
+                <div class="fader-notch" style="left:26%"></div>
+                <div class="fader-cap" style="left:26%"></div>
+                <span class="tick is-edge is-start" style="left:0%">1</span>
+                <span class="tick is-default" style="left:26%">8</span>
+                <span class="tick" style="left:55%">16</span>
+                <span class="tick is-edge is-end" style="left:100%">32</span>
+              </div>
+              <p class="fader-sub">Detail, not adherence. e07 doubles the passes to 16.</p>
+            </div>
+
+            <div class="fader-block mt-3">
+              <div class="fader-head">
+                <span class="fader-label">LoRA · render</span>
+                <span class="value-chip">1.0</span>
+              </div>
+              <div class="fader" data-control="lora_nar_scale" data-kind="fader" role="img" aria-label="LoRA render adapter: 1.0, default 1.0, guard rail 1.5">
+                <div class="fader-track">
+                  <div class="fader-zone is-warn" style="left:67%;right:0" aria-hidden="true"></div>
+                  <div class="fader-fill" style="width:67%"></div>
+                </div>
+                <div class="fader-notch" style="left:67%"></div>
+                <div class="fader-cap" style="left:67%"></div>
+                <span class="tick is-edge is-start" style="left:0%">0</span>
+                <span class="tick" style="left:47%">0.7</span>
+                <span class="tick is-default" style="left:67%">1.0</span>
+                <span class="tick is-edge is-end" style="left:100%">1.5</span>
+              </div>
+              <p class="fader-sub">Same blend, different side of the desk: the finished audio, not the performance.</p>
+            </div>
+
+            <p class="module-note">Steps add detail. <b>They cannot rescue a wrong plan or a stiff read.</b> Those are decided upstream.</p>
+            <div class="mt-3">
+              <div class="ladder-label"><span>render detail</span><span id="pass-label">8 / 32 passes</span></div>
+              <div class="pass-ladder" id="pass-ladder" aria-hidden="true">
+                <i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+                <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- readout -->
+      <div class="readout" aria-label="Selected take summary" aria-live="polite">
+        <div>
+          <p class="ro-label">On the desk</p>
+          <div class="ro-take">
+            <span class="ro-take-id" id="ro-take-id">e03_cfg20</span>
+            <span class="ro-chip" id="ro-chip">score v_a</span>
+          </div>
+        </div>
+        <div>
+          <p class="ro-label" id="ro-move-label">One control moved</p>
+          <div class="ro-move" id="ro-move">
+            <code>guidance_scale</code>
+            <span>1.0</span>
+            <span class="arrow" aria-hidden="true">→</span>
+            <strong>2.0</strong>
+          </div>
+        </div>
+        <div>
+          <p class="ro-label">Cost</p>
+          <div class="ro-cost" id="ro-cost"><span class="led led-amber" aria-hidden="true"></span><span>voice path runs <strong>twice</strong></span></div>
+        </div>
+      </div>
+
+      <div class="legend-line" aria-label="How to read the desk">
+        <span><i class="lg-cap" aria-hidden="true"></i>cap = this take</span>
+        <span><i class="lg-notch" aria-hidden="true"></i>notch = default</span>
+        <span><i class="lg-hatch" aria-hidden="true"></i>hatch = guard rail</span>
+        <span><i class="lg-drag" aria-hidden="true"></i>drag = explore</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── explain band ───────────────────────────────────────────────── -->
+  <section class="explain mt-10">
+    <div class="explain-grid mx-auto max-w-[1440px] px-5 sm:px-8">
+      <div class="explain-item">
+        <h2 class="explain-title">what moved</h2>
+        <p id="story-moved">Guidance is not part of the plan. It presses the voice toward the request — <strong>style tags plus lyrics together</strong>. At 2.0 the press is hard.</p>
+      </div>
+      <div class="explain-item">
+        <h2 class="explain-title">listen for</h2>
+        <p id="story-listen">Clearer consonants and a firmer read of the style. Then check the cost: <strong>does the tarab phrasing survive the extra push?</strong></p>
+      </div>
+      <div class="explain-item">
+        <h2 class="explain-title">do not expect</h2>
+        <p id="story-expect">Better audio, or a stronger maqam. Quality comes from the render side; the maqam comes from the score or the planning stage.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── sweep ──────────────────────────────────────────────────────── -->
+  <section class="mx-auto max-w-[1440px] px-5 py-14 sm:px-8" aria-labelledby="sweep-title">
+    <div class="flex flex-wrap items-end justify-between gap-5">
+      <div>
+        <h2 class="sec-title" id="sweep-title">The sweep</h2>
+        <p class="sec-copy">Nine takes, one variable at a time. Select a slot to put it on the desk.</p>
+      </div>
+      <div class="flex flex-wrap items-center gap-4 text-[9px] uppercase tracking-[.12em] text-[#8a7968]">
+        <span class="inline-flex items-center gap-2"><i aria-hidden="true" class="inline-block h-[3px] w-4 bg-brass"></i>P plan</span>
+        <span class="inline-flex items-center gap-2"><i aria-hidden="true" class="inline-block h-[3px] w-4 bg-brass"></i>S sing</span>
+        <span class="inline-flex items-center gap-2"><i aria-hidden="true" class="inline-block h-[3px] w-4 bg-brass"></i>R render</span>
+        <span class="inline-flex items-center gap-2"><i aria-hidden="true" class="inline-block h-[7px] w-[7px] rounded-full border border-[#d28a7c]"></i>no score</span>
+      </div>
+    </div>
+
+    <div class="sweep-scroll mt-7">
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e01</span><span class="take-score">v_a</span></span>
+        <span class="take-name">base</span>
+        <span class="take-desc">Every control at its default. The reference.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="take-stage-key"><span>unchanged</span><span>—</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e02</span><span class="take-score">v_a</span></span>
+        <span class="take-name">cfg15</span>
+        <span class="take-desc">Guidance 1.5. The first take to switch CFG on.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i class="on"></i><i></i></span>
+        <span class="take-stage-key"><span>sing</span><span>1.5</span></span>
+      </button>
+
+      <button class="take is-active" type="button" aria-pressed="true">
+        <span class="take-top"><span class="take-id">e03</span><span class="take-score">v_a</span></span>
+        <span class="take-name">cfg20</span>
+        <span class="take-desc">Guidance 2.0. A hard press; watch the phrasing.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i class="on"></i><i></i></span>
+        <span class="take-stage-key"><span>sing</span><span>2.0</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e04</span><span class="take-score">v_a</span></span>
+        <span class="take-name">temp08</span>
+        <span class="take-desc">Semantic temperature 0.8. A steadier singer.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i class="on"></i><i></i></span>
+        <span class="take-stage-key"><span>sing</span><span>0.8</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e05</span><span class="take-score">v_a</span></span>
+        <span class="take-name">temp12</span>
+        <span class="take-desc">Semantic temperature 1.2. A bolder singer.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i class="on"></i><i></i></span>
+        <span class="take-stage-key"><span>sing</span><span>1.2</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e06</span><span class="take-score">v_a</span></span>
+        <span class="take-name">rep135</span>
+        <span class="take-desc">Repetition penalty 1.35. Fewer literal loops.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i class="on"></i><i></i></span>
+        <span class="take-stage-key"><span>sing</span><span>1.35</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e07</span><span class="take-score">v_a</span></span>
+        <span class="take-name">steps16</span>
+        <span class="take-desc">Sixteen render passes. Detail, not adherence.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i></i><i class="on"></i></span>
+        <span class="take-stage-key"><span>render</span><span>16</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e08</span><span class="take-score">v_a</span></span>
+        <span class="take-name">lora07</span>
+        <span class="take-desc">Both adapters at 0.7. Less arabmaqamrock.</span>
+        <span class="take-bars" aria-hidden="true"><i></i><i class="on"></i><i class="on"></i></span>
+        <span class="take-stage-key"><span>sing + render</span><span>0.7</span></span>
+      </button>
+
+      <button class="take" type="button" aria-pressed="false">
+        <span class="take-top"><span class="take-id">e09</span><span class="take-score is-none">no score</span></span>
+        <span class="take-name">plan</span>
+        <span class="take-desc">ABC 0.9 / 40. The planner writes instead of v_a.</span>
+        <span class="take-bars" aria-hidden="true"><i class="on"></i><i></i><i></i></span>
+        <span class="take-stage-key"><span>plan</span><span>0.9 / 40</span></span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── method ─────────────────────────────────────────────────────── -->
+  <section class="mx-auto max-w-[1440px] px-5 pb-16 sm:px-8" aria-labelledby="method-title">
+    <div class="grid gap-10 lg:grid-cols-12 lg:gap-14">
+      <div class="lg:col-span-6">
+        <h2 class="sec-title" id="method-title">Listen blind, then look.</h2>
+        <p class="sec-copy">The take names give the answer away. Hide them long enough to hear the difference first.</p>
+        <div class="mt-6">
+          <div class="step">
+            <span class="step-no">1</span>
+            <div><h3>Play the baseline, then one take</h3><p>Keep the same lyric, style, seed and score. Change one thing only.</p></div>
+          </div>
+          <div class="step">
+            <span class="step-no">2</span>
+            <div><h3>Describe it before you name it</h3><p>“Tighter.” “Stiffer.” “Wider.” “The consonants bite more.” Plain words first.</p></div>
+          </div>
+          <div class="step">
+            <span class="step-no">3</span>
+            <div><h3>Reveal the control</h3><p>If the difference does not survive the reveal, the take did not earn the knob.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-6">
+        <div class="blind-deck">
+          <div class="blind-head"><span id="blind-title">Blind pair · protocol demo</span><button class="deal-btn" id="deal-btn" type="button">Deal pair</button></div>
+          <div class="pads">
+            <div class="pad">
+              <div class="flex items-start justify-between"><span class="pad-letter">A</span><span class="pad-meta" id="pad-a-meta">take hidden</span></div>
+              <svg class="pad-wave" viewBox="0 0 160 28" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="0,14 12,14 16,7 20,21 24,11 28,16 34,14 46,14 50,4 54,24 58,10 62,17 68,14 82,14 86,8 90,20 94,12 98,15 106,14 120,14 124,6 128,22 132,11 136,16 142,14 160,14"
+                  fill="none" stroke="#b07c42" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div class="pad">
+              <div class="flex items-start justify-between"><span class="pad-letter">B</span><span class="pad-meta" id="pad-b-meta">take hidden</span></div>
+              <svg class="pad-wave" viewBox="0 0 160 28" preserveAspectRatio="none" aria-hidden="true">
+                <polyline points="0,14 10,14 14,9 18,19 22,12 28,15 36,14 44,14 48,6 52,22 56,11 60,16 66,14 78,14 82,4 86,24 90,10 94,17 100,14 114,14 118,7 122,21 126,12 130,16 138,14 160,14"
+                  fill="none" stroke="#8f795a" stroke-width="1.2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <button class="reveal-card" id="reveal-btn" type="button" aria-label="Reveal the blind pair">
+            <span class="q" id="reveal-q">?</span>
+            <span class="reveal-copy" id="reveal-note">Commit, then reveal the pair</span>
+          </button>
+          <div class="blind-foot"><span>A/B does not say which is better</span><span>It says what changed</span></div>
+          <p class="blind-note">Protocol demo only. No audio is played; the deck teaches the listening method, not the song.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── hard stops ─────────────────────────────────────────────────── -->
+  <section class="border-t border-[#33251d] bg-[rgba(29,22,18,.5)]" aria-labelledby="stops-title">
+    <div class="mx-auto max-w-[1440px] px-5 py-14 sm:px-8">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h2 class="sec-title" id="stops-title">Hard stops</h2>
+          <p class="sec-copy">The tool refuses these before any GPU work. They are not taste calls.</p>
+        </div>
+        <span class="text-[9px] uppercase tracking-[.14em] text-[#8a7968]">Validation · pre-flight</span>
+      </div>
+
+      <div class="mt-7 grid gap-3 sm:grid-cols-2">
+        <div class="stop">
+          <h3>Score kills ABC <span>rule 01</span></h3>
+          <p>An external score replaces the plan. <code>abc_*</code> is dead with <code>cot=off</code> and rejected alongside <code>score</code> or <code>abc_file</code> — an explicit error, not a silent ignore.</p>
+        </div>
+        <div class="stop">
+          <h3>1.0 is off <span>rule 02</span></h3>
+          <p><code>guidance_scale=1.0</code> bypasses CFG. It is not a quiet setting. 1.5 and 2.0 are the first takes that switch it on, and the voice path runs twice.</p>
+        </div>
+        <div class="stop">
+          <h3>One adapter, one source <span>rule 03</span></h3>
+          <p>Do not combine manifest <code>lora_*_scale</code> with <code>LORA_AR_SCALE</code> / <code>LORA_NAR_SCALE</code> environment variables. Two sources for one setting are refused.</p>
+        </div>
+        <div class="stop">
+          <h3>The seed is not a save file <span>rule 04</span></h3>
+          <p>A seed reproduces a take only when every resolved setting matches. Move one fader and the path changes — same seed, different song.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="mx-auto flex max-w-[1440px] flex-col gap-3 px-5 py-7 text-[11px] text-[#8a7968] sm:flex-row sm:items-center sm:justify-between sm:px-8">
+    <p class="m-0">ArabMaqamRock · Control room — a reading of <a href="../easygoing-eagle-controls-ar.md">easygoing-eagle-controls-ar.md</a>.</p>
+    <p class="m-0">Interactive explainer · no audio, no generation · values mirror the manifest.</p>
+  </div>
+</footer>
+<script>
+(() => {
+  'use strict';
+
+  /* ── the model ───────────────────────────────────────────────────── */
+
+  const DEFAULTS = Object.freeze({
+    abc_temperature: 0.7,
+    abc_top_k: 30,
+    guidance_scale: 1.0,
+    semantic_temperature: 1.0,
+    semantic_repetition_penalty: 1.2,
+    lora_ar_scale: 1.0,
+    lora_nar_scale: 1.0,
+    num_inference_steps: 8
+  });
+
+  const CONTROLS = {
+    abc_temperature: {
+      label: 'ABC temperature', stage: 'plan', kind: 'knob',
+      min: 0, max: 5, step: 0.1,
+      story: {
+        moved: 'ABC temperature changes how boldly the planner samples its own melody. 0 is greedy and repeatable; higher values widen the choices.',
+        listen: 'More unexpected intervals and ornaments in the planned line — and a higher chance of a phrase that fights the lyric.',
+        expect: 'Any effect while score v_a is attached. abc_* is only the planner’s dial.'
+      }
+    },
+    abc_top_k: {
+      label: 'ABC top-k', stage: 'plan', kind: 'knob',
+      min: 1, max: 80, step: 1,
+      story: {
+        moved: 'Top-k limits the planner to the k most likely next tokens before temperature chooses among them. Small k narrows the menu; large k opens it.',
+        listen: 'A wider or narrower melodic vocabulary in the plan; it does not make the singer follow the style harder.',
+        expect: 'It cannot override an attached score. It changes what the planner may consider, not what the voice is asked to do.'
+      }
+    },
+    guidance_scale: {
+      label: 'Guidance scale', stage: 'sing', kind: 'fader',
+      min: 0, max: 20, step: 0.1,
+      story: {
+        moved: 'Guidance presses the voice toward style and lyrics together. 1.0 bypasses CFG; above 1.0 the voice path runs twice.',
+        listen: 'Consonants bite, the style tag lands harder, and the read can stiffen. Tarab phrasing is often the first casualty.',
+        expect: 'More detail or a better maqam. Render handles detail; the score or planner handles the maqam.'
+      }
+    },
+    semantic_temperature: {
+      label: 'Semantic temperature', stage: 'sing', kind: 'knob',
+      min: 0, max: 5, step: 0.1,
+      story: {
+        moved: 'Semantic temperature sets the randomness of the sung token stream: the singer’s nerve, not the composer’s.',
+        listen: 'Lower is steadier and more repeatable; higher takes more risks with delivery and ornament.',
+        expect: 'An edit to the score. It changes how the voice traverses the notes it was given.'
+      }
+    },
+    semantic_repetition_penalty: {
+      label: 'Repetition penalty', stage: 'sing', kind: 'knob',
+      min: 0.1, max: 2, step: 0.05,
+      story: {
+        moved: 'Repetition penalty discourages tokens seen in the recent window. The default is 1.2; e06 uses 1.35.',
+        listen: 'Fewer literal repeated syllables and loops; push too far and natural returns start to feel avoided.',
+        expect: 'A cure for a monotonous lyric. It only penalizes literal repetition.'
+      }
+    },
+    lora_ar_scale: {
+      label: 'LoRA voice', stage: 'sing', kind: 'fader',
+      min: 0, max: 1.5, step: 0.05,
+      story: {
+        moved: 'LoRA voice blends the arabmaqamrock adapter into the AR path — and into the planner. 1.0 is full; 0.7 is a lighter dose.',
+        listen: 'Less of the adapter’s signature in the performance and the plan; the base model shows through.',
+        expect: 'A prompt weight. This is weight blending; above 1.0 is instability, not “more style”.'
+      }
+    },
+    lora_nar_scale: {
+      label: 'LoRA render', stage: 'render', kind: 'fader',
+      min: 0, max: 1.5, step: 0.05,
+      story: {
+        moved: 'LoRA render blends the adapter into the NAR side: timbre and final mix, not the performance.',
+        listen: 'A lighter adapter colour in the finished audio while the sung performance stays the same.',
+        expect: 'A fix for a stiff read or a wrong plan; those are already baked in upstream.'
+      }
+    },
+    num_inference_steps: {
+      label: 'Inference steps', stage: 'render', kind: 'fader',
+      min: 1, max: 32, step: 1,
+      story: {
+        moved: 'Inference steps are NAR flow-matching passes. More passes refine detail; they do not renegotiate the performance.',
+        listen: 'Finer detail, cleaner tails and texture. The notes and delivery should not change.',
+        expect: 'Extra adherence. If the plan is wrong or the read is stiff, steps only render it more clearly.'
+      }
+    }
+  };
+
+  const TAKES = [
+    {
+      id: 'e01_base', short: 'e01', name: 'base', score: true, values: {}, tag: 'all defaults',
+      story: {
+        moved: 'Nothing moved. Every control sits at its default and score v_a is attached.',
+        listen: 'The reference. Note the tempo, the maqam colour and how much ornament the voice adds before any control is touched.',
+        expect: '“Neutral” to mean “best”. It is the fixed point the other eight takes are measured against.'
+      }
+    },
+    {
+      id: 'e02_cfg15', short: 'e02', name: 'cfg15', score: true, values: { guidance_scale: 1.5 }, tag: 'guidance 1.5',
+      story: {
+        moved: 'Guidance moved from 1.0 to 1.5. CFG is on for the first time, so the voice path runs twice.',
+        listen: 'A firmer read of style and lyric. Compare the tarab phrases: does the extra press help, or harden them?',
+        expect: 'Better audio. Guidance steers adherence; it does not render detail.'
+      }
+    },
+    {
+      id: 'e03_cfg20', short: 'e03', name: 'cfg20', score: true, values: { guidance_scale: 2.0 }, tag: 'guidance 2.0',
+      story: {
+        moved: 'Guidance moved from 1.0 to 2.0. The score still supplies the notes; CFG presses the voice toward style and lyric.',
+        listen: 'Clearer consonants and a firmer read. Check the cost: does the tarab phrasing survive the extra push?',
+        expect: 'A better voice or a stronger maqam. The maqam comes from the score; guidance only presses the performance toward the request.'
+      }
+    },
+    {
+      id: 'e04_temp08', short: 'e04', name: 'temp08', score: true, values: { semantic_temperature: 0.8 }, tag: 'sem temp 0.8',
+      story: {
+        moved: 'Semantic temperature moved from 1.0 to 0.8. The score is unchanged; only the singer’s sampling is steadier.',
+        listen: 'A more conservative delivery: safer ornaments, fewer surprises, perhaps less risk in the high phrases.',
+        expect: 'A corrected melody. The notes come from v_a; temperature changes how the voice moves between them.'
+      }
+    },
+    {
+      id: 'e05_temp12', short: 'e05', name: 'temp12', score: true, values: { semantic_temperature: 1.2 }, tag: 'sem temp 1.2',
+      story: {
+        moved: 'Semantic temperature moved from 1.0 to 1.2. Same score, a bolder traversal.',
+        listen: 'More variation in delivery and ornament. Check whether the extra freedom stays inside the maqam.',
+        expect: 'A wider range or a better plan. It is the same notes sung with more risk.'
+      }
+    },
+    {
+      id: 'e06_rep135', short: 'e06', name: 'rep135', score: true, values: { semantic_repetition_penalty: 1.35 }, tag: 'rep penalty 1.35',
+      story: {
+        moved: 'Repetition penalty moved from 1.2 to 1.35. Recently used vocal tokens are pushed away.',
+        listen: 'Fewer literal loops and repeated syllables. Natural returns may also start to feel avoided.',
+        expect: 'A cure for repetitive lyrics. It only penalizes recent tokens; it does not rewrite the line.'
+      }
+    },
+    {
+      id: 'e07_steps16', short: 'e07', name: 'steps16', score: true, values: { num_inference_steps: 16 }, tag: 'steps 16',
+      story: {
+        moved: 'Render steps moved from 8 to 16. The performance is decided; only the NAR detail pass is doubled.',
+        listen: 'Finer texture, cleaner tails, more detail in the mix. The notes and delivery should stay put.',
+        expect: 'Extra adherence to the score or style. Steps cannot rescue a wrong plan or a stiff read.'
+      }
+    },
+    {
+      id: 'e08_lora07', short: 'e08', name: 'lora07', score: true,
+      values: { lora_ar_scale: 0.7, lora_nar_scale: 0.7 }, tag: 'LoRA 0.7 / 0.7',
+      story: {
+        moved: 'Both LoRA scales moved from 1.0 to 0.7: the voice/planner adapter and the render adapter together.',
+        listen: 'Less arabmaqamrock signature in both the performance and the finished audio. Notice what the base model does instead.',
+        expect: 'A prompt weight or a quality setting. It is a blend; above 1.0 is instability, not more style.'
+      }
+    },
+    {
+      id: 'e09_plan', short: 'e09', name: 'plan', score: false,
+      values: { abc_temperature: 0.9, abc_top_k: 40 }, tag: 'planner · no score',
+      story: {
+        moved: 'No score. The planner wakes: abc_temperature 0.9 and abc_top_k 40, both above default. Guidance stays at 1.0, so CFG is off.',
+        listen: 'A plan written by the model instead of v_a. Compare its maqam path and phrase shape with the supplied score.',
+        expect: 'An improved score. It is a different author for the plan, with more sampling freedom.'
+      }
+    }
+  ];
+
+  const SCORE_STORIES = {
+    release: {
+      moved: 'Score released. Planning wakes: abc_* now feed the planner, and no external score replaces its plan.',
+      listen: 'A plan that may differ from v_a in phrase shape and maqam path. Compare it with any score-locked take.',
+      expect: 'Automatically better. A model-written plan is another author, with planner sampling as a variable.'
+    },
+    attach: {
+      moved: 'Score v_a attached. The planner is bypassed and abc_* becomes inert.',
+      listen: 'The plan now comes from the same score as e01–e08, so only the other controls can differ.',
+      expect: 'Planner freedom. Any abc_* movement is refused, not silently ignored.'
+    }
+  };
+
+  const SCORE_TEXT = `X:1  M:2/4  L:1/32  Q:1/4=65
+K:D#m · Nahawand on D#
+V:Vocal
+D4E2F2E4D4|E2F2G2F2E8
+G4A4F4E4|F2G2A4G2F6|`;
+
+  const NO_SCORE_TEXT = `no external score attached
+the planner writes its own ABC
+before the voice stage runs`;
+
+  const FADER_CURVES = {
+    guidance_scale: [[0, 0], [1, 18], [2, 34], [5, 62], [20, 100]],
+    num_inference_steps: [[1, 0], [8, 26], [16, 55], [32, 100]]
+  };
+
+  /* ── helpers ─────────────────────────────────────────────────────── */
+
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+  function trimDecimal(text) {
+    let out = text.replace(/0+$/, '');
+    if (out.endsWith('.')) out += '0';
+    return out;
+  }
+
+  function fmt(key, value) {
+    if (key === 'abc_top_k' || key === 'num_inference_steps') return String(Math.round(value));
+    return trimDecimal(Number(value).toFixed(2));
+  }
+
+  function fmtBound(value) {
+    return Number.isInteger(value) ? String(value) : trimDecimal(Number(value).toFixed(2));
+  }
+
+  function faderPosition(key, value) {
+    const curve = FADER_CURVES[key];
+    if (curve) {
+      if (value <= curve[0][0]) return curve[0][1];
+      for (let i = 1; i < curve.length; i += 1) {
+        const [x1, y1] = curve[i - 1];
+        const [x2, y2] = curve[i];
+        if (value <= x2) return y1 + ((value - x1) / (x2 - x1)) * (y2 - y1);
+      }
+      return curve[curve.length - 1][1];
+    }
+    const meta = CONTROLS[key];
+    return ((value - meta.min) / (meta.max - meta.min)) * 100;
+  }
+
+  function knobAngle(key, value) {
+    const meta = CONTROLS[key];
+    const pct = clamp((value - meta.min) / (meta.max - meta.min), 0, 1);
+    return -135 + pct * 270;
+  }
+
+  function pluralPasses(steps) {
+    return steps === 1 ? '1 pass' : `${steps} passes`;
+  }
+
+  /* ── state ───────────────────────────────────────────────────────── */
+
+  let settings = { ...DEFAULTS, guidance_scale: 2.0 };
+  let scoreAttached = true;
+  let selectedTake = 'e03_cfg20';
+  let lastTouched = null;
+  let refusalTimer = 0;
+  let blindPair = [];
+  let blindRevealed = false;
+
+  const inputs = {};
+
+  const els = {
+    planModule: $('#plan-module'),
+    planStatus: $('#plan-status'),
+    planNote: $('#plan-note'),
+    planRefusal: $('#plan-refusal'),
+    scoreCard: $('#score-card'),
+    scoreLabel: $('#score-label'),
+    scoreFlag: $('#score-flag'),
+    scorePre: $('#score-pre'),
+    scoreFoot: $('#score-foot'),
+    scoreToggle: $('#score-toggle'),
+    singModule: $('#sing-module'),
+    singStatus: $('#sing-status'),
+    singLed: $('#sing-led'),
+    singStatusText: $('#sing-status-text'),
+    renderModule: $('#render-module'),
+    renderStatus: $('#render-status'),
+    renderLed: $('#render-led'),
+    renderStatusText: $('#render-status-text'),
+    passLadder: $('#pass-ladder'),
+    passLabel: $('#pass-label'),
+    roTakeId: $('#ro-take-id'),
+    roChip: $('#ro-chip'),
+    roMoveLabel: $('#ro-move-label'),
+    roMove: $('#ro-move'),
+    roCost: $('#ro-cost'),
+    storyMoved: $('#story-moved'),
+    storyListen: $('#story-listen'),
+    storyExpect: $('#story-expect'),
+    brandScore: $('#brand-score'),
+    brandScoreLed: $('#brand-score-led'),
+    brandCfg: $('#brand-cfg'),
+    brandCfgLed: $('#brand-cfg-led'),
+    counter: $('#take-counter'),
+    caption: $('#console-caption'),
+    blindTitle: $('#blind-title'),
+    padAMeta: $('#pad-a-meta'),
+    padBMeta: $('#pad-b-meta'),
+    revealBtn: $('#reveal-btn'),
+    revealQ: $('#reveal-q'),
+    revealNote: $('#reveal-note'),
+    dealBtn: $('#deal-btn')
+  };
+
+  function changedKeys() {
+    return Object.keys(DEFAULTS).filter(key => Math.abs(settings[key] - DEFAULTS[key]) > 1e-9);
+  }
+
+  /* ── controls ────────────────────────────────────────────────────── */
+
+  function wireControls() {
+    $$('[data-control]').forEach(host => {
+      const key = host.dataset.control;
+      const meta = CONTROLS[key];
+      if (!meta) return;
+
+      const input = document.createElement('input');
+      input.type = 'range';
+      input.className = 'ctrl-range';
+      input.min = String(meta.min);
+      input.max = String(meta.max);
+      input.step = String(meta.step);
+      input.value = String(settings[key]);
+      input.dataset.control = key;
+      input.setAttribute('aria-label', `${meta.label} control`);
+
+      Array.from(host.children).forEach(child => child.setAttribute('aria-hidden', 'true'));
+      host.removeAttribute('role');
+      host.removeAttribute('aria-label');
+      host.appendChild(input);
+      inputs[key] = input;
+
+      input.addEventListener('input', () => {
+        if (scoreAttached && meta.stage === 'plan') {
+          showRefusal();
+          input.value = String(settings[key]);
+          return;
+        }
+        settings[key] = Number(input.value);
+        selectedTake = null;
+        lastTouched = key;
+        render();
+      });
+    });
+  }
+
+  function renderControls() {
+    Object.keys(CONTROLS).forEach(key => {
+      const meta = CONTROLS[key];
+      const input = inputs[key];
+      if (!input) return;
+
+      const value = settings[key];
+      const locked = scoreAttached && meta.stage === 'plan';
+
+      input.value = String(value);
+      if (locked) input.setAttribute('aria-disabled', 'true');
+      else input.removeAttribute('aria-disabled');
+      input.dataset.locked = locked ? 'true' : 'false';
+
+      let extra = '';
+      if (key === 'guidance_scale') {
+        extra = value > 1 ? ', CFG on, voice path runs twice' : ', CFG off, single voice path';
+      } else if (key === 'num_inference_steps') {
+        extra = `, ${pluralPasses(value)}`;
+      } else if (key.startsWith('lora_')) {
+        extra = ', guard rail 1.5';
+      } else if (key.startsWith('abc_')) {
+        extra = locked ? ', locked by the attached score' : ', planner active';
+      }
+      input.setAttribute('aria-valuetext',
+        `${meta.label} ${fmt(key, value)}, default ${fmt(key, DEFAULTS[key])}, ` +
+        `range ${fmtBound(meta.min)} to ${fmtBound(meta.max)}${extra}`);
+
+      const host = input.parentElement;
+      const wrap = host.closest('.knob-wrap') || host.closest('.fader-block');
+
+      if (meta.kind === 'knob') {
+        const angle = knobAngle(key, value);
+        host.style.setProperty('--angle', `${angle.toFixed(2)}deg`);
+        const pointer = $('.knob-pointer', host);
+        if (pointer) pointer.style.setProperty('--angle', `${angle.toFixed(2)}deg`);
+        const notch = $('.knob-notch', host);
+        if (notch) notch.style.setProperty('--notch', `${knobAngle(key, DEFAULTS[key]).toFixed(2)}deg`);
+        const valueEl = $('.knob-value', wrap);
+        if (valueEl) valueEl.textContent = fmt(key, value);
+      } else {
+        const pct = faderPosition(key, value);
+        const fill = $('.fader-fill', host);
+        const cap = $('.fader-cap', host);
+        const notch = $('.fader-notch', host);
+        const chip = $('.value-chip', wrap);
+        if (fill) fill.style.width = `${pct}%`;
+        if (cap) cap.style.left = `${pct}%`;
+        if (notch) notch.style.left = `${faderPosition(key, DEFAULTS[key])}%`;
+        if (chip) chip.textContent = fmt(key, value);
+      }
+    });
+  }
+
+  /* ── score panel ─────────────────────────────────────────────────── */
+
+  function renderScore() {
+    els.planRefusal.hidden = true;
+    els.planModule.classList.toggle('is-muted', scoreAttached);
+    els.scoreCard.classList.toggle('is-awake', !scoreAttached);
+    els.planNote.classList.toggle('is-awake', !scoreAttached);
+
+    if (scoreAttached) {
+      els.planStatus.className = 'status is-muted';
+      els.planStatus.textContent = 'Score lock';
+      els.planNote.innerHTML = '<b>External score v_a replaces the plan.</b> These two knobs do nothing while the score is attached. Release it to see the e09 condition.';
+      els.scoreLabel.textContent = 'score v_a · supplied';
+      els.scoreFlag.textContent = 'not the planner';
+      els.scorePre.textContent = SCORE_TEXT;
+      els.scoreFoot.textContent = 'The plan is read, not written. abc_* stays idle.';
+      els.scoreToggle.textContent = 'Release score v_a';
+    } else {
+      els.planStatus.className = 'status is-awake';
+      els.planStatus.textContent = 'Planner awake';
+      els.planNote.innerHTML = '<b>No external score.</b> The planner writes its own ABC, so abc_temperature and abc_top_k are live. This is the e09 condition.';
+      els.scoreLabel.textContent = 'no score · planner writes';
+      els.scoreFlag.textContent = 'planner awake';
+      els.scorePre.textContent = NO_SCORE_TEXT;
+      els.scoreFoot.textContent = 'abc_* now feed the planner. The stage is a writer, not a reader.';
+      els.scoreToggle.textContent = 'Attach score v_a';
+    }
+  }
+
+  function showRefusal() {
+    els.planRefusal.textContent = 'Refused: score v_a replaces the plan. Release the score before moving abc_*.';
+    els.planRefusal.hidden = false;
+    window.clearTimeout(refusalTimer);
+    refusalTimer = window.setTimeout(() => {
+      els.planRefusal.hidden = true;
+    }, 4200);
+  }
+
+  function toggleScore() {
+    scoreAttached = !scoreAttached;
+    selectedTake = null;
+    lastTouched = scoreAttached ? 'score_attach' : 'score_release';
+    render();
+  }
+
+  /* ── status, readout, story ─────────────────────────────────────── */
+
+  function renderStatus() {
+    const cfgOn = settings.guidance_scale > 1;
+    els.singStatus.className = `status ${cfgOn ? 'is-on' : 'is-neutral'}`;
+    els.singLed.className = `led led-amber${cfgOn ? '' : ' is-off'}`;
+    els.singStatusText.textContent = cfgOn ? 'CFG on' : 'CFG off';
+
+    const steps = Math.round(settings.num_inference_steps);
+    const moreSteps = steps !== 8;
+    els.renderStatus.className = `status ${moreSteps ? 'is-on' : 'is-neutral'}`;
+    els.renderLed.className = `led led-amber${moreSteps ? '' : ' is-off'}`;
+    els.renderStatusText.textContent = pluralPasses(steps);
+    els.passLabel.textContent = `${steps} / 32 passes`;
+    Array.from(els.passLadder.children).forEach((bar, index) => {
+      bar.classList.toggle('on', index < steps);
+    });
+  }
+
+  function renderReadout() {
+    const take = TAKES.find(item => item.id === selectedTake);
+    const keys = changedKeys();
+
+    els.roTakeId.textContent = take ? take.id : 'custom_desk';
+    els.roChip.textContent = scoreAttached ? 'score v_a' : 'no score';
+
+    if (keys.length === 0) els.roMoveLabel.textContent = 'No control moved';
+    else if (keys.length === 1) els.roMoveLabel.textContent = 'One control moved';
+    else els.roMoveLabel.textContent = `${keys.length} controls moved`;
+
+    if (keys.length === 0) {
+      els.roMove.innerHTML = '<code>every control at default</code>';
+    } else {
+      const shown = keys.slice(0, 2);
+      const extra = keys.length - shown.length;
+      const keyText = shown.join(' · ') + (extra > 0 ? ` +${extra}` : '');
+      const fromValues = Array.from(new Set(shown.map(key => fmt(key, DEFAULTS[key]))));
+      const toValues = Array.from(new Set(shown.map(key => fmt(key, settings[key]))));
+      els.roMove.innerHTML =
+        `<code>${keyText}</code><span>${fromValues.join(' / ')}</span>` +
+        '<span class="arrow" aria-hidden="true">→</span>' +
+        `<strong>${toValues.join(' / ')}</strong>`;
+    }
+
+    const steps = Math.round(settings.num_inference_steps);
+    const bits = [];
+    bits.push(settings.guidance_scale > 1 ? 'voice path runs twice' : 'CFG off · voice path once');
+    bits.push(scoreAttached ? 'score lock' : 'planner active');
+    if (scoreAttached && changedKeys().some(key => CONTROLS[key].stage === 'plan')) bits.push('abc_* idle');
+    if (steps !== 8) bits.push(`${steps} render passes`);
+    const ledClass = settings.guidance_scale > 1 ? 'led led-amber' : 'led is-off';
+    els.roCost.innerHTML =
+      `<span class="${ledClass}" aria-hidden="true"></span><span>${bits.join(' · ')}</span>`;
+  }
+
+  function renderStory() {
+    let story;
+    if (selectedTake) {
+      const take = TAKES.find(item => item.id === selectedTake);
+      story = take ? take.story : null;
+    } else if (lastTouched === 'score_release' || lastTouched === 'score_attach') {
+      story = SCORE_STORIES[lastTouched === 'score_release' ? 'release' : 'attach'];
+    } else if (lastTouched && CONTROLS[lastTouched]) {
+      const meta = CONTROLS[lastTouched];
+      story = {
+        moved: `${meta.story.moved} <strong>Current: ${fmt(lastTouched, settings[lastTouched])}</strong>.`,
+        listen: meta.story.listen,
+        expect: meta.story.expect
+      };
+    }
+    if (!story) {
+      story = {
+        moved: 'A custom desk. Move a control to see what it touches.',
+        listen: 'Compare one change at a time before combining settings.',
+        expect: 'A stock take name. Any manual change makes this a custom desk.'
+      };
+    }
+    els.storyMoved.innerHTML = story.moved;
+    els.storyListen.innerHTML = story.listen;
+    els.storyExpect.innerHTML = story.expect;
+  }
+
+  function renderLiveModules() {
+    const stages = new Set(
+      changedKeys()
+        .filter(key => !(scoreAttached && CONTROLS[key].stage === 'plan'))
+        .map(key => CONTROLS[key].stage)
+    );
+    if (!scoreAttached) stages.add('plan');
+    els.planModule.classList.toggle('is-live', stages.has('plan'));
+    els.singModule.classList.toggle('is-live', stages.has('sing'));
+    els.renderModule.classList.toggle('is-live', stages.has('render'));
+  }
+
+  function renderBrand() {
+    els.brandScore.textContent = scoreAttached ? 'Score v_a' : 'No score';
+    els.brandScoreLed.classList.toggle('is-off', !scoreAttached);
+    const cfgOn = settings.guidance_scale > 1;
+    els.brandCfg.textContent = cfgOn ? 'CFG on' : 'CFG off';
+    els.brandCfgLed.classList.toggle('is-off', !cfgOn);
+  }
+
+  function renderTakeButtons() {
+    $$('.take').forEach(button => {
+      const takeId = button.dataset.take;
+      const active = takeId === selectedTake;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-pressed', String(active));
+    });
+  }
+
+  function centerActiveTake() {
+    const scroller = $('.sweep-scroll');
+    const active = $('.take.is-active');
+    if (!scroller || !active) return;
+    if (scroller.scrollWidth <= scroller.clientWidth + 1) return;
+    const target = active.offsetLeft - (scroller.clientWidth - active.offsetWidth) / 2;
+    scroller.scrollLeft = Math.max(0, target);
+  }
+
+  function renderNavigation() {
+    const take = TAKES.find(item => item.id === selectedTake);
+    if (take) {
+      const number = take.short.slice(1);
+      els.counter.innerHTML = `Take <b>${number}</b> / 09`;
+      els.caption.textContent = `The control desk, showing take ${take.id}`;
+    } else {
+      els.counter.textContent = 'Custom desk';
+      els.caption.textContent = 'The control desk, showing custom settings';
+    }
+  }
+
+  function render() {
+    renderControls();
+    renderScore();
+    renderStatus();
+    renderReadout();
+    renderStory();
+    renderLiveModules();
+    renderBrand();
+    renderTakeButtons();
+    renderNavigation();
+  }
+
+  /* ── take selection ─────────────────────────────────────────────── */
+
+  function selectTake(id) {
+    const take = TAKES.find(item => item.id === id);
+    if (!take) return;
+    settings = { ...DEFAULTS, ...take.values };
+    scoreAttached = take.score;
+    selectedTake = take.id;
+    lastTouched = null;
+    render();
+    centerActiveTake();
+  }
+
+  function wireTakes() {
+    $$('.take').forEach(button => {
+      const short = $('.take-id', button).textContent.trim();
+      const take = TAKES.find(item => item.short === short);
+      if (!take) return;
+      button.dataset.take = take.id;
+      button.addEventListener('click', () => selectTake(take.id));
+    });
+  }
+
+  /* ── blind protocol deck ───────────────────────────────────────── */
+
+  function pickPair() {
+    const first = Math.floor(Math.random() * TAKES.length);
+    let second = Math.floor(Math.random() * TAKES.length);
+    while (second === first) second = Math.floor(Math.random() * TAKES.length);
+    return [TAKES[first], TAKES[second]];
+  }
+
+  function drawBlind() {
+    const [a, b] = blindPair;
+    if (a && b) {
+      els.padAMeta.textContent = blindRevealed ? `${a.short} · ${a.tag}` : 'take hidden';
+      els.padBMeta.textContent = blindRevealed ? `${b.short} · ${b.tag}` : 'take hidden';
+    }
+    els.blindTitle.textContent = blindRevealed ? 'Blind pair · revealed' : 'Blind pair · names hidden';
+    els.revealQ.textContent = blindRevealed ? 'A·B' : '?';
+    els.revealNote.textContent = blindRevealed
+      ? 'names on the pads · tap to hide'
+      : 'Commit, then reveal the pair';
+    els.revealBtn.setAttribute('aria-label', blindRevealed ? 'Hide the blind pair' : 'Reveal the blind pair');
+    els.revealBtn.setAttribute('aria-expanded', String(blindRevealed));
+  }
+
+  function dealBlind() {
+    blindPair = pickPair();
+    blindRevealed = false;
+    drawBlind();
+  }
+
+  function wireBlind() {
+    els.dealBtn.addEventListener('click', dealBlind);
+    els.revealBtn.addEventListener('click', () => {
+      if (!blindPair.length) blindPair = pickPair();
+      blindRevealed = !blindRevealed;
+      drawBlind();
+    });
+  }
+
+  /* ── start ──────────────────────────────────────────────────────── */
+
+  wireControls();
+  wireTakes();
+  wireBlind();
+  els.scoreToggle.addEventListener('click', toggleScore);
+  render();
+  centerActiveTake();
+  dealBlind();
+})();
+</script>
+</body>
+</html>
