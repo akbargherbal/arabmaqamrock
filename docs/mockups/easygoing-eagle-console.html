@@ -1352,6 +1352,24 @@ before the voice stage runs`;
     return ((value - meta.min) / (meta.max - meta.min)) * 100;
   }
 
+  /* Inverse of faderPosition(): slider position (0-100) -> value.
+     Curved faders keep their native range input in position space so the
+     invisible thumb always sits exactly under the drawn cap. */
+  function faderValue(key, pct) {
+    const curve = FADER_CURVES[key];
+    for (let i = 1; i < curve.length; i += 1) {
+      const [x1, y1] = curve[i - 1];
+      const [x2, y2] = curve[i];
+      if (pct <= y2) return x1 + ((pct - y1) / (y2 - y1)) * (x2 - x1);
+    }
+    return curve[curve.length - 1][0];
+  }
+
+  function snapToStep(meta, value) {
+    const snapped = meta.min + Math.round((value - meta.min) / meta.step) * meta.step;
+    return clamp(Number(snapped.toFixed(4)), meta.min, meta.max);
+  }
+
   function knobAngle(key, value) {
     const meta = CONTROLS[key];
     const pct = clamp((value - meta.min) / (meta.max - meta.min), 0, 1);
@@ -1433,10 +1451,17 @@ before the voice stage runs`;
       const input = document.createElement('input');
       input.type = 'range';
       input.className = 'ctrl-range';
-      input.min = String(meta.min);
-      input.max = String(meta.max);
-      input.step = String(meta.step);
-      input.value = String(settings[key]);
+      if (FADER_CURVES[key]) {
+        input.min = '0';
+        input.max = '100';
+        input.step = '0.1';
+        input.value = String(faderPosition(key, settings[key]));
+      } else {
+        input.min = String(meta.min);
+        input.max = String(meta.max);
+        input.step = String(meta.step);
+        input.value = String(settings[key]);
+      }
       input.dataset.control = key;
       input.setAttribute('aria-label', `${meta.label} control`);
 
@@ -1452,7 +1477,9 @@ before the voice stage runs`;
           input.value = String(settings[key]);
           return;
         }
-        settings[key] = Number(input.value);
+        settings[key] = FADER_CURVES[key]
+          ? snapToStep(meta, faderValue(key, Number(input.value)))
+          : Number(input.value);
         selectedTake = null;
         lastTouched = key;
         render();
@@ -1469,7 +1496,7 @@ before the voice stage runs`;
       const value = settings[key];
       const locked = scoreAttached && meta.stage === 'plan';
 
-      input.value = String(value);
+      input.value = String(FADER_CURVES[key] ? faderPosition(key, value) : value);
       if (locked) input.setAttribute('aria-disabled', 'true');
       else input.removeAttribute('aria-disabled');
       input.dataset.locked = locked ? 'true' : 'false';
