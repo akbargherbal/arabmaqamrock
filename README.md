@@ -204,9 +204,40 @@ each) to compare against. `--dry-run` prints the resolved values per track;
 semantics and code references are in
 [docs/suno-generation-controls.md](docs/suno-generation-controls.md) Appendix D.
 
-## Maqams
+## Base prompt
 
-Four style templates ship in `prompts/`, one per maqam — use them as-is or edit them:
+The canonical manifest prompt is the tag-list style adopted on 2026-11-05 from
+`manifests/space-stallion.json`. It writes the Western scale name beside the
+maqam — the winning variable in that A/B. Full recipe, field order and rationale:
+[docs/base-prompt.md](docs/base-prompt.md).
+
+`arabmaqamrock` is the LoRA trigger word, not a genre:
+
+```text
+arabmaqamrock: LoRA trigger word.
+arabmaqamrock: The music feels like a grand, solemn symphonic-rock ballad driven by a commanding, deeply resonant Arabic male vocal delivering ornate, hymn-like melodies over heavy guitars and sweeping orchestral strings.
+```
+
+Canonical prompt:
+
+```text
+arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Hijaz, Phrygian Dominant, mood: "longing, nostalgic, lush beauty"
+```
+
+| Maqam | Western scale to write beside it |
+|---|---|
+| Hijaz | `Phrygian Dominant` |
+| Kurd | `Phrygian Mode` |
+| Nahawand | `Natural Minor Scale (Aeolian)` |
+| Ajam | `Major Scale (Ionian)` |
+
+Keep both names: the maqam carries the idiom, the Western name gives the model a
+familiar frame. Do not replace one with the other, and keep `mood:` last.
+
+## Maqam style templates
+
+`prompts/` also ships four full-caption templates, one per maqam. They are an
+alternative to the tag-list base above and are what `run_one.sh` uses:
 
 | File | Maqam | Mood |
 |---|---|---|

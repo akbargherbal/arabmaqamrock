@@ -91,9 +91,9 @@ mood: "yearning, deep sorrow, lamenting"`.
 for one fine-tuned sound. Do not interpret it from the token itself; its meaning
 is exactly this, and only this:
 
-> A grand, solemn symphonic-rock ballad driven by a commanding, deeply resonant
-> Arabic male vocal delivering ornate, hymn-like melodies over heavy guitars and
-> sweeping orchestral strings.
+> The music feels like a grand, solemn symphonic-rock ballad driven by a
+> commanding, deeply resonant Arabic male vocal delivering ornate, hymn-like
+> melodies over heavy guitars and sweeping orchestral strings.
 
 Read it for three things only:
 
