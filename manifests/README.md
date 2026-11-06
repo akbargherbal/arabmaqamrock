@@ -31,6 +31,7 @@ the manifest lives in `manifests/`. A manifest with assets next to it can omit
 | `moon_edit2.json` | 6 | Round 2: `clean`/`mid` x 3 seeds, `cot=melody`. |
 | `pragmatic-grasshopper_ibn_zuraiq_formatted.json` | 4 x 3 | Four-song Ibn Zuraiq batch, no score. |
 | `tarab_test_01.json` | 5 | Tarab A/B listening test on `moon_101_v2`. |
+| `fadhl_shaker_instrumental_01.json` | 23 | Base model (LoRA scale 0), `cot=melody`, `[Instrumental]`, full-instrumental captions from the Fadhl Shaker shortlist; see the companion `.md`. |
 
 Validate any manifest without a GPU:
 

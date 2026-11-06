@@ -1,0 +1,220 @@
+{
+  "base_dir": "..",
+  "scores": {
+    "ana_min_akhiraha": "scores/fadhl_shaker/ana_min_akhiraha.abc",
+    "awwal_ma_bashufak": "scores/fadhl_shaker/awwal_ma_bashufak.abc",
+    "al_hal": "scores/fadhl_shaker/al_hal.abc",
+    "al_dawr_ala_meen": "scores/fadhl_shaker/al_dawr_ala_meen.abc",
+    "badeet_atib": "scores/fadhl_shaker/badeet_atib.abc",
+    "bafakker_bil_sa3at": "scores/fadhl_shaker/bafakker_bil_sa3at.abc",
+    "habeetak": "scores/fadhl_shaker/habeetak.abc",
+    "hazak_ya_albi": "scores/fadhl_shaker/hazak_ya_albi.abc",
+    "saneen_alshawq": "scores/fadhl_shaker/saneen_alshawq.abc",
+    "saharni_alshawq": "scores/fadhl_shaker/saharni_alshawq.abc",
+    "ghayb": "scores/fadhl_shaker/ghayb.abc",
+    "fustan_alhelwa": "scores/fadhl_shaker/fustan_alhelwa.abc",
+    "feen_layalik": "scores/fadhl_shaker/feen_layalik.abc",
+    "lissa_alhala_matasarish": "scores/fadhl_shaker/lissa_alhala_matasarish.abc",
+    "lelheen_3ayesh": "scores/fadhl_shaker/lelheen_3ayesh.abc",
+    "leh_aljarh": "scores/fadhl_shaker/leh_aljarh.abc",
+    "ma_khalas": "scores/fadhl_shaker/ma_khalas.abc",
+    "mata_habibi_mata": "scores/fadhl_shaker/mata_habibi_mata.abc",
+    "ma3_alsalama": "scores/fadhl_shaker/ma3_alsalama.abc",
+    "min_kothr_hobbi_feek": "scores/fadhl_shaker/min_kothr_hobbi_feek.abc",
+    "waynak_habib": "scores/fadhl_shaker/waynak_habib.abc",
+    "ya_tkoon_habibi": "scores/fadhl_shaker/ya_tkoon_habibi.abc",
+    "ya_hawa_alghaleen": "scores/fadhl_shaker/ya_hawa_alghaleen.abc"
+  },
+  "defaults": {
+    "cot": "melody",
+    "lora_ar_scale": 0,
+    "lora_nar_scale": 0,
+    "repeat": 1
+  },
+  "songs": [
+    {
+      "name": "أنا_من_آخرها",
+      "style": "An energetic instrumental Arabic pop track driven by a powerful, syncopated darbuka rhythm and a prominent, melodic oud line. The oud carries the main melody with melismatic ornamentation and vibrato, enhanced by reverb, while a lush, synthesized string section provides dramatic swells and counter-melodies, creating a full, cinematic soundscape. The anthemic chorus is carried by the layered strings and a soaring synth lead. A dynamic instrumental break highlights the interplay between the oud and strings before returning to the main chorus theme. The production is clean, modern, and punchy, blending traditional Middle Eastern instrumentation with a driving, dance-oriented beat to deliver a dramatic and compelling feel. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "أول_مابشوفك",
+      "style": "An upbeat, driving instrumental Arabic pop track with a strong Khaleeji influence, built on a punchy electronic drum machine beat and a rhythmic synth bassline. A melodic oud carries the main instrumental hook and the lead melody with traditional melisma and vibrato, weaving through the arrangement alongside lush synth strings and pads. The chorus is anthemic and communal, with the strings and synth lead playing the theme in unison over the full band. The production blends traditional Arabic melodicism with contemporary pop and electronic elements, with prominent reverb on the lead instruments giving the track a spacious, grand sound reminiscent of late 90s or early 2000s Arabic pop. The rhythm is syncopated and vibrant, enhanced by cinematic strings and a foundational bassline. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "awwal_ma_bashufak",
+      "cap": 6336,
+      "seed": 20261106
+    },
+    {
+      "name": "الحال",
+      "style": "An energetic instrumental Arabic pop track driven by a fast, intricate oud melody and a driving darbuka rhythm. The oud acts as the lead voice, rich with melismatic ornamentation and vibrato, clear and emotionally charged with significant reverb, soaring over a lush bed of synth strings and a solid bassline. The arrangement blends traditional and modern elements, built on a steady mid-tempo beat combining a modern kick drum with traditional hand percussion. A punchy drum machine and rhythmic synth bassline support the groove, while atmospheric pads and layered synth lines add depth and emotional resonance. Dynamic instrumental sections highlight the oud's expressive solo, which takes center stage in a long, evolving bridge before fading out on the rhythmic groove. The production is spacious, modern, and anthemic, with a celebratory and romantic character. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "al_hal",
+      "cap": 6467,
+      "seed": 20261106
+    },
+    {
+      "name": "الدور_على_مين",
+      "style": "A melancholic instrumental Arabic pop track built on a steady, mid-tempo electronic beat featuring a darbuka and a simple kick-snare pattern, underpinned by a deep synth bass. The arrangement centers on a prominent, emotive oud melody that weaves through the composition, complemented by lush cinematic string pads, subtle string-like textures, and a ney-like synth flute providing poignant melodic fills and carrying the main theme with traditional Arabic ornamentation. Spacious reverb adds to the grand, dramatic atmosphere. The track begins with a brief atmospheric intro featuring a plucked synth arpeggio, before the main groove and oud melody take center stage. An accordion joins the arrangement during the instrumental breaks. The song builds to an anthemic chorus theme, followed by an extended instrumental section showcasing the oud and strings, concluding with a fade-out. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "al_dawr_ala_meen",
+      "cap": 6336,
+      "seed": 20261106
+    },
+    {
+      "name": "بديت_أطيب",
+      "style": "An energetic instrumental Arabic pop track featuring a dense arrangement of oud, synth strings, and a driving bassline, with a powerful, emotive lead melody played with melismatic ornamentation. The rhythm section is syncopated, highlighting a prominent darbuka and other Middle Eastern percussion, blended with a modern pop drum machine beat and lively hand percussion. A virtuosic accordion melody adds a distinctive, emotive layer, trading call-and-response phrases with the oud and synth strings to give the chorus a strong, anthemic feel. The production is clean and spacious, with reverb applied to the lead instruments, creating a full, vibrant, and danceable soundscape that seamlessly blends traditional instrumentation with contemporary pop sensibilities. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "badeet_atib",
+      "cap": 5761,
+      "seed": 20261106
+    },
+    {
+      "name": "بفكر_بالساعات",
+      "style": "A dramatic and cinematic instrumental Arabic pop track opens with a clean piano melody and an emotive oud performance, rich with intricate ornamentation and vibrato. A lush, sweeping string section enters, building an epic atmosphere alongside rhythmic hand percussion, likely a darbuka. The arrangement swells into a powerful, driving chorus where the main theme, played with characteristic Arabic melisma, soars over the full ensemble. The production is spacious and polished, with significant reverb enhancing the grand, emotional soundscape. The track is driven by a steady, mid-tempo beat combining a darbuka-style hand drum with a modern kick and snare, supported by lush synth pads that create a dramatic backdrop. A prominent synth lead emulates an oud or strings, carrying the main melodic hook. An expressive violin takes the lead during an extended instrumental break, delivering soaring, expressive lines that weave through the driving rhythm. The song briefly transitions into an atmospheric section featuring an oud-like plucked string instrument before returning to the main theme and fading out. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "bafakker_bil_sa3at",
+      "cap": 7824,
+      "seed": 20261106
+    },
+    {
+      "name": "حبيتك",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "habeetak",
+      "cap": 6993,
+      "seed": 20261106
+    },
+    {
+      "name": "حظك_ياقلبي",
+      "style": "A dramatic and cinematic instrumental Arabic pop track opens with a mournful, bowed string melody reminiscent of a cello, quickly building with a driving beat that combines traditional hand percussion and a modern drum machine, enhanced by shimmering, arpeggiated qanun-like synth textures. The main theme, rich with vibrato and emotional melisma, is carried by the strings, and by the full orchestral strings in unison during the chorus, creating an anthemic and grand soundscape. The arrangement is built on a steady, mid-tempo drum machine beat and a foundational synth bassline, with a prominent synth lead emulating the sound of an oud that plays intricate melodic lines and arpeggios, defining the song's instrumental hooks. Atmospheric synth pads add harmonic depth, and the production features generous reverb, giving the track a spacious, grand feel characteristic of its era. A call-and-response dynamic between the oud-like lead and the string section is especially prominent in the chorus sections. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "hazak_ya_albi",
+      "cap": 9417,
+      "seed": 20261106
+    },
+    {
+      "name": "سنين_الشوق",
+      "style": "An upbeat instrumental Arabic dance-pop track driven by a punchy electronic drum machine beat and a rhythmic synth bassline, opening with festive sleigh bells before the main groove kicks in. The arrangement features a prominent, slightly reedy synth lead carrying the main melody with passionate, melismatic ornamentation and rich reverb and delay, lush synth pads, and string layers that add harmonic depth. A catchy, looping synthesized accordion riff contributes to the energetic feel, complemented by darbuka-style percussion that creates an infectious belly dance groove. Layered synth harmonies enhance the chorus, giving it an anthemic quality. The track includes a brief instrumental break highlighting the accordion hook before abruptly ending. A filtered, telephone-like synth effect appears during a transitional instrumental section before the track fades out. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "saneen_alshawq",
+      "cap": 7325,
+      "seed": 20261106
+    },
+    {
+      "name": "سهرني_الشوق",
+      "style": "The track opens with a melancholic, cinematic introduction featuring a clean piano melody and an emotive, mournful cello line. A dramatic orchestral hit follows, transitioning into a main section driven by a driving, mid-tempo Arabic pop beat with a distinct kick and clap pattern. The lead melody, rich with vibrato and melisma, is carried by lush synth strings and pads. Powerful layered strings provide harmonic backing and call-and-response phrases, adding to the grand, dramatic scale. The rhythm section blends a modern pop drum machine with traditional percussion, creating a danceable yet intense groove. A brief atmospheric breakdown features a cello-like synth, leading into a more contemplative section before building back into a high-energy chorus with layered string harmonies and a yearning mood. The track concludes with a lengthy instrumental section featuring an expressive, virtuosic violin solo that weaves through traditional Arabic scales, accompanied by atmospheric synth textures and a fading beat. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "saharni_alshawq",
+      "cap": 6652,
+      "seed": 20261106
+    },
+    {
+      "name": "غيب",
+      "style": "An epic and dramatic instrumental Arabic pop ballad opens with a highly emotive, microtonal violin solo, setting a melancholic and cinematic tone. The violin carries the main melody with significant vibrato and emotional intensity over a lush bed of orchestral strings and atmospheric synth pads. The arrangement features a prominent, virtuosic violin with soaring, ornamented melodies and traditional elements like oud and other strings, adding rich texture. A steady mid-tempo electronic drum beat with a strong kick and clap provides a modern rhythmic foundation. The track builds into a grand instrumental section with sweeping orchestral strings and a passionate violin solo, creating a powerful, cinematic atmosphere before transitioning into a more reflective passage. The violin plays with passion and melisma, soaring over grand, melancholic chord progressions. The beat subsides, emphasizing the introspective quality of the violin and piano, all drenched in cavernous reverb, before fading out. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ghayb",
+      "cap": 6169,
+      "seed": 20261106
+    },
+    {
+      "name": "فستان_الحلوة",
+      "style": "An upbeat instrumental Arabic pop track driven by a vibrant percussion section featuring a prominent darbuka and hand percussion, with a syncopated groove. A melodic oud carries the main instrumental theme and lead melody with clear, emotive, melismatic ornamentation, playing intricate melodic lines with a touch of reverb, complemented by bright synthesized accordion-like textures and lush synth strings. A solid synth bassline anchors the rhythm. The chorus features a dynamic call-and-response between the oud, accordion-like synth, and layered string lines, adding a powerful, communal feel. The track includes an extended instrumental break that highlights the oud's virtuosity and the interplay between the oud and percussion, before returning to the infectious chorus theme. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "fustan_alhelwa",
+      "cap": 5302,
+      "seed": 20261106
+    },
+    {
+      "name": "فين_لياليك",
+      "style": "An energetic instrumental Arabic pop track driven by a powerful, syncopated darbuka rhythm and a prominent, virtuosic ney flute melody that weaves throughout the song and carries the main theme with melismatic ornamentation. The chorus introduces layered synth and string lines, creating a full, anthemic call-and-response texture. The production is clean and modern, blending traditional Middle Eastern instrumentation with a driving, danceable pop structure, evoking a mood that is both yearning and celebratory. The arrangement alternates between powerful chorus sections and more intimate verses, where a restrained but emotive ney line is supported by intricate melodic lines from the oud. A steady, programmed drum machine beat and a melodic synth bassline provide a mid-tempo foundation, with simple synth pads offering harmonic support. The track features expressive oud solos and a brief instrumental section at the end, concluding with a clean, melodic synth lead that fades out. A touch of reverb enhances the emotional weight of the lead instruments. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "feen_layalik",
+      "cap": 7336,
+      "seed": 20261106
+    },
+    {
+      "name": "لسه_الحاله_ماتسرش",
+      "style": "The track opens with a fast, ornate melodic line on the oud or a synth emulation, establishing a dramatic and passionate tone. A strong, emotive lead melody with significant vibrato and melismatic runs typical of Arabic music is carried by the oud and strings. A lush cinematic string section swells in, building tension before transitioning into a mid-tempo Arabic pop groove. The arrangement features a driving beat with a prominent darbuka and full drum kit, supported by a solid bassline that anchors the rhythm. Synth strings and pads add harmonic depth, while the oud weaves intricate counter-melodies throughout the verses and chorus, maintaining traditional roots. The track follows a clear verse-chorus structure, building in intensity toward a powerful chorus theme, and concludes with an instrumental flourish that highlights the oud's virtuosity. An energetic instrumental break reprises the main melodic theme before ending abruptly. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "lissa_alhala_matasarish",
+      "cap": 6030,
+      "seed": 20261106
+    },
+    {
+      "name": "للحين_عايش",
+      "style": "A dramatic and melancholic instrumental Arabic pop ballad opens with a gentle piano arpeggio, soon joined by a virtuosic and emotive accordion playing a lively, European-influenced melody. The accordion and strings carry the main theme with significant passion and vibrato over a steady, mid-tempo beat driven by acoustic drums and a supportive bassline. The arrangement builds with the addition of lush, cinematic strings, creating a rich, orchestral texture that underscores the emotional weight. The accordion remains a central melodic voice throughout, weaving intricate lines, answered by layered string and synth phrases in a dynamic call-and-response that builds to an intense emotional peak. The track blends traditional and modern elements, featuring a prominent oud playing melodic lines over a darbuka, a solid kick drum, and a clean bass guitar. Lush synth pads provide harmonic depth, and the track culminates in an expressive accordion and oud improvisation before an abrupt, impactful ending. A distinctive, lively accordion melody takes center stage during instrumental breaks, adding a unique folk-like texture. The arrangement is built on a driving electronic beat and a prominent synth bassline, layered with cinematic synth strings. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "lelheen_3ayesh",
+      "cap": 7442,
+      "seed": 20261106
+    },
+    {
+      "name": "ليه_الجرح",
+      "style": "An energetic instrumental Arabic pop track driven by a punchy drum machine beat and a melodic synth bassline, with an emotive lead melody rich with melisma and vibrato. The track opens with a dramatic, cinematic saxophone melody, followed by a driving, danceable groove built on a modern drum machine and prominent darbuka-style hand percussion. A prominent oud carries the main melodic line, weaving intricate patterns throughout, while a synthesized string section provides lush harmonic pads. A lead synth, possibly emulating an oud or qanun, plays intricate melodic lines during instrumental breaks. The production is clean and modern, with significant reverb on the lead instruments creating a grand, anthemic feel. The track features a soulful, melodic saxophone solo during an instrumental break, followed by a dynamic section with synth arpeggios and a brief, distorted guitar-like flourish before an abrupt end. The overall sound blends nostalgic late-90s/early-2000s production elements with vibrant, rhythmic instrumentation. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "leh_aljarh",
+      "cap": 7619,
+      "seed": 20261106
+    },
+    {
+      "name": "ما_خلاص",
+      "style": "An energetic instrumental Arabic dance-pop track driven by a powerful, syncopated drum machine beat and a funky synth bassline. A prominent synth lead emulating the sound of an oud or mizmar/zurna carries the main melody, rich with melismatic ornamentation and vibrato and drenched in reverb, alongside lively keyboard chords and percussion. The chorus features layered synth lines in a call-and-response style, with the full ensemble playing the theme in unison, creating an anthemic and celebratory feel and an expansive atmosphere. The instrumentation blends modern electronic elements with traditional Arabic sounds, including electronic percussion reminiscent of a darbuka. The arrangement includes a dynamic instrumental break with rhythmic synth stabs and prominent synth work, maintaining a high-energy, club-ready groove throughout. The production is clean and modern, fusing traditional Arabic melodic sensibilities with a driving electronic dance rhythm. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ma_khalas",
+      "cap": 7441,
+      "seed": 20261106
+    },
+    {
+      "name": "متى_حبيبي_متى",
+      "style": "An energetic instrumental Arabic pop track driven by a powerful, syncopated drum machine beat and a prominent melodic oud performance, featuring a punchy electronic rhythm and a rhythmic synth bassline. The track opens with a dramatic, cinematic instrumental introduction led by a reedy synth melody, reminiscent of an accordion or mizmar, punctuated by orchestral stabs. The oud and synth lead carry the main melody with vibrato and Arabic melisma, in a strong, clear tone, trading call-and-response phrases with the string pads for depth and a communal, celebratory feel. Layered synths, including string pads and melodic lead lines, weave through the mix, while traditional Middle Eastern instrumentation blends seamlessly with a modern, dance-oriented pop structure. The production is clean and vibrant, creating a high-energy, festive atmosphere ideal for belly dancing. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "mata_habibi_mata",
+      "cap": 7463,
+      "seed": 20261106
+    },
+    {
+      "name": "مع_السلامة",
+      "style": "The track opens with a virtuosic and dramatic oud taqsim, a rapid, improvisational flourish that establishes a passionate, cinematic tone. The oud then carries an emotive lead melody with significant melisma and vibrato characteristic of Arabic music. The arrangement builds into a full-band sound, blending traditional and modern elements: a driving rhythm section combines a standard drum kit with Middle Eastern percussion like the darbuka, while a lush string section provides a sweeping orchestral backdrop. The oud remains a central melodic voice throughout. The chorus theme is powerful and anthemic, followed by an instrumental break featuring a lively accordion melody over the driving beat before the track comes to an abrupt end. Emotional, melismatic oud and string runs express a sense of longing and heartache, supported by a solid bassline, rhythmic percussion, and subtle synth pads. The chorus swells with intensity, the lead lines becoming more forceful. The track concludes with a dramatic slowdown, where the melody becomes drawn-out and soaked in reverb, fading into a brief, atmospheric instrumental outro. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ma3_alsalama",
+      "cap": 5665,
+      "seed": 20261106
+    },
+    {
+      "name": "من_كثر_حبي_فيك",
+      "style": "A dramatic and cinematic instrumental Arabic pop track opens with an evocative piano and oud melody, quickly joined by lush, sweeping orchestral strings. A powerful, emotive lead melody with passionate vibrato is carried by the strings and oud over a steady, mid-tempo beat driven by acoustic drums and bass. The arrangement features a prominent accordion that delivers expressive melodic lines and a fiery solo, trading phrases with the oud and strings. Layered string harmonies provide depth and a call-and-response dynamic, enhancing the grand, theatrical feel. A lush string section and a steady rhythm section of drums and bass guitar form the core of the arrangement. The production is clean and spacious, with significant reverb creating a concert hall ambiance. The track builds in intensity, conveying a sense of romantic yearning and drama, with a nostalgic, slightly European flavor characteristic of late 20th-century Middle Eastern music. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "min_kothr_hobbi_feek",
+      "cap": 9436,
+      "seed": 20261106
+    },
+    {
+      "name": "وينك_حبيب",
+      "style": "The track opens with a virtuosic ney flute solo performing a traditional Arabic taqsim, adorned with intricate ornamentation over a subtle atmospheric pad. A smooth, melancholic ney melody follows, typical of modern Arabic pop. The arrangement blends traditional and contemporary elements, featuring a gentle electronic beat, a deep synth bass, and lush string pads that support the ney and lead synth. The energy builds into a more driving, rhythmic chorus with layered synth and string lines and a prominent beat, creating a powerful, yearning atmosphere before an abrupt cut-off. A reverb-drenched lead melody drives the song, supported by lush cinematic synth strings and a steady mid-tempo electronic drum beat. A prominent synth lead carries the main melodic hook, while layered string and pad harmonies create a grand, layered effect in the chorus, amplifying the melancholic mood. The arrangement breaks down into a more intimate, reflective section with just a solo lead line and sparse synth pads before fading out. A dynamic, modern beat incorporates the distinct sound of a darbuka, and a prominent instrumental section features a fast, melodic oud solo over the propulsive groove, transitioning into a more reflective passage. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "waynak_habib",
+      "cap": 6095,
+      "seed": 20261106
+    },
+    {
+      "name": "يا_تكون_حبيبي",
+      "style": "An energetic instrumental Arabic pop track featuring a powerful, passionate lead melody rich with melisma and vibrato, played in a classic Arabic melodic style by the synth lead and strings. The rhythm section features a prominent darbuka and a steady, driving bassline, providing a danceable foundation. A bright, reedy synth lead mimics an accordion or mizmar, playing catchy melodic lines and solos throughout. A lush string section offers harmonic support, while a lively accordion adds melodic fills and a featured solo. The arrangement includes an extended instrumental introduction with fiery organ and guitar solos, followed by a verse-chorus structure. A dynamic instrumental break highlights the synth lead and intricate percussion, building to a final melodic phrase. The track also features a lively brass section playing staccato melodic phrases and an oud weaving intricate lines throughout. The production is clean and modern, with the lead instruments placed front and center, enhanced by a touch of reverb, and the overall mood remains high-energy and festive, characteristic of vintage Middle Eastern pop. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ya_tkoon_habibi",
+      "cap": 8550,
+      "seed": 20261106
+    },
+    {
+      "name": "يا_هوى_الغالين",
+      "style": "An energetic instrumental Arabic pop track driven by a powerful, syncopated darbuka rhythm and a punchy synth bassline, featuring a driving drum machine beat. A bright, reedy synth lead, rich with melisma and vibrato and slightly reverb-drenched, carries the main melody over the beat, answered by dynamic layered synth and string phrases in a call-and-response style that creates a celebratory, anthemic atmosphere. The instrumentation blends modern and traditional elements, with Middle Eastern-style melodic flourishes, layered with synth strings and pads. A prominent, virtuosic violin plays fast, ornate melodies, placing both the synth lead and the violin front and center in the mix. The production is bright, lively, and vibrant, designed for dancing, with a constant, high-tempo energy perfect for belly dancing or festive gatherings. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ya_hawa_alghaleen",
+      "cap": 9331,
+      "seed": 20261106
+    }
+  ]
+}
