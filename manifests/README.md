@@ -32,6 +32,7 @@ the manifest lives in `manifests/`. A manifest with assets next to it can omit
 | `pragmatic-grasshopper_ibn_zuraiq_formatted.json` | 4 x 3 | Four-song Ibn Zuraiq batch, no score. |
 | `tarab_test_01.json` | 5 | Tarab A/B listening test on `moon_101_v2`. |
 | `fadhl_shaker_instrumental_01.json` | 23 | Base model (LoRA scale 0), `cot=melody`, `[Instrumental]`, full-instrumental captions from the Fadhl Shaker shortlist; see the companion `.md`. |
+| `fadhl_shaker_instrumental_02.json` | 23 | Round 02: same recipe on scores converted with the official YuE2 Vocal → Ins instrumental workflow (no vocal melody left to sing). |
 
 Validate any manifest without a GPU:
 

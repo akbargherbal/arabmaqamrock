@@ -35,6 +35,7 @@ re-downloaded on a fresh VM.
 | `setup_transcribe.sh` | build the optional repo-local `.venv-sheetsage2` for `./transcribe.sh` (Python 3.11, CPU default; `--cuda` opt-in) |
 | `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`) |
 | `audio_cpp.pin` | the audio.cpp commit a build should use (empty = track main) |
+| `instrumentalize_scores.py` | convert native YuE2/SheetSage2 scores to instrumental form (Vocal → Ins); vendored official helpers in `yue2_instrumental/` |
 
 ## Use
 

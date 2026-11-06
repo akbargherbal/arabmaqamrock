@@ -8,6 +8,12 @@ at a time to push fidelity to the original.
 **Input:** `local_workspace/fadhl_shaker_selected_scores.zip` +
 `local_workspace/full_instrumental_fadhl_shaker_shortlist.json`.
 
+> **Result (2026-11-07):** the melody was recognisably the original song, but
+> the model sang gibberish. That is the expected YuE2 behaviour: it always
+> plans a Vocal line, even with `[Instrumental]`. See
+> [`fadhl_shaker_instrumental_02.md`](fadhl_shaker_instrumental_02.md) for the
+> score-surgery fix (Vocal → Ins).
+
 ## Recipe
 
 | | |
