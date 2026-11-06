@@ -37,26 +37,27 @@ The automatic cap is derived from the number of Arabic letters in the lyrics.
 ~111 s floor and truncate almost every song. The manifest sets the cap from each
 score's own length instead. Dry-run reports `headroom 250` (10 s) for all 23.
 
-### Why `--no-trigger` is required
+### Why the trigger is off
 
 `arabmaqamrock` is the **LoRA trigger word**, not a genre label. With the LoRA at
 scale 0 it is noise, so the style must stay exactly the `full_instrumental`
-caption. `generate.py` prepends the trigger whenever it is missing, so pass
-`--no-trigger` on both the dry-run and the real run.
+caption. The manifest sets `"trigger": false` in `defaults`; `generate.py` then
+leaves the style untouched. (`--no-trigger` is still available as a batch-wide
+override, but it is no longer required here.)
 
 ## Commands
 
 ```bash
 # validate the manifest (no GPU, writes nothing)
-python3 generate.py manifests/fadhl_shaker_instrumental_01.json --dry-run --no-trigger
+python3 generate.py manifests/fadhl_shaker_instrumental_01.json --dry-run
 
 # smoke test: only the first song (أنا من آخرها), then listen before the batch
 python3 generate.py manifests/fadhl_shaker_instrumental_01.json \
-  --no-trigger --limit 1 --label fadhl_inst_01_smoke
+  --limit 1 --label fadhl_inst_01_smoke
 
 # real run (~23 x 6.5 min ≈ 2.5 h on a T4)
 python3 generate.py manifests/fadhl_shaker_instrumental_01.json \
-  --no-trigger --label fadhl_inst_01
+  --label fadhl_inst_01
 ```
 
 Outputs land in `out/<timestamp>_fadhl_inst_01/`. Each take has a sidecar with

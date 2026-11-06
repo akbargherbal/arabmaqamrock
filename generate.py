@@ -27,7 +27,8 @@ Schema (strict: unknown keys are an error)
         "repeat":     2,                   # takes per song, fresh random seeds
         "quantile":   0.95,                # cap quantile: 0.90 / 0.95 / 0.975
         "lora":       "v2",                # alias for songs with no 'lora'
-        "cot":        "full"               # required when a score is given (see below)
+        "cot":        "full",              # required when a score is given (see below)
+        "trigger":    false                # false = do NOT prepend "arabmaqamrock"
       },
       "songs": [
         {
@@ -39,6 +40,7 @@ Schema (strict: unknown keys are an error)
           "abc_file": "scores/score.abc",  # ABC score file  xor 'score' alias (inline 'abc' is rejected)
           "score":   "v1",                 # alias into input.scores
           "cot":     "full",               # off | melody | full; must be melody/full with a score
+          "trigger": false,                # false = no "arabmaqamrock " prefix (base model runs)
           "lora":    "qahh_a0p1",         # optional alias; else defaults.lora, else the CLI pair
           "repeat":  3,                    # -> 3 fresh random seeds
           "seeds":   [1, 2, 3],            # or explicit, all < 2^32
@@ -69,7 +71,8 @@ preflight before any GPU work; score files are checked while resolving the JSON.
 Seeds default to `secrets.randbelow(2**32)`; values >= 2^32 alias because
 audio.cpp seeds a uint32 (DECISIONS.md). The trigger "arabmaqamrock " is
 prepended to the style when absent, matching every training caption and the
-staged prompts (disable with --no-trigger).
+staged prompts. Set `"trigger": false` (per song or in `defaults`) for base-model
+runs; `--no-trigger` still forces it off for the whole batch.
 
 Everything lands in out/<YYYYMMDD-HHMMSS>_<label>/:
 
@@ -151,9 +154,9 @@ COT_MODES = ("off", "melody", "full")
 
 SONG_KEYS = {"name", "style", "style_file", "lyrics", "lyrics_file",
              "repeat", "seeds", "seed", "cap", "quantile", "lora",
-             "abc_file", "score", "cot"}
+             "abc_file", "score", "cot", "trigger"}
 DEFAULT_KEYS = {"style", "style_file", "repeat", "quantile", "lora",
-                "abc_file", "score", "cot"}
+                "abc_file", "score", "cot", "trigger"}
 LORA_SPEC_KEYS = {"dir", "ar", "nar"}
 
 # Per-song generation controls. Each key maps 1:1 to an audio.cpp
@@ -802,7 +805,7 @@ def _lora_alias(raw: dict, defaults: dict, loras: dict, where: str) -> str | Non
 
 
 def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
-                  trigger: bool = True, loras: dict | None = None,
+                  cli_trigger: bool = True, loras: dict | None = None,
                   scores: dict | None = None,
                   cli_cot: str | None = None) -> list[Song]:
     """Validate the input JSON and resolve every song (no writes, no GPU)."""
@@ -816,6 +819,9 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
         check(_is_pos_int(defaults["repeat"]), "input.defaults.repeat: integer >= 1 required")
     if "quantile" in defaults:
         _validate_quantile(defaults["quantile"], "input.defaults.quantile")
+    if "trigger" in defaults:
+        check(isinstance(defaults["trigger"], bool),
+              "input.defaults.trigger: boolean required")
 
     songs_raw = data.get("songs")
     check(isinstance(songs_raw, list) and songs_raw, "input.songs: non-empty array required")
@@ -844,7 +850,11 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
             warn(f"{where}.name: '{base}' already used; renamed to '{name}'")
         seen.add(name)
 
-        style_text = _style_text(raw, defaults, base_dir, where, trigger)
+        song_trigger = raw.get("trigger", defaults.get("trigger", True))
+        check(isinstance(song_trigger, bool), f"{where}.trigger: boolean required")
+        if not cli_trigger:
+            song_trigger = False
+        style_text = _style_text(raw, defaults, base_dir, where, song_trigger)
         lyrics_text = _lyrics_text(raw, base_dir, where)
         n_letters = arabic_letters(lyrics_text)
         if n_letters == 0:
@@ -1513,7 +1523,7 @@ def main(argv: list[str] | None = None) -> int:
         loras = resolve_loras(data, base_dir)
         scores = resolve_scores(data, base_dir)
         songs = resolve_songs(data, base_dir, args.quantile,
-                              trigger=not args.no_trigger, loras=loras,
+                              cli_trigger=not args.no_trigger, loras=loras,
                               scores=scores, cli_cot=args.cot)
 
         if args.out_dir:

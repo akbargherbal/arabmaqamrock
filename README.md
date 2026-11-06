@@ -105,13 +105,15 @@ Per-song fields (`strict` — unknown keys are an error):
 | `lora` | optional alias into the top-level `loras` map (see below) |
 | `abc_file` / `score` | optional ABC score: a path, or an alias into the top-level `scores` map (mutually exclusive) |
 | `cot` | `off` (default) / `melody` / `full`; required when a score is given |
+| `trigger` | `true` (default) / `false`; `false` keeps the LoRA trigger word out of the style (base-model runs) |
 | `guidance_scale`, `semantic_*`, `abc_*` | optional per-song sampler controls (see below) |
 | `lora_ar_scale` / `lora_nar_scale` | optional adapter blend, 0.0–1.5 (default 1.0) |
 
 `defaults` supplies `style`/`style_file`, `repeat`, `quantile`, `lora`,
-`score`/`abc_file`/`cot`, and any control key for every song. The trigger word **`arabmaqamrock`** is
-prepended to any style that lacks it (every training caption carried it; disable
-with `--no-trigger`).
+`score`/`abc_file`/`cot`, `trigger`, and any control key for every song. The
+trigger word **`arabmaqamrock`** is prepended to any style that lacks it (every
+training caption carried it). Set `"trigger": false` per song or in `defaults`
+for base-model runs; `--no-trigger` still forces it off for the whole batch.
 
 The optional top-level `loras` map lets one batch mix adapters:
 

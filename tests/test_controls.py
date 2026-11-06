@@ -24,6 +24,7 @@ ABC = "X:1\nT:test\nM:4/4\nL:1/4\nK:D\nD E F G|\n"
 
 def write_assets(tmp: Path) -> None:
     (tmp / "style.txt").write_text("arabmaqamrock test style", encoding="utf-8")
+    (tmp / "plain_style.txt").write_text("plain test style", encoding="utf-8")
     (tmp / "lyrics.txt").write_text("يا ليل", encoding="utf-8")
     (tmp / "score.abc").write_text(ABC, encoding="utf-8")
 
@@ -50,6 +51,57 @@ class ControlKeys(unittest.TestCase):
 
     def resolve(self, data: dict):
         return generate.resolve_songs(data, self.tmp)
+
+    def resolve_no_trigger(self, data: dict):
+        return generate.resolve_songs(data, self.tmp, cli_trigger=False)
+
+    def test_trigger_defaults_to_on(self):
+        song = self.resolve(manifest(
+            [{"name": "a", "lyrics_file": "lyrics.txt"}],
+            defaults={"style_file": "plain_style.txt", "cot": "full"},
+        ))[0]
+        self.assertTrue(song.style_text.startswith("arabmaqamrock "))
+
+    def test_trigger_false_in_defaults(self):
+        song = self.resolve(manifest(
+            [{"name": "a", "lyrics_file": "lyrics.txt"}],
+            defaults={"style_file": "plain_style.txt", "cot": "full",
+                      "trigger": False},
+        ))[0]
+        self.assertEqual(song.style_text, "plain test style")
+
+    def test_trigger_per_song_override(self):
+        off, on = self.resolve(manifest(
+            [{"name": "off", "lyrics_file": "lyrics.txt", "trigger": False},
+             {"name": "on", "lyrics_file": "lyrics.txt", "trigger": True}],
+            defaults={"style_file": "plain_style.txt", "cot": "full",
+                      "trigger": True},
+        ))
+        self.assertEqual(off.style_text, "plain test style")
+        self.assertTrue(on.style_text.startswith("arabmaqamrock "))
+
+    def test_cli_no_trigger_forces_off(self):
+        song = self.resolve_no_trigger(manifest(
+            [{"name": "a", "lyrics_file": "lyrics.txt", "trigger": True}],
+            defaults={"style_file": "plain_style.txt", "cot": "full",
+                      "trigger": True},
+        ))[0]
+        self.assertEqual(song.style_text, "plain test style")
+
+    def test_trigger_must_be_bool(self):
+        for bad in ("false", 0, 1, None):
+            with self.subTest(bad=bad), self.assertRaises(generate.PlanError):
+                self.resolve(manifest(
+                    [{"name": "a", "lyrics_file": "lyrics.txt",
+                      "trigger": bad}],
+                    defaults={"style_file": "plain_style.txt", "cot": "full"},
+                ))
+        with self.assertRaises(generate.PlanError):
+            self.resolve(manifest(
+                [{"name": "a", "lyrics_file": "lyrics.txt"}],
+                defaults={"style_file": "plain_style.txt", "cot": "full",
+                          "trigger": "false"},
+            ))
 
     def test_absent_means_nothing_is_passed(self):
         song = self.resolve(manifest([{"name": "a", "lyrics_file": "lyrics.txt"}]))[0]
