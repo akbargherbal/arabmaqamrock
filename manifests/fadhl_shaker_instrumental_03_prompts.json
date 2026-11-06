@@ -1,0 +1,81 @@
+{
+  "base_dir": "..",
+  "scores": {
+    "ana_min_akhiraha": "scores/fadhl_shaker_instrumental/ana_min_akhiraha.abc"
+  },
+  "defaults": {
+    "cot": "melody",
+    "lora_ar_scale": 0,
+    "lora_nar_scale": 0,
+    "repeat": 1,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "p0_original_caption",
+      "style": "An energetic instrumental Arabic pop track driven by a powerful, syncopated darbuka rhythm and a prominent, melodic oud line. The oud carries the main melody with melismatic ornamentation and vibrato, enhanced by reverb, while a lush, synthesized string section provides dramatic swells and counter-melodies, creating a full, cinematic soundscape. The anthemic chorus is carried by the layered strings and a soaring synth lead. A dynamic instrumental break highlights the interplay between the oud and strings before returning to the main chorus theme. The production is clean, modern, and punchy, blending traditional Middle Eastern instrumentation with a driving, dance-oriented beat to deliver a dramatic and compelling feel. Full instrumental track, no vocals.",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "p1_one_word",
+      "style": "instrumental",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "p2_minimal_negative",
+      "style": "pure instrumental music, no vocals, no singing, no voice",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "p3_negative_list",
+      "style": "Pure instrumental. No vocals, no singing, no voice, no choir, no humming, no vocalizations, no lyrics, no ad-libs, no vocal samples. Arabic pop, oud, darbuka, synth strings, synth bass.",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "p4_positive_only",
+      "style": "An energetic Arabic pop arrangement for oud, darbuka, synth strings, and synth bass. The oud carries the lead melody with Arabic ornamentation; the strings answer in call-and-response; the darbuka drives a syncopated groove. Cinematic, modern, punchy production.",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "p5_tag_list",
+      "style": "instrumental, Arabic pop, oud, darbuka, synth strings, synth bass, cinematic, modern, no vocals, no singing, no choir, no humming",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "p6_negative_cfg15",
+      "style": "Pure instrumental. No vocals, no singing, no voice, no choir, no humming, no vocalizations, no lyrics, no ad-libs, no vocal samples. Arabic pop, oud, darbuka, synth strings, synth bass.",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106,
+      "guidance_scale": 1.5
+    },
+    {
+      "name": "p7_one_word_cfg15",
+      "style": "instrumental",
+      "lyrics": "[Instrumental]",
+      "score": "ana_min_akhiraha",
+      "cap": 6454,
+      "seed": 20261106,
+      "guidance_scale": 1.5
+    }
+  ]
+}

@@ -99,3 +99,8 @@ The round 01 run can be stopped; its first 6 takes are still useful as the
 If a take still has a faint vocal texture, that is a model artifact, not a
 planned vocal line. The next fallback is source separation on the finished WAV
 (keep the instrumental stem), but try the score surgery first.
+
+> **Result:** the score surgery made the product more palatable, but a vocal-like
+> line still appears. Round 03 tests whether a caption written for instruments
+> only, or the minimal `instrumental` caption, suppresses it:
+> [`fadhl_shaker_instrumental_03_prompts.md`](fadhl_shaker_instrumental_03_prompts.md).
