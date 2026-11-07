@@ -1,0 +1,82 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    }
+  },
+  "scores": {
+    "habeetak_full": "scores/fadhl_shaker_instrumental/habeetak.abc"
+  },
+  "defaults": {
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 1,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "s0_control_long",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "score": "habeetak_full",
+      "cap": 6993,
+      "seed": 20261106,
+      "lora": "instrumental",
+      "lora_nar_scale": 0.0
+    },
+    {
+      "name": "s1_compact",
+      "style": "Arabic pop instrumental, 101 BPM, G minor, oud lead, qanun, cinematic strings, synth bass, darbuka, layered full-band arrangement, continuous accompaniment, lush, romantic, no vocals",
+      "lyrics": "[instrumental]",
+      "score": "habeetak_full",
+      "cap": 6993,
+      "seed": 20261106,
+      "lora": "instrumental",
+      "lora_nar_scale": 0.0
+    },
+    {
+      "name": "s2_roles",
+      "style": "Arabic pop instrumental, 101 BPM, G minor, 4/4, oud carries the lead melody with vibrato, qanun answers with tremolo counter-melody, violin and cello section sustain the chords, electric bass locks with the kick, darbuka and riq drive a busy groove, hand claps on the backbeat, layered full-band arrangement, continuous comping, call-and-response fills, punchy drums, warm low end, wide stereo, plate reverb, no vocals",
+      "lyrics": "[instrumental]",
+      "score": "habeetak_full",
+      "cap": 6993,
+      "seed": 20261106,
+      "lora": "instrumental",
+      "lora_nar_scale": 0.0
+    },
+    {
+      "name": "s3_rhythm",
+      "style": "Arabic pop instrumental, 101 BPM, G minor, driving darbuka and riq groove, kick and snare pop beat, hand claps, electric bass walking groove, oud rhythm comping, qanun arpeggios, string pad, busy percussion fills, danceable, full band, loud punchy mix, no vocals",
+      "lyrics": "[instrumental]",
+      "score": "habeetak_full",
+      "cap": 6993,
+      "seed": 20261106,
+      "lora": "instrumental",
+      "lora_nar_scale": 0.0
+    },
+    {
+      "name": "s4_dense",
+      "style": "Arabic pop instrumental, 101 BPM, G minor, wall of sound, full band, oud lead, qanun counter-melody, violin and cello section, synth string pad, electric bass, darbuka, riq, hand claps, tambourine, drum machine, layered arrangement, continuous comping, no empty space, busy fills, call-and-response, doubled melody, wide stereo, punchy compressed drums, warm bass, bright presence, plate reverb, no vocals",
+      "lyrics": "[instrumental]",
+      "score": "habeetak_full",
+      "cap": 6993,
+      "seed": 20261106,
+      "lora": "instrumental",
+      "lora_nar_scale": 0.0
+    },
+    {
+      "name": "s5_roles_sections",
+      "style": "Arabic pop instrumental, 101 BPM, G minor, 4/4, oud carries the lead melody with vibrato, qanun answers with tremolo counter-melody, violin and cello section sustain the chords, electric bass locks with the kick, darbuka and riq drive a busy groove, hand claps on the backbeat, layered full-band arrangement, continuous comping, call-and-response fills, punchy drums, warm low end, wide stereo, plate reverb, no vocals",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[instrumental]\n[verse]\n[chorus]\n[instrumental]",
+      "score": "habeetak_full",
+      "cap": 6993,
+      "seed": 20261106,
+      "lora": "instrumental",
+      "lora_nar_scale": 0.0
+    }
+  ]
+}
