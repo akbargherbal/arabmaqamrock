@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-"""Validate a YuE2 AR LoRA safetensors header before a GPU run.
+"""Validate a YuE2 AR or NAR LoRA safetensors header before a GPU run.
 
 The runtime (audio.cpp) loads A/B adapters from a safetensors state dict. A
-wrong file (NAR adapter, ComfyUI fused layout, truncated download) otherwise
+wrong file (AR vs NAR, ComfyUI fused layout, truncated download) otherwise
 only fails after the model is loaded, which costs minutes. This reads the
-header only and checks the YuE2 AR layout:
+header only.
 
-  * 28 layers, layers 0..27;
-  * self_attn.{q,k,v,o}_proj and mlp.{gate,up,down}_proj, lora_A + lora_B;
-  * one rank across every lora_A.
+AR layout: 28 layers x self_attn.{q,k,v,o}_proj + mlp.{gate,up,down}_proj,
+           lora_A + lora_B (392 tensors).
+NAR layout: the same with nar_self_attn / nar_mlp (392 tensors), plus full
+           replacement weights for vae2llm / llm2vae (4 tensors) = 396.
 
 Usage:
-    python3 plumbing/check_lora.py path/to/adapter.safetensors [--expect-rank 64]
+    python3 plumbing/check_lora.py path/to/adapter.safetensors \
+        --kind ar --expect-rank 64
+    python3 plumbing/check_lora.py path/to/nar_adapter.safetensors \
+        --kind nar --expect-rank 32
 """
 from __future__ import annotations
 
@@ -26,16 +30,27 @@ AR_BLOCKS = {
     "self_attn": ("q_proj", "k_proj", "v_proj", "o_proj"),
     "mlp": ("gate_proj", "up_proj", "down_proj"),
 }
+NAR_BLOCKS = {
+    "nar_self_attn": ("q_proj", "k_proj", "v_proj", "o_proj"),
+    "nar_mlp": ("gate_proj", "up_proj", "down_proj"),
+}
+NAR_IO_KEYS = {"vae2llm.weight", "vae2llm.bias", "llm2vae.weight", "llm2vae.bias"}
 
 
-def expected_keys() -> set[str]:
-    return {
+def expected_keys(kind: str = "ar") -> set[str]:
+    if kind not in ("ar", "nar"):
+        raise ValueError("kind must be ar or nar")
+    blocks = AR_BLOCKS if kind == "ar" else NAR_BLOCKS
+    keys = {
         f"layers.{i}.{block}.{proj}.{ab}"
         for i in range(LAYERS)
-        for block, projections in AR_BLOCKS.items()
+        for block, projections in blocks.items()
         for proj in projections
         for ab in ("lora_A", "lora_B")
     }
+    if kind == "nar":
+        keys |= NAR_IO_KEYS
+    return keys
 
 
 def read_header(path: Path) -> tuple[dict, dict]:
@@ -52,11 +67,11 @@ def read_header(path: Path) -> tuple[dict, dict]:
     return metadata, header
 
 
-def validate(metadata: dict, tensors: dict, expect_rank: int | None = None
-             ) -> tuple[list[str], int | None, int]:
+def validate(metadata: dict, tensors: dict, expect_rank: int | None = None,
+             kind: str = "ar") -> tuple[list[str], int | None, int]:
     """Return (problems, rank, layer_count)."""
     problems: list[str] = []
-    expected = expected_keys()
+    expected = expected_keys(kind)
     missing = sorted(expected - set(tensors))
     extra = sorted(set(tensors) - expected)
     if missing:
@@ -92,6 +107,7 @@ def validate(metadata: dict, tensors: dict, expect_rank: int | None = None
 def main() -> int:
     cli = argparse.ArgumentParser(description=__doc__)
     cli.add_argument("path", type=Path)
+    cli.add_argument("--kind", choices=("ar", "nar"), default="ar")
     cli.add_argument("--expect-rank", type=int, default=None)
     args = cli.parse_args()
 
@@ -101,13 +117,15 @@ def main() -> int:
         print(f"FAIL: {exc}", file=sys.stderr)
         return 2
 
-    problems, rank, layer_count = validate(metadata, tensors, args.expect_rank)
+    problems, rank, layer_count = validate(
+        metadata, tensors, args.expect_rank, args.kind)
     print(
         f"{args.path}: {len(tensors)} tensors, {layer_count} layers, "
-        f"rank {rank}"
+        f"rank {rank}, kind {args.kind}"
     )
     if metadata:
-        wanted = {k: metadata[k] for k in ("intended_cot", "rank", "base_model")
+        wanted = {k: metadata[k] for k in
+                  ("intended_cot", "rank", "base_model", "pair_with")
                   if k in metadata}
         if wanted:
             print("metadata:", json.dumps(wanted, ensure_ascii=False))
@@ -115,7 +133,7 @@ def main() -> int:
         for problem in problems:
             print(f"FAIL: {problem}", file=sys.stderr)
         return 1
-    print("OK: YuE2 AR LoRA header")
+    print(f"OK: YuE2 {args.kind.upper()} LoRA header")
     return 0
 
 

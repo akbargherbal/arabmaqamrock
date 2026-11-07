@@ -36,7 +36,7 @@ re-downloaded on a fresh VM.
 | `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`) |
 | `audio_cpp.pin` | the audio.cpp commit a build should use (empty = track main) |
 | `instrumentalize_scores.py` | convert native YuE2/SheetSage2 scores to instrumental form (Vocal → Ins); vendored official helpers in `yue2_instrumental/` |
-| `check_lora.py` | validate a YuE2 AR LoRA safetensors header (28 layers, 392 tensors, rank) before loading it on the GPU |
+| `check_lora.py` | validate a YuE2 AR or NAR LoRA safetensors header (28 layers, tensor count, rank) before loading it on the GPU |
 
 ## Use
 

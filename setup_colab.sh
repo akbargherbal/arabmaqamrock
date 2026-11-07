@@ -41,6 +41,12 @@ LORA_NAR="arabmaqamrock-v3-nar.safetensors"
 HF_INST_LORA_REPO="Mothersuperior/YuE2-instrumental-cot-full-loras"
 HF_INST_LORA="ar_lora_inst_v3abc.bf16.safetensors"
 HF_INST_LORA_SHA256="e408fd3148b75b1165f7ddbf63db575d83bb6402a0b5f876fcb767dbcb2c5414"
+# NAR decoder LoRA for round 06 (real-production timbre). It is optional:
+# the instrumental AR adapter works with the stock NAR, but this is the
+# author's recommended pairing for production-quality output.
+HF_NAR_LORA_REPO="Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4"
+HF_NAR_LORA="nar_lora_joint_v9.bf16.safetensors"
+HF_NAR_LORA_SHA256="ce57f98e9e0e65c724c2a00aa23dea2568952590504a428c588d82f00bc61c55"
 
 ok()   { printf '  [ok]   %s\n' "$*"; }
 warn() { printf '  [warn] %s\n' "$*"; }
@@ -82,6 +88,13 @@ if [ -f "$LORAS/instrumental/$HF_INST_LORA" ]; then
   echo "$HF_INST_LORA_SHA256  $LORAS/instrumental/$HF_INST_LORA" | sha256sum -c - >/dev/null \
     && ok "instrumental LoRA sha256" \
     || warn "instrumental LoRA sha256 mismatch (round 04 may fail)"
+fi
+mkdir -p "$LORAS/nar"
+hf download "$HF_NAR_LORA_REPO" "$HF_NAR_LORA" --local-dir "$LORAS/nar" >/dev/null && ok "NAR v9 LoRA"
+if [ -f "$LORAS/nar/$HF_NAR_LORA" ]; then
+  echo "$HF_NAR_LORA_SHA256  $LORAS/nar/$HF_NAR_LORA" | sha256sum -c - >/dev/null \
+    && ok "NAR v9 LoRA sha256" \
+    || warn "NAR v9 LoRA sha256 mismatch (round 06 may fail)"
 fi
 
 echo "== 4. backup sidecar =="
