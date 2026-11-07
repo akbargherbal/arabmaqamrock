@@ -1,0 +1,25 @@
+{
+  "source": "habeetak",
+  "mode": "melody_only",
+  "source_transcription": "derived from a --full transcription (Vocal staff only; the original Ins line and chord symbols are discarded); not a melody-only re-transcription",
+  "vocal_notes_before": 438,
+  "vocal_notes_after": 0,
+  "original_ins_notes": 459,
+  "output_ins_notes": 438,
+  "chords_before": 182,
+  "chords_after": 0,
+  "bpm_before": 101,
+  "bpm_after": 101,
+  "key_before": "Gm",
+  "key_after": "Gm",
+  "bars": 114,
+  "meter": [
+    4,
+    4
+  ],
+  "duration_quarters": "454",
+  "duration_seconds": 269.703,
+  "vocal_pitch_onset_duration_preserved": true,
+  "bar_grid_preserved": true,
+  "nominal_seconds": 269.703
+}
