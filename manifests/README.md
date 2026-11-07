@@ -34,6 +34,7 @@ the manifest lives in `manifests/`. A manifest with assets next to it can omit
 | `fadhl_shaker_instrumental_01.json` | 23 | Base model (LoRA scale 0), `cot=melody`, `[Instrumental]`, full-instrumental captions from the Fadhl Shaker shortlist; see the companion `.md`. |
 | `fadhl_shaker_instrumental_02.json` | 23 | Round 02: same recipe on scores converted with the official YuE2 Vocal → Ins instrumental workflow (no vocal melody left to sing). |
 | `fadhl_shaker_instrumental_03_prompts.json` | 8 | Round 03: caption sweep on one song (`أنا من آخرها`), from the original full-instrumental caption to a one-word `instrumental` prompt; same instrumentalized score and seed. |
+| `fadhl_shaker_instrumental_04_lora_habeetak.json` | 6 | Round 04: third-party instrumental AR LoRA on one song (`حبيتك`); original vs Vocal → Ins score, AR scale 1.0 vs 0.75, a base-model control, and a text-only LoRA diagnostic. |
 
 Validate any manifest without a GPU:
 

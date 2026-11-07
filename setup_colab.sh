@@ -36,6 +36,11 @@ HF_GGUF_REPO="audio-cpp/Yue2-3B-GGUF"
 HF_LORA_REPO="akbargherbal/arabmaqamrock-yue2-lora"
 LORA_AR="arabmaqamrock-v3-ar.safetensors"
 LORA_NAR="arabmaqamrock-v3-nar.safetensors"
+# Third-party AR-only adapter for instrumental covers (round 04). It is loaded
+# instead of the arabmaqamrock AR adapter; the NAR adapter stays off (scale 0).
+HF_INST_LORA_REPO="Mothersuperior/YuE2-instrumental-cot-full-loras"
+HF_INST_LORA="ar_lora_inst_v3abc.bf16.safetensors"
+HF_INST_LORA_SHA256="e408fd3148b75b1165f7ddbf63db575d83bb6402a0b5f876fcb767dbcb2c5414"
 
 ok()   { printf '  [ok]   %s\n' "$*"; }
 warn() { printf '  [warn] %s\n' "$*"; }
@@ -71,6 +76,13 @@ echo "== 3. model + LoRA =="
 hf download "$HF_GGUF_REPO" yue2-3b-bf16.gguf yue2-vae-f16.gguf --local-dir "$MODELS" >/dev/null && ok "ggufs"
 hf download "$HF_GGUF_REPO" --include "sidecars/*" --local-dir "$MODELS" >/dev/null && ok "sidecars"
 hf download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS" >/dev/null && ok "LoRA"
+mkdir -p "$LORAS/instrumental"
+hf download "$HF_INST_LORA_REPO" "$HF_INST_LORA" --local-dir "$LORAS/instrumental" >/dev/null && ok "instrumental LoRA"
+if [ -f "$LORAS/instrumental/$HF_INST_LORA" ]; then
+  echo "$HF_INST_LORA_SHA256  $LORAS/instrumental/$HF_INST_LORA" | sha256sum -c - >/dev/null \
+    && ok "instrumental LoRA sha256" \
+    || warn "instrumental LoRA sha256 mismatch (round 04 may fail)"
+fi
 
 echo "== 4. backup sidecar =="
 if pgrep -f 'plumbing/backup_to_gcp.py' >/dev/null; then

@@ -1,0 +1,76 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    }
+  },
+  "scores": {
+    "habeetak_original": "scores/fadhl_shaker/habeetak.abc",
+    "habeetak_instrumental": "scores/fadhl_shaker_instrumental/habeetak.abc"
+  },
+  "defaults": {
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 1,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "v1_original_lora100",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106,
+      "score": "habeetak_original",
+      "lora_ar_scale": 1.0
+    },
+    {
+      "name": "v2_surgery_lora100",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106,
+      "score": "habeetak_instrumental",
+      "lora_ar_scale": 1.0
+    },
+    {
+      "name": "v0_base_surgery_full",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106,
+      "score": "habeetak_instrumental",
+      "lora_ar_scale": 0.0,
+      "lora_nar_scale": 0.0
+    },
+    {
+      "name": "v3_original_lora075",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106,
+      "score": "habeetak_original",
+      "lora_ar_scale": 0.75
+    },
+    {
+      "name": "v4_surgery_lora075",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106,
+      "score": "habeetak_instrumental",
+      "lora_ar_scale": 0.75
+    },
+    {
+      "name": "v5_lora_text_only",
+      "style": "A grand, cinematic instrumental Arabic pop piece opens with a lush orchestral arrangement featuring sweeping strings, dramatic piano arpeggios, and a prominent oud melody. The lead melody, played with vibrato and melismatic phrasing, is carried by the oud and strings with passion and emotion. The track builds into a mid-tempo, driving rhythm with the introduction of a steady drum machine beat and a supportive bassline, blending traditional Arabic orchestration with a modern pop sensibility. The overall mood is deeply romantic and yearning, carried by the soaring lead instruments and the majestic, layered instrumentation. A second, energetic section follows with a driving, synthesized dance beat, centered around a catchy, fast-paced instrumental hook played on a synthesized string instrument that mimics an oud or qanun with intricate melodic runs. A punchy synth bass and a four-on-the-floor drum machine pattern create an insistent, danceable groove. The production is clean and modern, enhanced by reverb, with layered synthesizers such as string pads and a lead synth performing oriental-scale melodies. The track transitions into an extended instrumental section featuring a virtuosic synth lead solo with expressive melismatic runs, creating a vibrant and celebratory dance floor atmosphere. Full instrumental track, no vocals.",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106
+    }
+  ]
+}
