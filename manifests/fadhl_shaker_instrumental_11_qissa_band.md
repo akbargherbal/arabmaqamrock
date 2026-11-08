@@ -72,22 +72,38 @@ maqam-rock NAR at scale 0.
 
 The band vocabulary is the cheap lever on top. Instrument words are in
 distribution for this LoRA (its caption format is *genre, instruments, mood, BPM*),
-and the negatives target exactly what the user hears:
+and it is written **entirely in the affirmative** — no `no X` clauses, which is
+how this caption space usually reads:
 
 ```
-live band, real instruments, acoustic drums, electric guitar, bass guitar,
-hand percussion, warm analog production, organic mix,
-no drum machine, no electronic drums, no synth lead, no programmed beats
+live band, real instruments, electric oud, electric guitar, bass guitar,
+acoustic drums, hand percussion, human timing, live performance dynamics,
+warm analog production, organic mix, natural room ambience, instrumental arrangement
 ```
+
+How each negative became a direct command:
+
+| what we do not want | what we ask for instead |
+|---|---|
+| `no drum machine` | `acoustic drums` |
+| `no electronic drums` | `hand percussion` |
+| `no synth lead` | `electric oud, electric guitar` (a player, named) |
+| `no programmed beats` | `human timing, live performance dynamics` |
+| `no vocals, no singing, no vocal chops` | `instrumental arrangement`, plus the `[instrumental]` section tag |
+
+The cost of that last row is the only real risk in this round: the three explicit
+vocal exclusions were in every winning string so far. The positive replacements
+were chosen to cover the same ground — but the takes must be checked for vocal
+leakage, because a leak would be a regression, not a taste call.
 
 ## 3. The takes — 4
 
 | # | take | style | AR | NAR |
 |---|---|---|---|---|
-| 1 | `c0_tags` | h2 | 1.0 | off |
-| 2 | `c1_band` | h2 + band | 1.0 | off |
-| 3 | `c2_band_v9` | h2 + band | 1.0 | **v9 @1.0** |
-| 4 | `c3_band_v9_ar085` | h2 + band | **0.85** | **v9 @1.0** |
+| 1 | `c0_tags` | h2, affirmative (189 chars) | 1.0 | off |
+| 2 | `c1_band` | h2 + band, affirmative (396 chars) | 1.0 | off |
+| 3 | `c2_band_v9` | h2 + band, affirmative | 1.0 | **v9 @1.0** |
+| 4 | `c3_band_v9_ar085` | h2 + band, affirmative | **0.85** | **v9 @1.0** |
 
 All four use `[intro]/[instrumental]/[outro]` and cap 9200. One variable per step:
 band words → decoder → adapter strength.
@@ -108,6 +124,8 @@ python3 generate.py manifests/fadhl_shaker_instrumental_11_qissa_band.json \
 ## 5. Judging
 
 - **Level-match first.** v9 is ~2.5 dB hotter; louder always sounds better.
+- **Vocal leakage.** The explicit `no vocals` exclusions are gone. Any words,
+  syllables, humming or choir in a take is a regression, not a preference.
 - Ending checks: sidecar `truncated` flag, duration vs 319.1 s, and the RMS of the
   last 10 s (a fade should be −30 dB or lower; a cut sits near −15).
 - Band checks: does the low end sound like a bass guitar and a kick, or a synth

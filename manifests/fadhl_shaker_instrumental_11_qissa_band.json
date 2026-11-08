@@ -14,7 +14,7 @@
     "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc"
   },
   "defaults": {
-    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, no vocals, no singing, no vocal chops",
+    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, instrumental arrangement",
     "lyrics": "[intro]\n[instrumental]\n[outro]",
     "cot": "full",
     "lora": "instrumental",
@@ -28,18 +28,19 @@
       "name": "c0_tags",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
-      "seed": 20261106
+      "seed": 20261106,
+      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, instrumental arrangement"
     },
     {
       "name": "c1_band",
-      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
+      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, electric oud, electric guitar, bass guitar, acoustic drums, hand percussion, human timing, live performance dynamics, warm analog production, organic mix, natural room ambience, instrumental arrangement",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106
     },
     {
       "name": "c2_band_v9",
-      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
+      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, electric oud, electric guitar, bass guitar, acoustic drums, hand percussion, human timing, live performance dynamics, warm analog production, organic mix, natural room ambience, instrumental arrangement",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106,
@@ -48,7 +49,7 @@
     },
     {
       "name": "c3_band_v9_ar085",
-      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
+      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, electric oud, electric guitar, bass guitar, acoustic drums, hand percussion, human timing, live performance dynamics, warm analog production, organic mix, natural room ambience, instrumental arrangement",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106,
