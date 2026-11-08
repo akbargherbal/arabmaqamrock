@@ -1,0 +1,206 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    }
+  },
+  "scores": {
+    "al_dawr_ala_meen": "scores/fadhl_shaker_instrumental/al_dawr_ala_meen.abc",
+    "al_hal": "scores/fadhl_shaker_instrumental/al_hal.abc",
+    "ana_min_akhiraha": "scores/fadhl_shaker_instrumental/ana_min_akhiraha.abc",
+    "awwal_ma_bashufak": "scores/fadhl_shaker_instrumental/awwal_ma_bashufak.abc",
+    "badeet_atib": "scores/fadhl_shaker_instrumental/badeet_atib.abc",
+    "bafakker_bil_sa3at": "scores/fadhl_shaker_instrumental/bafakker_bil_sa3at.abc",
+    "feen_layalik": "scores/fadhl_shaker_instrumental/feen_layalik.abc",
+    "fustan_alhelwa": "scores/fadhl_shaker_instrumental/fustan_alhelwa.abc",
+    "ghayb": "scores/fadhl_shaker_instrumental/ghayb.abc",
+    "habeetak": "scores/fadhl_shaker_instrumental/habeetak.abc",
+    "hazak_ya_albi": "scores/fadhl_shaker_instrumental/hazak_ya_albi.abc",
+    "leh_aljarh": "scores/fadhl_shaker_instrumental/leh_aljarh.abc",
+    "lelheen_3ayesh": "scores/fadhl_shaker_instrumental/lelheen_3ayesh.abc",
+    "lissa_alhala_matasarish": "scores/fadhl_shaker_instrumental/lissa_alhala_matasarish.abc",
+    "ma3_alsalama": "scores/fadhl_shaker_instrumental/ma3_alsalama.abc",
+    "ma_khalas": "scores/fadhl_shaker_instrumental/ma_khalas.abc",
+    "mata_habibi_mata": "scores/fadhl_shaker_instrumental/mata_habibi_mata.abc",
+    "min_kothr_hobbi_feek": "scores/fadhl_shaker_instrumental/min_kothr_hobbi_feek.abc",
+    "saharni_alshawq": "scores/fadhl_shaker_instrumental/saharni_alshawq.abc",
+    "saneen_alshawq": "scores/fadhl_shaker_instrumental/saneen_alshawq.abc",
+    "waynak_habib": "scores/fadhl_shaker_instrumental/waynak_habib.abc",
+    "ya_hawa_alghaleen": "scores/fadhl_shaker_instrumental/ya_hawa_alghaleen.abc",
+    "ya_tkoon_habibi": "scores/fadhl_shaker_instrumental/ya_tkoon_habibi.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, busy instrumentation, no empty space, rich full production, no vocals, no singing, no vocal chops",
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 1,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "al_dawr_ala_meen",
+      "score": "al_dawr_ala_meen",
+      "lyrics": "[instrumental]",
+      "cap": 6336,
+      "seed": 20261106
+    },
+    {
+      "name": "al_hal",
+      "score": "al_hal",
+      "lyrics": "[instrumental]",
+      "cap": 6467,
+      "seed": 20261106
+    },
+    {
+      "name": "ana_min_akhiraha",
+      "score": "ana_min_akhiraha",
+      "lyrics": "[instrumental]",
+      "cap": 6454,
+      "seed": 20261106
+    },
+    {
+      "name": "awwal_ma_bashufak",
+      "score": "awwal_ma_bashufak",
+      "lyrics": "[instrumental]",
+      "cap": 6336,
+      "seed": 20261106
+    },
+    {
+      "name": "badeet_atib",
+      "score": "badeet_atib",
+      "lyrics": "[instrumental]",
+      "cap": 5761,
+      "seed": 20261106
+    },
+    {
+      "name": "bafakker_bil_sa3at",
+      "score": "bafakker_bil_sa3at",
+      "lyrics": "[instrumental]",
+      "cap": 7824,
+      "seed": 20261106
+    },
+    {
+      "name": "feen_layalik",
+      "score": "feen_layalik",
+      "lyrics": "[instrumental]",
+      "cap": 7336,
+      "seed": 20261106
+    },
+    {
+      "name": "fustan_alhelwa",
+      "score": "fustan_alhelwa",
+      "lyrics": "[instrumental]",
+      "cap": 5302,
+      "seed": 20261106
+    },
+    {
+      "name": "ghayb",
+      "score": "ghayb",
+      "lyrics": "[instrumental]",
+      "cap": 6169,
+      "seed": 20261106
+    },
+    {
+      "name": "habeetak",
+      "score": "habeetak",
+      "lyrics": "[instrumental]",
+      "cap": 6993,
+      "seed": 20261106
+    },
+    {
+      "name": "hazak_ya_albi",
+      "score": "hazak_ya_albi",
+      "lyrics": "[instrumental]",
+      "cap": 9417,
+      "seed": 20261106
+    },
+    {
+      "name": "leh_aljarh",
+      "score": "leh_aljarh",
+      "lyrics": "[instrumental]",
+      "cap": 7619,
+      "seed": 20261106
+    },
+    {
+      "name": "lelheen_3ayesh",
+      "score": "lelheen_3ayesh",
+      "lyrics": "[instrumental]",
+      "cap": 7442,
+      "seed": 20261106
+    },
+    {
+      "name": "lissa_alhala_matasarish",
+      "score": "lissa_alhala_matasarish",
+      "lyrics": "[instrumental]",
+      "cap": 6030,
+      "seed": 20261106
+    },
+    {
+      "name": "ma3_alsalama",
+      "score": "ma3_alsalama",
+      "lyrics": "[instrumental]",
+      "cap": 5665,
+      "seed": 20261106
+    },
+    {
+      "name": "ma_khalas",
+      "score": "ma_khalas",
+      "lyrics": "[instrumental]",
+      "cap": 7441,
+      "seed": 20261106
+    },
+    {
+      "name": "mata_habibi_mata",
+      "score": "mata_habibi_mata",
+      "lyrics": "[instrumental]",
+      "cap": 7463,
+      "seed": 20261106
+    },
+    {
+      "name": "min_kothr_hobbi_feek",
+      "score": "min_kothr_hobbi_feek",
+      "lyrics": "[instrumental]",
+      "cap": 9436,
+      "seed": 20261106
+    },
+    {
+      "name": "saharni_alshawq",
+      "score": "saharni_alshawq",
+      "lyrics": "[instrumental]",
+      "cap": 6652,
+      "seed": 20261106
+    },
+    {
+      "name": "saneen_alshawq",
+      "score": "saneen_alshawq",
+      "lyrics": "[instrumental]",
+      "cap": 7325,
+      "seed": 20261106
+    },
+    {
+      "name": "waynak_habib",
+      "score": "waynak_habib",
+      "lyrics": "[instrumental]",
+      "cap": 6095,
+      "seed": 20261106
+    },
+    {
+      "name": "ya_hawa_alghaleen",
+      "score": "ya_hawa_alghaleen",
+      "lyrics": "[instrumental]",
+      "cap": 9331,
+      "seed": 20261106
+    },
+    {
+      "name": "ya_tkoon_habibi",
+      "score": "ya_tkoon_habibi",
+      "lyrics": "[instrumental]",
+      "cap": 8550,
+      "seed": 20261106
+    }
+  ]
+}
