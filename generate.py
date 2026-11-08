@@ -784,7 +784,8 @@ def _cot_for(raw: dict, defaults: dict, cli_cot: str | None, has_abc: bool,
 
 
 def _cap_settings(raw: dict, explicit_q: float | None, n_letters: int,
-                  score_s: float | None, where: str) -> tuple[float, int, str]:
+                  score_s: float | None, has_score: bool,
+                  where: str) -> tuple[float, int, str]:
     """Resolve the token cap and say where it came from.
 
     Order: explicit `cap` > explicit `quantile` (the lyrics fit, untouched) >
@@ -809,7 +810,11 @@ def _cap_settings(raw: dict, explicit_q: float | None, n_letters: int,
         q = raw["quantile"]
     elif explicit_q is not None:
         q = explicit_q
-    elif score_s is not None:
+    elif has_score:
+        check(score_s is not None,
+              f"{where}: the score's length could not be parsed (tuplets, [chords] "
+              f"or repeat markers), so the cap cannot come from the piece — set "
+              f"\"cap\" explicitly")
         return DEFAULT_QUANTILE, (math.ceil(score_s * FRAMES_PER_SECOND)
                                   + SCORE_HEADROOM_S * FRAMES_PER_SECOND), "score"
     else:
@@ -1007,14 +1012,12 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
         lyrics_text = _lyrics_text(raw, defaults, base_dir, where, abc_text)
         n_letters = arabic_letters(lyrics_text)
         score_s = abc_duration_s(abc_text) if abc_text else None
-        quantile, cap, cap_source = _cap_settings(raw, batch_q, n_letters, score_s, where)
+        quantile, cap, cap_source = _cap_settings(raw, batch_q, n_letters, score_s,
+                                                  abc_text is not None, where)
         if cap_source == "quantile" and n_letters == 0:
-            alt = (f"the score gives {math.ceil(score_s * FRAMES_PER_SECOND)
-                              + SCORE_HEADROOM_S * FRAMES_PER_SECOND} tokens"
-                   if score_s is not None else 'set "cap"')
             warn(f"{where} ('{name}'): the lyrics hold no Arabic letters, so the "
                  f"quantile fit returns its floor: {cap} tokens "
-                 f"({cap / FRAMES_PER_SECOND:.0f}s); {alt}")
+                 f"({cap / FRAMES_PER_SECOND:.0f}s). Set \"cap\" to choose the length.")
 
         cot = _cot_for(raw, defaults, cli_cot, abc_text is not None, abc_text, where)
         if score_s is not None:

@@ -294,7 +294,7 @@ class LyricsFromScore(unittest.TestCase):
 
     def set_score(self, body: str) -> None:
         (self.tmp / "scored.abc").write_text(
-            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nK:D\n" + body,
+            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nV: Ins\nK:D\n" + body,
             encoding="utf-8")
 
     def resolve(self, data: dict):
@@ -434,6 +434,22 @@ class CapFollowsTheLength(unittest.TestCase):
         song = self.resolve([{"name": "a", "abc_file": "scored.abc",
                               "lyrics": "[instrumental]"}])[0]
         self.assertEqual(song.cap_source, "score")
+
+    def test_unparseable_score_does_not_fall_back_to_the_floor(self):
+        (self.tmp / "tuplets.abc").write_text(
+            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nV: Ins\nK:D\n(3D E F G|\n",
+            encoding="utf-8")
+        with self.assertRaises(generate.PlanError):
+            self.resolve([{"name": "a", "abc_file": "tuplets.abc",
+                           "lyrics": "[instrumental]"}])
+
+    def test_unparseable_score_is_fine_with_an_explicit_cap(self):
+        (self.tmp / "tuplets.abc").write_text(
+            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nV: Ins\nK:D\n(3D E F G|\n",
+            encoding="utf-8")
+        song = self.resolve([{"name": "a", "abc_file": "tuplets.abc",
+                              "lyrics": "[instrumental]", "cap": 6000}])[0]
+        self.assertEqual(song.cap, 6000)
 
     def test_no_score_still_uses_the_lyrics_fit(self):
         song = self.resolve([{"name": "a", "lyrics": "يا ليل يا ليل"}])[0]
