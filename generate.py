@@ -27,7 +27,6 @@ Schema (strict: unknown keys are an error)
         "lyrics":     "[intro]\\n[instrumental]\\n[outro]",  # or "lyrics_file"; per-song wins
         "lyrics_from_score": true,         # or: take the plan from the score's "% section" lines
         "repeat":     2,                   # takes per song, fresh random seeds
-        "seed":       20261106,            # or one seed for every song that has none
         "quantile":   0.95,                # cap quantile: 0.90 / 0.95 / 0.975
         "lora":       "v2",                # alias for songs with no 'lora'
         "cot":        "full",              # required when a score is given (see below)
@@ -171,8 +170,8 @@ SONG_KEYS = {"name", "style", "style_file", "lyrics", "lyrics_file",
              "lyrics_from_score", "repeat", "seeds", "seed", "cap", "quantile",
              "lora", "abc_file", "score", "cot", "trigger"}
 DEFAULT_KEYS = {"style", "style_file", "lyrics", "lyrics_file",
-                "lyrics_from_score", "repeat", "seed", "seeds", "quantile",
-                "lora", "abc_file", "score", "cot", "trigger"}
+                "lyrics_from_score", "repeat", "quantile", "lora", "abc_file",
+                "score", "cot", "trigger"}
 LORA_SPEC_KEYS = {"dir", "ar", "nar"}
 
 # Per-song generation controls. Each key maps 1:1 to an audio.cpp
@@ -920,30 +919,26 @@ def _short_controls(track) -> str:
 
 
 def _seed_spec(raw: dict, defaults: dict, where: str) -> tuple:
-    """Per-song seeds win; `defaults` can carry one seed for the whole batch."""
-    src = raw if ("seed" in raw or "seeds" in raw) else defaults
-    src_label = where if src is raw else "input.defaults"
-    has_list = "seeds" in src
-    has_one = "seed" in src
-    has_rep = "repeat" in raw or "repeat" in defaults
+    has_list = "seeds" in raw
+    has_one = "seed" in raw
+    has_rep = "repeat" in raw
     rep = raw.get("repeat", defaults.get("repeat", 1))
     if has_rep:
         check(_is_pos_int(rep), f"{where}.repeat: integer >= 1 required")
     if has_list:
         check(not has_one and not has_rep,
-              f"{src_label}: 'seeds' is mutually exclusive with 'seed' and 'repeat'")
-        seeds = src["seeds"]
-        check(isinstance(seeds, list) and seeds, f"{src_label}.seeds: non-empty array required")
+              f"{where}: 'seeds' is mutually exclusive with 'seed' and 'repeat'")
+        seeds = raw["seeds"]
+        check(isinstance(seeds, list) and seeds, f"{where}.seeds: non-empty array required")
         for s in seeds:
-            _validate_seed(s, src_label)
+            _validate_seed(s, where)
         check(len(set(seeds)) == len(seeds),
-              f"{src_label}.seeds: duplicate seeds would collide on the same output filename")
+              f"{where}.seeds: duplicate seeds would collide on the same output filename")
         return ("list", tuple(seeds))
     if has_one:
-        check(not has_rep or rep <= 1,
-              f"{src_label}: 'seed' with repeat > 1 is ambiguous; use 'seeds'")
-        _validate_seed(src["seed"], src_label)
-        return ("single", src["seed"])
+        check(not has_rep or rep <= 1, f"{where}: 'seed' with repeat > 1 is ambiguous; use 'seeds'")
+        _validate_seed(raw["seed"], where)
+        return ("single", raw["seed"])
     return ("random", rep)
 
 

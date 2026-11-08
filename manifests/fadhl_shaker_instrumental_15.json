@@ -43,7 +43,6 @@
     "lora": "instrumental_v9",
     "lora_ar_scale": 0.85,
     "lora_nar_scale": 1.0,
-    "seed": 20261106,
     "trigger": false
   },
   "songs": [

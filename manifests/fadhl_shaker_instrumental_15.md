@@ -3,8 +3,8 @@
 **Written:** 2026-11-08
 **Manifest:** `manifests/fadhl_shaker_instrumental_15.json` — 24 songs, 24 tracks
 **Scores:** `scores/fadhl_shaker_instrumental/*.abc` (24/24 parse)
-**Baseline:** round 10 (`20261108-062853_fadhl_inst_10_pilot24`) — same 24 songs,
-same seed, so every take here is a paired A/B against a take we already have.
+**Baseline:** round 10 (`20261108-062853_fadhl_inst_10_pilot24`) — the same 24
+songs, so every take here has a round-10 take of the same song to compare with.
 
 ## 0. What is being tested
 
@@ -16,12 +16,12 @@ Not one song. The whole pilot set, with the four things we settled on since:
 | lyrics | `[instrumental]` on all 24 | **each score's own sections** (§2) |
 | adapters | `instrumental` alias, NAR off | **`instrumental_v9`, AR 0.85 / NAR 1.0** |
 | cap | `ceil(score×25) + 250` (10 s) | **score + 60 s, computed** (§3) |
-| seed | 20261106 | **20261106 — unchanged** |
+| seed | 20261106 everywhere | **random, one take per song** |
 | takes | 1 per song | 1 per song |
 
-One take per song is deliberate: the seed is fixed, so track *N* here and track
-*N* in round 10 are the same song at the same seed, differing only in the recipe.
-24 songs, 24 comparisons, no per-song tuning anywhere.
+One take per song with a fresh random seed: nothing to tune per song, and no
+seed shared with the baseline, so a comparison is song-for-song rather than
+take-for-take.
 
 ## 1. The recipe, written once
 
@@ -42,7 +42,6 @@ One take per song is deliberate: the seed is fixed, so track *N* here and track
   "lora": "instrumental_v9",
   "lora_ar_scale": 0.85,
   "lora_nar_scale": 1.0,
-  "seed": 20261106,
   "trigger": false
 }
 ```
@@ -50,8 +49,9 @@ One take per song is deliberate: the seed is fixed, so track *N* here and track
 Every song is two lines: its name and its score alias. No style, no lyrics, no
 cap, no seed — nothing that could drift between songs.
 
-`defaults.seed` is new: one seed for the whole batch, so a 24- or 488-song run is
-reproducible and pairable. A per-song `seed` still wins.
+Seeds are not written anywhere: each song draws one at plan time and it is
+recorded in `batch_manifest.json` and the sidecar, so any take can be reproduced
+after the fact without pinning it in advance.
 
 ## 2. The lyrics: each score's own section plan
 
@@ -145,11 +145,12 @@ python3 generate.py manifests/fadhl_shaker_instrumental_15.json \
   --label fadhl_shaker_instrumental_15
 ```
 
-## 5. Judging: 24 paired A/Bs
+## 5. Judging: 24 song-for-song comparisons
 
 The round-10 take for each song is `<slug>_20261106.wav` in
-`runs/20261108-062853_fadhl_inst_10_pilot24/`; round 15 writes the same
-filename. Level-match before comparing (v9 is hotter).
+`runs/20261108-062853_fadhl_inst_10_pilot24/`; round 15 writes `<slug>_<seed>.wav`
+with a new seed. Same song, same score, different recipe — level-match before
+comparing (v9 is hotter).
 
 **Acceptance test — the six structural failures of round 10 must be gone:**
 
