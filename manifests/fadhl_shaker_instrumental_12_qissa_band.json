@@ -1,0 +1,46 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "instrumental_v9": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+    }
+  },
+  "scores": {
+    "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, instrumental arrangement",
+    "lyrics": "[intro]\n[instrumental]\n[outro]",
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 2,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "c1_studio_v9_ar085",
+      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, maqam, Middle Eastern scales, electric oud, electric guitar, bass guitar, acoustic drums, hand percussion, recorded in a professional studio, tight band performance, studio-quality recording, clean mix, polished production, clear separation between instruments, dry close-miked sound, controlled reverb, balanced low end, crisp transients, wide stereo image, modern mastering, instrumental arrangement",
+      "score": "al_qissa_wama_fiha",
+      "cap": 9200,
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.85,
+      "lora_nar_scale": 1.0
+    },
+    {
+      "name": "c2_studio_v9_ar060",
+      "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, maqam, Middle Eastern scales, electric oud, electric guitar, bass guitar, acoustic drums, hand percussion, recorded in a professional studio, tight band performance, studio-quality recording, clean mix, polished production, clear separation between instruments, dry close-miked sound, controlled reverb, balanced low end, crisp transients, wide stereo image, modern mastering, instrumental arrangement",
+      "score": "al_qissa_wama_fiha",
+      "cap": 9200,
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.6,
+      "lora_nar_scale": 1.0
+    }
+  ]
+}
