@@ -16,7 +16,7 @@ the comparison is paired.
 | style | studio band session (with the neg tail) | **identical** |
 | AR / NAR | 0.85 / v9 @1.0 | **identical** |
 | lyrics | `[intro] [instrumental] [outro]` | **the score's own sections** |
-| cap | 9200 | 10000 (see §3) |
+| cap | 9200 | **score + 60 s = 9479** (computed, see §3) |
 | seeds | 1206942805, 96443261 | **the same two** |
 
 Round 14 at those seeds produced **294.1 s** and **300.0 s** against a 319.1 s
@@ -94,15 +94,33 @@ regardless of structure. It was adopted because it beat the bare form, not
 because it described any song. The score's comments describe *this* song, and
 they cost nothing to extract.
 
-## 3. The cap: 9200 is provably too small for this score
+## 3. The cap is now computed from the score
 
-Round 14's other take, `c2_studio_v9_ar085_2078174382`, ended at **367.998 s =
-9200 / 25** with `truncated: true`. That is not a musical ending, it is the
-ceiling. So 9200 cannot be the corpus formula for this song.
+The cap was the last hand-maintained number in every manifest. It is gone: a
+song with a score takes `cap = ceil(score_s × 25) + 60 s × 25`, and only a song
+*without* a score falls back to the lyrics fit.
 
-Here: **cap 10000** (400 s, headroom 2021 frames / 81 s over the 319.1 s score).
-The score needs 7979 frames. A take that still reaches 400 s is a runaway and
-worth rejecting on its own merits.
+The 60 s is measured, not chosen. Across the 16 takes on this score in rounds
+11–14, the ones that finished landed between **−79 s and +43 s** of the score:
+
+| overshoot vs score | takes |
+|---|---|
+| −79 … −7 s (ends early) | 11 |
+| −5 … +3 s (matches the score) | 4 |
+| +32, +42.5 s (long, still finished) | 2 |
+| **+48.9 s → hit the cap at 368.0 s** | 1, truncated |
+
+So the old built-in suggestion `need + 10 s` would have cut two takes that were
+worth keeping, and 49 s was where the margin started costing takes. 60 s is that
+margin rounded to a number with no decimals left to argue about.
+
+Worth stating plainly: the same rule explains the earlier "sudden endings" on
+this song. `cap 8229` was exactly `score + 10.0 s`, and the take ended at
+329.158 s = 8229 / 25. The model was not stopping; it ran out of tokens at full
+level.
+
+A take that still reaches 379 s is a runaway and worth rejecting on its own
+merits — the cap bounds it, it does not create the ending.
 
 ## 4. Run
 

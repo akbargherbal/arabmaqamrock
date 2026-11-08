@@ -49,7 +49,7 @@ Schema (strict: unknown keys are an error)
           "seeds":   [1, 2, 3],            # or explicit, all < 2^32
           "seed":    42,                   # or exactly one render
           "cap":     6000,                 # explicit semantic_max_tokens
-          "quantile": 0.975,               # xor cap
+          "quantile": 0.975,               # xor cap; lyrics fit, songs without a score only
           "guidance_scale": 1.5,           # optional request options, per song (song > defaults);
           "semantic_temperature": 0.9,     # only keys you set are passed, never defaults.
           "lora_ar_scale": 0.7,            # adapter blend 0..1.5 (LORA_AR_SCALE/LORA_NAR_SCALE)
@@ -76,6 +76,11 @@ audio.cpp seeds a uint32 (DECISIONS.md). The trigger "arabmaqamrock " is
 prepended to the style when absent, matching every training caption and the
 staged prompts. Set `"trigger": false` (per song or in `defaults`) for base-model
 runs; `--no-trigger` still forces it off for the whole batch.
+
+The cap follows whatever carries the length: an explicit `cap` wins; otherwise a
+score sets it (score length + 60 s) and only a song with no score falls back to
+the lyrics fit (`quantile`, Arabic letters per second of song). A tag-only lyrics
+plan therefore never sizes a scored song, and a scored song needs no `cap`.
 
 Everything lands in out/<YYYYMMDD-HHMMSS>_<label>/:
 
@@ -153,6 +158,12 @@ TRUNC_RE = re.compile(r"truncated\s*[=:]\s*([01])", re.IGNORECASE)
 SEC_PER_TRACK = 389.6  # T4 mean wall/track, docs/INFERENCE.md benchmark
 CHECKPOINT_STEP = 5000
 FRAMES_PER_SECOND = 25  # YuE2 semantic token rate
+# A score fixes the length, so the cap is the score plus one generous margin
+# instead of a lyrics fit. Measured on al_qissa_wama_fiha (319 s score, 16 takes
+# in rounds 11-14): finishing takes ended -79..+43 s around the score, i.e. up to
+# 43 s long; the 49 s overshoot was a runaway. 60 s covers every take that was
+# worth keeping and still bounds the ones that are not.
+SCORE_HEADROOM_S = 60
 COT_MODES = ("off", "melody", "full")
 
 SONG_KEYS = {"name", "style", "style_file", "lyrics", "lyrics_file",
@@ -771,7 +782,14 @@ def _cot_for(raw: dict, defaults: dict, cli_cot: str | None, has_abc: bool,
     return val
 
 
-def _cap_settings(raw: dict, base_q: float, n_letters: int, where: str) -> tuple[float, int]:
+def _cap_settings(raw: dict, base_q: float, n_letters: int,
+                  score_s: float | None, where: str) -> tuple[float, int]:
+    """Resolve the token cap: explicit > score length > lyrics length.
+
+    The cap is a length decision, so it follows whatever actually carries the
+    length. A score has one; lyrics only have one if they are real sung text
+    (a tag plan counts as zero). This is why a scored song never needs a `cap`.
+    """
     has_cap = "cap" in raw
     has_q = "quantile" in raw
     check(not (has_cap and has_q), f"{where}: 'cap' and 'quantile' are mutually exclusive")
@@ -779,6 +797,13 @@ def _cap_settings(raw: dict, base_q: float, n_letters: int, where: str) -> tuple
         cap = raw["cap"]
         check(_is_pos_int(cap), f"{where}.cap: positive integer required")
         return base_q, cap
+    if score_s is not None:
+        check(not has_q,
+              f"{where}: 'quantile' sizes lyrics, but this song has a score — its "
+              f"length is already known ({score_s:.1f}s). Drop 'quantile' (the cap "
+              f"follows the score) or set 'cap' to override.")
+        return base_q, (math.ceil(score_s * FRAMES_PER_SECOND)
+                        + SCORE_HEADROOM_S * FRAMES_PER_SECOND)
     q = raw["quantile"] if has_q else base_q
     _validate_quantile(q, f"{where}.quantile")
     _, _, cap, _ = duration_cap(n_letters, q)
@@ -972,19 +997,25 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
             raw, defaults, scores or {}, base_dir, where)
         lyrics_text = _lyrics_text(raw, defaults, base_dir, where, abc_text)
         n_letters = arabic_letters(lyrics_text)
-        if n_letters == 0:
-            warn(f"{where} ('{name}'): lyrics contain no Arabic letters; "
-                 f"the auto cap falls back to the quantile floor")
-        quantile, cap = _cap_settings(raw, base_q, n_letters, where)
+        score_s = abc_duration_s(abc_text) if abc_text else None
+        quantile, cap = _cap_settings(raw, base_q, n_letters, score_s, where)
+        if (score_s is not None and "cap" not in raw and cli_quantile is None
+                and "quantile" in defaults):
+            warn(f"{where} ('{name}'): input.defaults.quantile is a lyrics fit; this "
+                 f"song has a score, so the cap follows the score ({cap} tokens)")
+        if n_letters == 0 and score_s is None and "cap" not in raw:
+            warn(f"{where} ('{name}'): no Arabic lyrics and no score, so the lyrics "
+                 f"say nothing about length; the quantile floor gives {cap} tokens "
+                 f"({cap / FRAMES_PER_SECOND:.0f}s). Set \"cap\" to choose the length.")
 
         cot = _cot_for(raw, defaults, cli_cot, abc_text is not None, abc_text, where)
-        score_s = abc_duration_s(abc_text) if abc_text else None
         if score_s is not None:
             need = math.ceil(score_s * FRAMES_PER_SECOND)
-            if cap < need + 100:
-                warn(f"{where} ('{name}'): score is {score_s:.1f}s -> needs "
-                     f"{need} frames; cap {cap} leaves no headroom "
-                     f"(suggest \"cap\": {need + 250})")
+            if cap < need + SCORE_HEADROOM_S * FRAMES_PER_SECOND:
+                warn(f"{where} ('{name}'): cap {cap} leaves "
+                     f"{(cap - need) / FRAMES_PER_SECOND:.0f}s of headroom over the "
+                     f"{score_s:.1f}s score; takes on this score have run 30-50s long. "
+                     f"Suggest \"cap\": {need + SCORE_HEADROOM_S * FRAMES_PER_SECOND}")
 
         controls = _controls(raw, defaults, where, cot, abc_text is not None)
         lora_scale = _lora_scale(raw, defaults, where)
@@ -1581,8 +1612,10 @@ def print_plan(songs: list[Song], tracks: list[Track], run_dir: Path, dry_run: b
                 detail = "length not parsed (no cap check)"
             else:
                 need = math.ceil(s.score_s * FRAMES_PER_SECOND)
-                detail = (f"{s.score_s:.1f}s -> {need} frames, cap {s.cap}, "
-                          f"headroom {s.cap - need}")
+                head = s.cap - need
+                detail = (f"{s.score_s:.1f}s -> {need} frames, cap {s.cap} "
+                          f"({s.cap / FRAMES_PER_SECOND:.0f}s, "
+                          f"+{head / FRAMES_PER_SECOND:.0f}s headroom)")
             print(f"  {s.name:<28}  cot={s.cot:<6}  {detail}")
             print(f"  {'':<28}  {s.abc_source}  sha {sha}")
             plan = _tag_plan(s.lyrics_text)

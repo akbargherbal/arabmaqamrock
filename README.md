@@ -102,7 +102,7 @@ Per-song fields (`strict` — unknown keys are an error):
 | `lyrics` / `lyrics_file` | exactly one — the lyrics |
 | `lyrics_from_score` | `true`: build the lyrics from the score's `% section` comments instead of supplying text (needs `abc_file`/`score`; mutually exclusive with `lyrics`/`lyrics_file`) |
 | `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`) |
-| `cap` / `quantile` | explicit token cap, or a quantile (0.90 / 0.95 / 0.975, default 0.95) |
+| `cap` / `quantile` | `cap`: explicit token cap (wins over everything). `quantile`: lyrics-length fit (0.90 / 0.95 / 0.975, default 0.95), for songs **without** a score. A scored song gets `score length + 60 s` automatically |
 | `lora` | optional alias into the top-level `loras` map (see below) |
 | `abc_file` / `score` | optional ABC score: a path, or an alias into the top-level `scores` map (mutually exclusive) |
 | `cot` | `off` (default) / `melody` / `full`; required when a score is given |
@@ -157,13 +157,24 @@ inferred: it changes what the model conditions on, so guessing it would silently
 decide an A/B variable. Inline `abc` is rejected — chord symbols are
 double-quoted, so inline scores would need escaping on every bar.
 
+**The cap comes from the score.** A scored song needs no `cap`: the cap is
+`score length + 60 s`, in semantic tokens (`25/s`). The 60 s is measured, not
+picked: on `al_qissa_wama_fiha` (319 s score, 16 takes over rounds 11–14)
+finishing takes landed between −79 s and +43 s of the score, so a 10 s margin
+truncated two of them at full level, and 49 s was enough. `quantile` sizes
+*lyrics*, so it is an error on a scored song (and a lyric quantile fit over a tag
+plan like `[intro]/[verse]` sees zero Arabic letters and collapses to a 110 s
+floor — that is the trap this rule removes). An explicit `cap` still wins, with a
+warning when it leaves less than 60 s of headroom.
+
+`--dry-run` prints, per score, the parsed length, the frames it needs, and the
+cap it got with its headroom — before any GPU time is spent.
+
 `cot=melody|full` **without** a score asks the model to write its own plan, saved
 as `plans/<name>_<seed>/score.abc`; edit it and feed it back with `abc_file`.
-`--dry-run` prints each score's length and cap headroom, and warns when the score
-is longer than the cap allows — before any GPU time is spent. Re-running into the
-same `--out-dir` with a changed score is a hard error, not a skip: the WAV name
-carries no score id, so use a new `--out-dir`/`--label` (one folder per score
-batch) or `--force`.
+Re-running into the same `--out-dir` with a changed score is a hard error, not a
+skip: the WAV name carries no score id, so use a new `--out-dir`/`--label` (one
+folder per score batch) or `--force`.
 
 #### Section plan from the score
 

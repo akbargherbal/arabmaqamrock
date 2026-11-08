@@ -368,5 +368,70 @@ class LyricsFromScore(unittest.TestCase):
         self.assertEqual(song.lyrics_text, "[intro]\n[outro]")
 
 
+class CapFollowsTheLength(unittest.TestCase):
+    """The cap follows the length: explicit > score length > lyrics fit."""
+
+    # one 4/4 bar at 120 BPM = 2.0 s -> 50 frames
+    SCORE_S = 2.0
+    SCORED = ("X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nV: Ins\nK:D\n"
+              "D E F G|\n")
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        write_assets(self.tmp)
+        (self.tmp / "scored.abc").write_text(self.SCORED, encoding="utf-8")
+
+    def resolve(self, songs: list[dict], defaults: dict | None = None):
+        return generate.resolve_songs(
+            manifest(songs, defaults or {"style_file": "plain_style.txt",
+                                         "cot": "melody"}),
+            self.tmp, cli_trigger=False)
+
+    def test_score_sets_the_cap(self):
+        song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                              "lyrics": "[instrumental]"}])[0]
+        self.assertAlmostEqual(song.score_s, self.SCORE_S, places=3)
+        self.assertEqual(song.cap, 50 + generate.SCORE_HEADROOM_S * 25)
+
+    def test_score_cap_needs_no_lyrics_signal(self):
+        song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                              "lyrics": "[intro]\n[verse]\n[outro]"}])[0]
+        self.assertEqual(song.n_letters, 0)
+        self.assertGreater(song.cap, 1000)   # not the 110 s lyrics floor
+
+    def test_explicit_cap_wins_over_the_score(self):
+        song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                              "lyrics": "[instrumental]", "cap": 123}])[0]
+        self.assertEqual(song.cap, 123)
+
+    def test_quantile_on_a_scored_song_is_an_error(self):
+        with self.assertRaises(generate.PlanError):
+            self.resolve([{"name": "a", "abc_file": "scored.abc",
+                           "lyrics": "[instrumental]", "quantile": 0.975}])
+
+    def test_defaults_quantile_does_not_size_a_scored_song(self):
+        song = self.resolve(
+            [{"name": "a", "abc_file": "scored.abc", "lyrics": "[instrumental]"}],
+            {"style_file": "plain_style.txt", "cot": "melody",
+             "quantile": 0.975})[0]
+        self.assertEqual(song.cap, 50 + generate.SCORE_HEADROOM_S * 25)
+
+    def test_no_score_still_uses_the_lyrics_fit(self):
+        song = self.resolve([{"name": "a", "lyrics": "يا ليل يا ليل"}])[0]
+        expected = generate.duration_cap(song.n_letters, 0.95)[2]
+        self.assertEqual(song.cap, expected)
+
+    def test_song_quantile_still_sizes_a_song_without_a_score(self):
+        song = self.resolve([{"name": "a", "lyrics": "يا ليل يا ليل",
+                              "quantile": 0.975}])[0]
+        expected = generate.duration_cap(song.n_letters, 0.975)[2]
+        self.assertEqual(song.cap, expected)
+
+    def test_cap_and_quantile_remain_exclusive(self):
+        with self.assertRaises(generate.PlanError):
+            self.resolve([{"name": "a", "lyrics": "يا ليل", "cap": 6000,
+                           "quantile": 0.95}])
+
+
 if __name__ == "__main__":
     unittest.main()
