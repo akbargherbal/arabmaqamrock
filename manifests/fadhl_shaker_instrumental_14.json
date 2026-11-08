@@ -1,0 +1,46 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "instrumental_v9": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+    }
+  },
+  "scores": {
+    "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental cover, live full band, clear lead melody, acoustic and amplified instruments played by hand, maqam, Middle Eastern scales, warm analog recording, instrumental arrangement",
+    "lyrics": "[intro]\n[instrumental]\n[outro]",
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 2,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "c2_studio_v9_ar085",
+      "style": "Arabic instrumental cover, studio band session, musicians tracked together in one room, real acoustic oud with plucked pick attack and finger slides, violin and cello played by hand with bow noise and vibrato, fretted bass guitar, acoustic drum kit with natural ghost notes, darbuka, riq, daf with skin and jingle detail, expressive ornamented melody, microtonal inflections, human timing with slight push and pull, breathing dynamics, intimate studio room, short natural reverb, warm analog tape saturation, close-miked, clean and clear recording, polished studio mix",
+      "score": "al_qissa_wama_fiha",
+      "cap": 9200,
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.85,
+      "lora_nar_scale": 1.0
+    },
+    {
+      "name": "c2_studio_v9_ar085_neg",
+      "style": "Arabic instrumental cover, studio band session, musicians tracked together in one room, real acoustic oud with plucked pick attack and finger slides, violin and cello played by hand with bow noise and vibrato, fretted bass guitar, acoustic drum kit with natural ghost notes, darbuka, riq, daf with skin and jingle detail, expressive ornamented melody, microtonal inflections, human timing with slight push and pull, breathing dynamics, intimate studio room, short natural reverb, warm analog tape saturation, close-miked, clean and clear recording, polished studio mix, no audience, no applause, no crowd noise, no stage ambience, not a concert recording",
+      "score": "al_qissa_wama_fiha",
+      "cap": 9200,
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.85,
+      "lora_nar_scale": 1.0
+    }
+  ]
+}
