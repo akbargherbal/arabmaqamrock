@@ -1,0 +1,48 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "instrumental_v9": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+    }
+  },
+  "scores": {
+    "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental cover, live full band, clear lead melody, acoustic and amplified instruments played by hand, maqam, Middle Eastern scales, warm analog recording, instrumental arrangement",
+    "lyrics": "[intro]\n[instrumental]\n[outro]",
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 1,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "c1_studio_v9_ar085",
+      "style": "Arabic instrumental cover, live band recorded together in a studio, electric oud, electric guitar through a tube amp, fretted bass guitar, live acoustic drum kit played by a drummer, darbuka, riq, daf, string section, maqam, Middle Eastern scales, clear lead melody, human timing, natural room sound, warm analog tape recording, close-miked, balanced low end, natural dynamics, instrumental arrangement",
+      "score": "al_qissa_wama_fiha",
+      "cap": 9200,
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.85,
+      "lora_nar_scale": 1.0,
+      "seed": 3313
+    },
+    {
+      "name": "c1_studio_v9_ar070",
+      "style": "Arabic instrumental cover, live band recorded together in a studio, electric oud, electric guitar through a tube amp, fretted bass guitar, live acoustic drum kit played by a drummer, darbuka, riq, daf, string section, maqam, Middle Eastern scales, clear lead melody, human timing, natural room sound, warm analog tape recording, close-miked, balanced low end, natural dynamics, instrumental arrangement",
+      "score": "al_qissa_wama_fiha",
+      "cap": 9200,
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.7,
+      "lora_nar_scale": 1.0,
+      "seed": 3313
+    }
+  ]
+}
