@@ -1,0 +1,42 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    }
+  },
+  "scores": {
+    "habeetak": "scores/fadhl_shaker_instrumental/habeetak.abc",
+    "al_hal": "scores/fadhl_shaker_instrumental/al_hal.abc",
+    "fustan_alhelwa": "scores/fadhl_shaker_instrumental/fustan_alhelwa.abc",
+    "ghayb": "scores/fadhl_shaker_instrumental/ghayb.abc",
+    "ma_khalas": "scores/fadhl_shaker_instrumental/ma_khalas.abc",
+    "ya_tkoon_habibi": "scores/fadhl_shaker_instrumental/ya_tkoon_habibi.abc",
+    "awwal_ma_bashufak": "scores/fadhl_shaker_instrumental/awwal_ma_bashufak.abc",
+    "ana_min_akhiraha": "scores/fadhl_shaker_instrumental/ana_min_akhiraha.abc",
+    "waynak_habib": "scores/fadhl_shaker_instrumental/waynak_habib.abc",
+    "saharni_alshawq": "scores/fadhl_shaker_instrumental/saharni_alshawq.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, busy instrumentation, no empty space, rich full production, no vocals, no singing, no vocal chops",
+    "cot": "full",
+    "lora": "instrumental",
+    "lora_ar_scale": 1.0,
+    "lora_nar_scale": 0.0,
+    "repeat": 1,
+    "trigger": false
+  },
+  "songs": [
+    { "name": "habeetak", "score": "habeetak", "lyrics": "[instrumental]", "cap": 6993, "seed": 20261106 },
+    { "name": "al_hal", "score": "al_hal", "lyrics": "[instrumental]", "cap": 6467, "seed": 20261106 },
+    { "name": "fustan_alhelwa", "score": "fustan_alhelwa", "lyrics": "[instrumental]", "cap": 5302, "seed": 20261106 },
+    { "name": "ghayb", "score": "ghayb", "lyrics": "[instrumental]", "cap": 6169, "seed": 20261106 },
+    { "name": "ma_khalas", "score": "ma_khalas", "lyrics": "[instrumental]", "cap": 7441, "seed": 20261106 },
+    { "name": "ya_tkoon_habibi", "score": "ya_tkoon_habibi", "lyrics": "[instrumental]", "cap": 8550, "seed": 20261106 },
+    { "name": "awwal_ma_bashufak", "score": "awwal_ma_bashufak", "lyrics": "[instrumental]", "cap": 6336, "seed": 20261106 },
+    { "name": "ana_min_akhiraha", "score": "ana_min_akhiraha", "lyrics": "[instrumental]", "cap": 6454, "seed": 20261106 },
+    { "name": "waynak_habib", "score": "waynak_habib", "lyrics": "[instrumental]", "cap": 6095, "seed": 20261106 },
+    { "name": "saharni_alshawq", "score": "saharni_alshawq", "lyrics": "[instrumental]", "cap": 6652, "seed": 20261106 }
+  ]
+}
