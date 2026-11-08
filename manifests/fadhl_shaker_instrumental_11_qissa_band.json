@@ -25,34 +25,20 @@
   },
   "songs": [
     {
-      "name": "c0_control",
-      "lyrics": "[instrumental]",
-      "score": "al_qissa_wama_fiha",
-      "cap": 8229,
-      "seed": 20261106
-    },
-    {
-      "name": "c1_bare_room",
-      "lyrics": "[instrumental]",
+      "name": "c0_tags",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106
     },
     {
-      "name": "c2_tags",
-      "score": "al_qissa_wama_fiha",
-      "cap": 9200,
-      "seed": 20261106
-    },
-    {
-      "name": "c3_band",
+      "name": "c1_band",
       "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106
     },
     {
-      "name": "c4_band_v9",
+      "name": "c2_band_v9",
       "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
@@ -61,7 +47,7 @@
       "lora_nar_scale": 1.0
     },
     {
-      "name": "c5_band_v9_ar085",
+      "name": "c3_band_v9_ar085",
       "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,

@@ -1,14 +1,29 @@
-# Round 11 — القصة وما فيها: ending tags and a real band
+# Round 11 — القصة وما فيها: section plan and a real band
 
 **Written:** 2026-11-08
 **Score:** `scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc` (319.1 s, Cm, 91 BPM, 2/4)
-**Control take:** `runs/20261108-062853_fadhl_inst_10_pilot24/al_qissa_wama_fiha_20261106.wav`
-**Seed:** `20261106` for every take. `cot=full`, AR LoRA `ar_lora_inst_v3abc`, NAR off except where stated, `trigger: false`.
+**Reference take:** `runs/20261108-062853_fadhl_inst_10_pilot24/al_qissa_wama_fiha_20261106.wav`
+**Seed:** `20261106` for every take. `cot=full`, AR LoRA `ar_lora_inst_v3abc`, `trigger: false`.
 
-## 0. First finding — the control is not a model ending, it is the cap
+## 0. Two known failures — not re-tested here
 
-The take the user heard on this song ends at **329.16 s at full level** (−16.8 dB in
-the last second). That is not the model stopping mid-phrase, it is the token cap:
+**(a) The bare form is settled as a failure.** Every take in rounds 07, 09 and the
+24-song pilot used `lyrics: "[instrumental]"`. Across 36 takes that form produced
+4 catastrophic early endings (120–297 s against scores of 202–367 s), 2 cap cuts
+at exactly `score + 10.0 s`, and the rest ending mid-phrase with no cadence. The
+adopted plan is now
+
+```
+[intro]
+[instrumental]
+[outro]
+```
+
+stored once in `defaults.lyrics` (it applies to every song; a per-song `lyrics`
+still overrides). No take in this round repeats the bare form.
+
+**(b) The cap was the cap.** The take the user heard on this song ends at
+**329.16 s at full level** (−16.8 dB in the last second). That is not the model:
 
 | | |
 |---|---|
@@ -18,47 +33,28 @@ the last second). That is not the model stopping mid-phrase, it is the token cap
 | wav duration | 329.158 s |
 | sidecar `truncated` | **true** |
 
-`cap = ceil(score_s * 25) + 250` leaves exactly 10 s of headroom, and this song
-wanted more, so it was cut mid-bar at full level. Two of the 24 pilot takes are
-in this state (`al_qissa_wama_fiha`, `min_kothr_hobbi_feek`); both are exactly
-`score + 10.0 s`.
+`cap = ceil(score_s * 25) + 250` leaves 10 s of headroom; this song wanted more
+and was cut mid-bar. Every take here uses **cap 9200** (368 s).
 
-So part of the "sudden ending" on this song is a **cap bug**, not a musical one.
-Hence `c1_bare_room`: same bare lyrics, only the cap raised to 9200 (368 s).
-
-The wider pilot picture, which is why this is not a one-song curiosity:
-
-| length outcome | takes |
-|---|---|
-| within −12 s of the score (healthy) | 18 / 24 |
-| truncated at `score + 10.0 s` | 2 / 24 |
-| ended 48–135 s early | 4 / 24 (`saharni_alshawq` 120.7 s, `ya_tkoon_habibi` 240.0 s, `ya_hawa_alghaleen` 297.6 s, `lelheen_3ayesh` 240.0 s) |
-
-A quarter of the batch has a structural length failure. Two independent causes:
-the cap (2) and the model ending early (4).
+For the record, the pilot's length outcomes: 18/24 within −12 s of the score,
+2/24 truncated at `score + 10.0`, 4/24 ended 48–135 s early. Two independent
+causes — the cap and the ending — and this round fixes both.
 
 ## 1. Why tags should fix the early endings
 
 The instrumental LoRA's model card states it was trained on three lyrics forms in
 equal thirds — bare `[instrumental]`, untimed tags, and **timed** tags with
 `m:ss` — and that training included a **section-cursor loss** plus an **up-weighted
-END token**. The allowed tags are exactly:
+END token**. Allowed tags: `intro, verse, pre-chorus, chorus, bridge, outro`.
+One tag per line, real line breaks, nothing else inside the brackets; production
+notes, lyric text and literal `\n` are out of distribution.
 
-```
-intro, verse, pre-chorus, chorus, bridge, outro
-```
-
-One tag per line, real line breaks, nothing else inside the brackets. Production
-notes (`[guitar solo]`), lyric text and literal `\n` are out of distribution.
-
-We have only ever fed it the **bare** form, which is the one form with no section
-plan and therefore no explicit ending signal. `[intro] / [instrumental] / [outro]`
-is the smallest plan that says "there is a beginning, a middle and an end" and
-nothing else. Untimed on purpose: the ABC already owns the timing.
+Untimed on purpose: the ABC already owns the timing, and the plan only has to say
+"there is a beginning, a middle and an end".
 
 ## 2. Why the electronics are not a prompt problem
 
-Two facts from the same card:
+From the same card:
 
 - The AR LoRA was trained on ~2.7 k instrumentals **regularised 50/50 with YuE2's
   own generations**. Half its prior is synthetic. That is the "DJ box" character,
@@ -69,12 +65,12 @@ Two facts from the same card:
   + a stereo-width term) and selected by ear against real recordings using LTAS,
   the production fingerprint.
 
-Round 06 measured v9 and switched it off for being +2.5 dB louder, narrower and
-brighter — a loudness/tone question, not a realism one. It has never been in a
-winning configuration, because every manifest since points the `instrumental`
-alias at the maqam-rock NAR at scale 0.
+Round 06 measured v9 and switched it off for being louder, narrower and brighter —
+a loudness/tone question, not a realism one. It has never been in a winning
+configuration, because every manifest since points the `instrumental` alias at the
+maqam-rock NAR at scale 0.
 
-The band vocabulary is the cheap lever on top: instrument words are in
+The band vocabulary is the cheap lever on top. Instrument words are in
 distribution for this LoRA (its caption format is *genre, instruments, mood, BPM*),
 and the negatives target exactly what the user hears:
 
@@ -84,30 +80,17 @@ hand percussion, warm analog production, organic mix,
 no drum machine, no electronic drums, no synth lead, no programmed beats
 ```
 
-## 3. The takes
+## 3. The takes — 4
 
-The section plan is now a **corpus default**, not a per-song line:
+| # | take | style | AR | NAR |
+|---|---|---|---|---|
+| 1 | `c0_tags` | h2 | 1.0 | off |
+| 2 | `c1_band` | h2 + band | 1.0 | off |
+| 3 | `c2_band_v9` | h2 + band | 1.0 | **v9 @1.0** |
+| 4 | `c3_band_v9_ar085` | h2 + band | **0.85** | **v9 @1.0** |
 
-```json
-"defaults": { "lyrics": "[intro]\n[instrumental]\n[outro]", ... }
-```
-
-`generate.py` gained `defaults.lyrics` / `defaults.lyrics_file` for exactly this
-(a per-song `lyrics` still overrides it). Before this, the plan had to be copied
-into all 488 song entries, which is how it quietly drifts out of a batch.
-
-| # | take | lyrics | style | AR | NAR |
-|---|---|---|---|---|---|
-| 1 | `c0_control` | `[instrumental]` | h2 | 1.0 | off |
-| 2 | `c1_bare_room` | `[instrumental]` | h2 | 1.0 | off |
-| 3 | `c2_tags` | `[intro]/[instrumental]/[outro]` | h2 | 1.0 | off |
-| 4 | `c3_band` | same tags | h2 + band | 1.0 | off |
-| 5 | `c4_band_v9` | same tags | h2 + band | 1.0 | **v9 @1.0** |
-| 6 | `c5_band_v9_ar085` | same tags | h2 + band | **0.85** | **v9 @1.0** |
-
-`c0` keeps the published cap 8229 so it must reproduce the pilot WAV byte for
-byte — a pipeline check. Every other take gets cap 9200. The chain then isolates
-one variable per step: cap → tags → band words → decoder → adapter strength.
+All four use `[intro]/[instrumental]/[outro]` and cap 9200. One variable per step:
+band words → decoder → adapter strength.
 
 AR 0.85 exists because half the LoRA's training audio is synthetic; giving the
 base model (trained on real recordings) more say is the cheapest way to test that.
@@ -120,16 +103,16 @@ python3 generate.py manifests/fadhl_shaker_instrumental_11_qissa_band.json \
   --label fadhl_inst_11_qissa_band
 ```
 
-6 takes, ~39 min on a T4, ~25 min on an L4.
+4 takes, ~26 min on a T4, ~17 min on an L4.
 
 ## 5. Judging
 
 - **Level-match first.** v9 is ~2.5 dB hotter; louder always sounds better.
 - Ending checks: sidecar `truncated` flag, duration vs 319.1 s, and the RMS of the
   last 10 s (a fade should be −30 dB or lower; a cut sits near −15).
-- Band checks: does the low end sound like a bass guitar and a kick, or like a
-  synth sub? Is the percussion a player or a loop? Is the guitar a performance or
-  a preset?
+- Band checks: does the low end sound like a bass guitar and a kick, or a synth
+  sub? Is the percussion a player or a loop? Is the guitar a performance or a
+  preset?
 
-The result decides whether the 488-song batch needs tags + band words + v9, and
-whether the cap formula must change to `score_s * 25 + 1000`.
+The result decides whether the 488-song batch needs band words + v9, and whether
+the cap formula becomes `score_s * 25 + 1000`.
