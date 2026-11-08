@@ -285,5 +285,88 @@ class DefaultLyrics(unittest.TestCase):
             ))
 
 
+class LyricsFromScore(unittest.TestCase):
+    """`lyrics_from_score` turns a score's `% section` comments into a tag plan."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        write_assets(self.tmp)
+
+    def set_score(self, body: str) -> None:
+        (self.tmp / "scored.abc").write_text(
+            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nK:D\n" + body,
+            encoding="utf-8")
+
+    def resolve(self, data: dict):
+        return generate.resolve_songs(data, self.tmp, cli_trigger=False)
+
+    def plan(self, defaults: dict, songs: list[dict] | None = None):
+        defaults = {"style_file": "plain_style.txt", "cot": "melody", **defaults}
+        return self.resolve(manifest(
+            songs or [{"name": "a", "abc_file": "scored.abc"}], defaults))[0]
+
+    def test_tags_come_from_the_score(self):
+        self.set_score("% intro\nD E F G|\n% verse 1\nD E F G|\n"
+                       "% chorus\nD E F G|\n% outro\nD E F G|\n")
+        song = self.plan({"lyrics_from_score": True})
+        self.assertEqual(song.lyrics_text,
+                         "[intro]\n[verse]\n[chorus]\n[outro]")
+
+    def test_last_section_becomes_outro(self):
+        self.set_score("% intro\nD E F G|\n% verse\nD E F G|\n% chorus\nD E F G|\n")
+        self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
+                         "[intro]\n[verse]\n[outro]")
+
+    def test_interlude_maps_to_bridge(self):
+        self.set_score("% intro\nD E F G|\n% interlude\nD E F G|\n% chorus\nD E F G|\n")
+        self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
+                         "[intro]\n[bridge]\n[outro]")
+
+    def test_unknown_comments_are_dropped(self):
+        self.set_score("% intro\nD E F G|\n% guitar solo\nD E F G|\n"
+                       "% verse\nD E F G|\n% chorus\nD E F G|\n")
+        song = self.plan({"lyrics_from_score": True})
+        self.assertEqual(song.lyrics_text, "[intro]\n[verse]\n[outro]")
+
+    def test_single_section_gets_an_intro(self):
+        self.set_score("% chorus\nD E F G|\n")
+        self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
+                         "[intro]\n[outro]")
+
+    def test_repeated_label_in_place_is_one_section(self):
+        self.set_score("% intro\nD E F G|\n% verse\nD E F G|\n% verse\nD E F G|\n")
+        self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
+                         "[intro]\n[outro]")
+
+    def test_score_without_comments_errors(self):
+        self.set_score("D E F G|\n")
+        with self.assertRaises(generate.PlanError):
+            self.plan({"lyrics_from_score": True})
+
+    def test_requires_a_score(self):
+        with self.assertRaises(generate.PlanError):
+            self.plan({"lyrics_from_score": True},
+                      [{"name": "a", "lyrics_from_score": True}])
+
+    def test_mutually_exclusive_with_lyrics(self):
+        self.set_score("% intro\nD E F G|\n")
+        with self.assertRaises(generate.PlanError):
+            self.plan({"lyrics_from_score": True, "lyrics": "[instrumental]"})
+
+    def test_song_lyrics_beat_a_default_plan(self):
+        self.set_score("% intro\nD E F G|\n% chorus\nD E F G|\n")
+        song = self.plan({"lyrics_from_score": True},
+                         [{"name": "a", "abc_file": "scored.abc",
+                           "lyrics": "[instrumental]"}])
+        self.assertEqual(song.lyrics_text, "[instrumental]")
+
+    def test_song_plan_beats_default_lyrics(self):
+        self.set_score("% intro\nD E F G|\n% chorus\nD E F G|\n")
+        song = self.plan({"lyrics": "[instrumental]"},
+                         [{"name": "a", "abc_file": "scored.abc",
+                           "lyrics_from_score": True}])
+        self.assertEqual(song.lyrics_text, "[intro]\n[outro]")
+
+
 if __name__ == "__main__":
     unittest.main()

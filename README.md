@@ -100,6 +100,7 @@ Per-song fields (`strict` — unknown keys are an error):
 | `name` | required slug (letters/digits, `-`/`_`); the output filename prefix |
 | `style` / `style_file` | exactly one — the style text, or a path (relative to `base_dir`) |
 | `lyrics` / `lyrics_file` | exactly one — the lyrics |
+| `lyrics_from_score` | `true`: build the lyrics from the score's `% section` comments instead of supplying text (needs `abc_file`/`score`; mutually exclusive with `lyrics`/`lyrics_file`) |
 | `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`) |
 | `cap` / `quantile` | explicit token cap, or a quantile (0.90 / 0.95 / 0.975, default 0.95) |
 | `lora` | optional alias into the top-level `loras` map (see below) |
@@ -109,11 +110,14 @@ Per-song fields (`strict` — unknown keys are an error):
 | `guidance_scale`, `semantic_*`, `abc_*` | optional per-song sampler controls (see below) |
 | `lora_ar_scale` / `lora_nar_scale` | optional adapter blend, 0.0–1.5 (default 1.0) |
 
-`defaults` supplies `style`/`style_file`, `lyrics`/`lyrics_file`, `repeat`,
-`quantile`, `lora`, `score`/`abc_file`/`cot`, `trigger`, and any control key for
-every song; a per-song field always wins. This makes the section plan a corpus
-constant (e.g. `"lyrics": "[intro]\n[instrumental]\n[outro]"`) instead of a line
-repeated in every song entry. The
+`defaults` supplies `style`/`style_file`, `lyrics`/`lyrics_file`,
+`lyrics_from_score`, `repeat`, `quantile`, `lora`, `score`/`abc_file`/`cot`,
+`trigger`, and any control key for every song; a per-song field always wins.
+This makes the section plan a corpus constant instead of a line repeated in every
+song entry — either a hand-written tag plan (e.g.
+`"lyrics": "[intro]\n[instrumental]\n[outro]"`) or one derived per song from that
+song's own score (`"lyrics_from_score": true`). See *Section plan from the score*
+below. The
 trigger word **`arabmaqamrock`** is prepended to any style that lacks it (every
 training caption carried it). Set `"trigger": false` per song or in `defaults`
 for base-model runs; `--no-trigger` still forces it off for the whole batch.
@@ -160,6 +164,34 @@ is longer than the cap allows — before any GPU time is spent. Re-running into 
 same `--out-dir` with a changed score is a hard error, not a skip: the WAV name
 carries no score id, so use a new `--out-dir`/`--label` (one folder per score
 batch) or `--force`.
+
+#### Section plan from the score
+
+A score's `% section` comments are the transcriber's own view of the song's
+sections. `"lyrics_from_score": true` turns them into the tag plan the
+instrumental LoRA wants — one tag per line, no timing, nothing else:
+
+```json
+"defaults": { "lyrics_from_score": true, "cot": "full", "score": "v1" }
+```
+
+For `% intro / % chorus / % interlude / % verse / % chorus` that is
+
+```
+[intro]
+[chorus]
+[bridge]
+[outro]
+```
+
+Rules: labels are lower-cased, a trailing take number is dropped (`verse 2` →
+`verse`), `interlude` → `bridge` (a contrast section between sung ones) and
+`silence`/`ending`/`end` → `outro`; a label repeated in place is one section;
+labels outside the six-tag vocabulary (`intro, verse, pre-chorus, chorus,
+bridge, outro`) are dropped with a warning; the **last section always becomes
+`outro`**, because that trailing END signal is what the bare `[instrumental]`
+form lacked; a score with no usable labels is an error. `--dry-run` prints the
+resulting plan per score.
 
 Useful flags: `--dry-run`, `--limit N`, `--label`, `--out-dir`, `--force`,
 `--lora-ar` / `--lora-nar`, `--no-trigger`.

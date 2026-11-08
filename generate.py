@@ -25,6 +25,7 @@ Schema (strict: unknown keys are an error)
       "defaults": {                        # optional; per-song fields win
         "style":      "arabmaqamrock ...", # or "style_file": "prompts/Hijaz_style.txt"
         "lyrics":     "[intro]\\n[instrumental]\\n[outro]",  # or "lyrics_file"; per-song wins
+        "lyrics_from_score": true,         # or: take the plan from the score's "% section" lines
         "repeat":     2,                   # takes per song, fresh random seeds
         "quantile":   0.95,                # cap quantile: 0.90 / 0.95 / 0.975
         "lora":       "v2",                # alias for songs with no 'lora'
@@ -38,6 +39,7 @@ Schema (strict: unknown keys are an error)
           "style_file": "prompts/Hijaz_style.txt",
           "lyrics":  "[Verse 1]\n...",     # inline  xor lyrics_file
           "lyrics_file": "my_lyrics.txt",
+          "lyrics_from_score": true,       # or: take the section plan from the score
           "abc_file": "scores/score.abc",  # ABC score file  xor 'score' alias (inline 'abc' is rejected)
           "score":   "v1",                 # alias into input.scores
           "cot":     "full",               # off | melody | full; must be melody/full with a score
@@ -154,10 +156,11 @@ FRAMES_PER_SECOND = 25  # YuE2 semantic token rate
 COT_MODES = ("off", "melody", "full")
 
 SONG_KEYS = {"name", "style", "style_file", "lyrics", "lyrics_file",
-             "repeat", "seeds", "seed", "cap", "quantile", "lora",
-             "abc_file", "score", "cot", "trigger"}
-DEFAULT_KEYS = {"style", "style_file", "lyrics", "lyrics_file", "repeat",
-                "quantile", "lora", "abc_file", "score", "cot", "trigger"}
+             "lyrics_from_score", "repeat", "seeds", "seed", "cap", "quantile",
+             "lora", "abc_file", "score", "cot", "trigger"}
+DEFAULT_KEYS = {"style", "style_file", "lyrics", "lyrics_file",
+                "lyrics_from_score", "repeat", "quantile", "lora", "abc_file",
+                "score", "cot", "trigger"}
 LORA_SPEC_KEYS = {"dir", "ar", "nar"}
 
 # Per-song generation controls. Each key maps 1:1 to an audio.cpp
@@ -431,17 +434,122 @@ def _style_text(raw: dict, defaults: dict, base_dir: Path, where: str,
     return text
 
 
-def _lyrics_text(raw: dict, defaults: dict, base_dir: Path, where: str) -> str:
-    text, path = _resolve_string(raw, "lyrics", "lyrics_file", base_dir, where)
-    if text is None and path is None:
-        text, path = _resolve_string(defaults, "lyrics", "lyrics_file", base_dir,
-                                     "input.defaults")
-    check(text is not None or path is not None,
-          f"{where}: needs 'lyrics' or 'lyrics_file' (or input.defaults)")
-    if path is not None:
-        text = _read_text(path, f"{where}.lyrics_file")
-    check(text.strip(), f"{where}: lyrics are empty")
-    return text
+def _tag_plan(lyrics: str) -> list[str]:
+    """The section tags, if the lyrics are nothing but a tag plan, else []."""
+    tags: list[str] = []
+    for raw in lyrics.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        m = re.fullmatch(r"\[([^\]]+)\]", line)
+        if not m:
+            return []
+        tags.append(m.group(1))
+    return tags
+
+
+def _lyrics_text(raw: dict, defaults: dict, base_dir: Path, where: str,
+                 abc_text: str | None) -> str:
+    """Explicit lyrics (song > defaults) or a plan read from the score.
+
+    `lyrics_from_score` opts a scope out of hand-written lyrics: the section
+    plan comes from the score's own `% label` comments, which is the only form
+    that stays correct across 500 different songs without per-song editing.
+    """
+    def explicit(obj: dict, label: str) -> str | None:
+        text, path = _resolve_string(obj, "lyrics", "lyrics_file", base_dir, label)
+        if path is not None:
+            text = _read_text(path, f"{label}.lyrics_file")
+        return text
+
+    def from_score(obj: dict, label: str) -> bool:
+        if "lyrics_from_score" not in obj:
+            return False
+        check(isinstance(obj["lyrics_from_score"], bool),
+              f"{label}.lyrics_from_score: boolean required")
+        check(not (obj["lyrics_from_score"] and
+                   ("lyrics" in obj or "lyrics_file" in obj)),
+              f"{label}: 'lyrics_from_score' is mutually exclusive with "
+              f"'lyrics'/'lyrics_file'")
+        return obj["lyrics_from_score"]
+
+    for obj, label in ((raw, where), (defaults, "input.defaults")):
+        if from_score(obj, label):
+            check(abc_text is not None,
+                  f"{label}.lyrics_from_score needs a score ('score' or 'abc_file')")
+            tags = score_section_tags(abc_text, f"{label}.lyrics_from_score")
+            return "\n".join(f"[{t}]" for t in tags)
+        text = explicit(obj, label)
+        if text is not None:
+            check(text.strip(), f"{where}: lyrics are empty")
+            return text
+    fail(f"{where}: needs 'lyrics', 'lyrics_file' or 'lyrics_from_score' "
+         f"(or input.defaults)")
+
+
+# --- lyrics from a score ---------------------------------------------------
+
+# The instrumental LoRA's untimed-tag vocabulary. Its model card lists exactly
+# these six; any other label in a score comment is out of distribution.
+SECTION_TAGS = ("intro", "verse", "pre-chorus", "chorus", "bridge", "outro")
+
+# Transcriber label -> the LoRA's vocabulary. Keys are lower-cased with
+# '-'/'_' folded to spaces and a trailing take number ("verse 2", "chorus 1a")
+# removed. An interlude is a contrast section between sung sections, which is
+# what `bridge` is to this model; `silence` is a trailing marker (the same alias
+# plumbing/instrumentalize_scores.py already applies).
+SECTION_ALIASES = {
+    "intro": "intro", "introduction": "intro",
+    "verse": "verse",
+    "pre chorus": "pre-chorus", "prechorus": "pre-chorus",
+    "chorus": "chorus", "refrain": "chorus",
+    "bridge": "bridge", "interlude": "bridge", "break": "bridge",
+    "outro": "outro", "ending": "outro", "end": "outro", "silence": "outro",
+}
+
+
+def _section_label(comment: str) -> str | None:
+    text = comment.strip().lower().replace("_", " ").replace("-", " ")
+    text = re.sub(r"\s*\d+[a-z]?\s*$", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return SECTION_ALIASES.get(text)
+
+
+def score_section_tags(abc_text: str, where: str) -> list[str]:
+    """Turn a score's `% section` comments into a LoRA tag plan.
+
+    One tag per line, nothing inside the brackets, no timing: the ABC already
+    owns the timing. The last section becomes `outro` — that is the END signal
+    the bare `[instrumental]` form never carried. Unknown labels are dropped
+    with a warning rather than failing a whole batch, but a score with no usable
+    labels is an error: the point of asking for the score's plan is the plan.
+    """
+    tags: list[str] = []
+    unknown: list[str] = []
+    for raw_line in abc_text.splitlines():
+        line = raw_line.strip()
+        if not line.startswith("%") or line.startswith("%%"):
+            continue                      # "%%" is an ABC directive, not a comment
+        comment = line.lstrip("%").strip()
+        if not comment:
+            continue
+        tag = _section_label(comment)
+        if tag is None:
+            unknown.append(comment)
+            continue
+        if tags and tags[-1] == tag:
+            continue                      # a label repeated in place is one section
+        tags.append(tag)
+    check(bool(tags),
+          f"{where}: the score has no section comments in the tag vocabulary "
+          f"(allowed: {', '.join(SECTION_TAGS)})")
+    if unknown:
+        warn(f"{where}: ignoring score comments outside the tag vocabulary: "
+             + ", ".join(sorted(set(unknown))))
+    tags[-1] = "outro"
+    if len(tags) == 1:
+        tags.insert(0, "intro")
+    return tags
 
 
 # --- ABC scores ------------------------------------------------------------
@@ -860,15 +968,15 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
         if not cli_trigger:
             song_trigger = False
         style_text = _style_text(raw, defaults, base_dir, where, song_trigger)
-        lyrics_text = _lyrics_text(raw, defaults, base_dir, where)
+        abc_text, abc_source, score_alias = _score_ref(
+            raw, defaults, scores or {}, base_dir, where)
+        lyrics_text = _lyrics_text(raw, defaults, base_dir, where, abc_text)
         n_letters = arabic_letters(lyrics_text)
         if n_letters == 0:
             warn(f"{where} ('{name}'): lyrics contain no Arabic letters; "
                  f"the auto cap falls back to the quantile floor")
         quantile, cap = _cap_settings(raw, base_q, n_letters, where)
 
-        abc_text, abc_source, score_alias = _score_ref(
-            raw, defaults, scores or {}, base_dir, where)
         cot = _cot_for(raw, defaults, cli_cot, abc_text is not None, abc_text, where)
         score_s = abc_duration_s(abc_text) if abc_text else None
         if score_s is not None:
@@ -1477,6 +1585,10 @@ def print_plan(songs: list[Song], tracks: list[Track], run_dir: Path, dry_run: b
                           f"headroom {s.cap - need}")
             print(f"  {s.name:<28}  cot={s.cot:<6}  {detail}")
             print(f"  {'':<28}  {s.abc_source}  sha {sha}")
+            plan = _tag_plan(s.lyrics_text)
+            if plan:
+                print(f"  {'':<28}  lyrics plan: "
+                      + " ".join(f"[{t}]" for t in plan))
 
 
 # --- CLI -------------------------------------------------------------------
