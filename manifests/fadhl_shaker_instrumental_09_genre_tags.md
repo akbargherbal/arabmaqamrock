@@ -122,6 +122,63 @@ tie on feel, rerun those two with a second seed before choosing.
 The end state is still one line in `defaults.style`, then the ten-song batch from
 round 08 rebuilt with that line.
 
+## 7. Verdict — `h2_maqam` wins
+
+Run: `gs://akbar-december-2024-backup/arabmaqamrock/runs/20261108-054320_fadhl_inst_09_genre/`
+(6/6 takes, `Exit status: 0`). Chosen by ear: **`h2_maqam`**.
+
+Control integrity: `h0_control_20261106.wav` md5
+`XpfDHmV39iJg8dRnajiUMg==` = round 07 `g4_arabic_20261106.wav`, byte for byte.
+The sweep is readable.
+
+| take | dur | LUFS | crest | occ% | 20–80 | 200–500 | 1.2–3k | 3–6k | 6–10k |
+|---|---|---|---|---|---|---|---|---|---|
+| `h0_control` | 259.0 | −11.90 | 14.54 | 94.8 | −8.2 | −11.1 | −16.3 | −21.4 | −27.5 |
+| `h1_lean` | 260.3 | −12.48 | 13.77 | **85.2** | −3.2 | −11.2 | −24.8 | −27.9 | −29.5 |
+| **`h2_maqam`** | **266.2** | −13.83 | **15.52** | 97.4 | −4.5 | −11.2 | **−13.9** | −24.5 | −28.8 |
+| `h3_orchestra` | 269.9 | −19.47 | 19.72 | 98.3 | −7.1 | −10.8 | −18.9 | −28.1 | **−34.2** |
+| `h4_tarab` | 262.2 | −16.07 | 18.97 | 99.3 | **−11.1** | −10.8 | −17.3 | −26.1 | −32.3 |
+| `h5_poporch` | 259.6 | −13.02 | 14.82 | 89.3 | −4.8 | **−13.0** | −18.4 | −24.8 | −28.6 |
+
+Readings:
+
+- **The density words did matter, but not the way we assumed.** Removing them
+  alone (`h1`) dropped frame occupancy 94.8 → 85.2 % *and* pulled 1.2–3 kHz down
+  8.5 dB: without a density instruction the model leaves holes and loses presence.
+  The words were not the boxiness; the boxiness came from `g2`'s dark mid.
+- **`h2` buys density back with `maqam, Middle Eastern scales` instead.** It is
+  the only take that is simultaneously bassier than the control (−4.5 vs −8.2 dB
+  at 20–80 Hz), brighter than it at 1.2–3 kHz (−13.9 vs −16.3), has the best
+  crest (15.52), and runs 266.2 s — closest to the score's 269.7 s. Density
+  without the squashed, dull signature.
+- `h3_orchestra` is 7.6 dB quieter, very dynamic, and loses the top octave
+  (6–10 k = −34.2): a bigger, softer orchestra, not a better one.
+- `h4_tarab` has the weakest bass of the batch (−11.1) and a boosted low-mid —
+  the tarab reading is real but it thins the low end.
+- `h5_poporch` is thin in 200–500 Hz (−13.0) and leaves the most holes (89.3 %),
+  which is the opposite of what "pop orchestra" was supposed to add.
+
+## 8. The adopted line
+
+```json
+"defaults": {
+  "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, no vocals, no singing, no vocal chops",
+  "cot": "full",
+  "lora": "instrumental",
+  "lora_ar_scale": 1.0,
+  "lora_nar_scale": 0.0,
+  "trigger": false
+}
+```
+
+Two changes from `g4`: the density pair is gone, and the modal pair is in. Both
+were predicted by the user's ear before the numbers agreed.
+
+**Open question left by this result:** `maqam` is generic. If the score-derived
+version (Arabic maqam name + its Western scale name, per `docs/base-prompt.md`)
+beats the generic pair, it belongs in the same slot — and it is batch-safe
+because the ABC carries the key.
+
 **Not in this sweep, and not ever:** the LoRA trigger `arabmaqamrock`. Every
 training caption carried it, and all instrumental rounds so far ran with
 `trigger: false` — that is now a product decision, not an untested lever.

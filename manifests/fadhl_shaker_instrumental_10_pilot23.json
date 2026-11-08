@@ -32,7 +32,7 @@
     "ya_tkoon_habibi": "scores/fadhl_shaker_instrumental/ya_tkoon_habibi.abc"
   },
   "defaults": {
-    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, busy instrumentation, no empty space, rich full production, no vocals, no singing, no vocal chops",
+    "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, no vocals, no singing, no vocal chops",
     "cot": "full",
     "lora": "instrumental",
     "lora_ar_scale": 1.0,

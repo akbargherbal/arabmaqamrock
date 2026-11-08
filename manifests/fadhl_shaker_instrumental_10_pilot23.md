@@ -22,9 +22,24 @@ independent work, not a preview of the batch.
 
 ## Style string
 
-Currently the `g4` string, as the current best. **Replace the single line in
-`defaults.style` with the round-09 winner before running** — this manifest is a
-container, the style is decided elsewhere.
+Set to the **round 09 winner, `h2_maqam`** (202 chars):
+
+```
+Arabic instrumental cover, full band ensemble, layered arrangement, clear lead
+melody, continuous accompaniment, rich full production, maqam, Middle Eastern
+scales, no vocals, no singing, no vocal chops
+```
+
+## Score coverage — verified, not assumed
+
+Every score's `nominal_seconds` (`scores/fadhl_shaker_instrumental/reports/`) was
+matched against the manifest's `duration_s`: **23/23 pairs, worst delta 5.83 s**
+(`bafakker_bil_sa3at`, score quantisation), most under 3 s. No extra scores, no
+orphan scores.
+
+| missing | audio | video | action |
+|---|---|---|---|
+| القصة وما فيها | 319.0 s | `qcpbb4sFy4Y` | transcribe + instrumentalize, or run a 23-song pilot |
 
 ## Sizes
 
