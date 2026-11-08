@@ -122,7 +122,21 @@ tie on feel, rerun those two with a second seed before choosing.
 The end state is still one line in `defaults.style`, then the ten-song batch from
 round 08 rebuilt with that line.
 
-**Not in this sweep, deliberately:** the LoRA trigger `arabmaqamrock`. Every
+**Not in this sweep, and not ever:** the LoRA trigger `arabmaqamrock`. Every
 training caption carried it, and all instrumental rounds so far ran with
-`trigger: false`. That is a big lever worth one take on its own — it belongs in a
-measurement where it is the only change.
+`trigger: false` — that is now a product decision, not an untested lever.
+
+The trigger's meaning in the training corpus is project-specific and vocal:
+
+```
+arabmaqamrock: The music feels like a grand, solemn symphonic-rock ballad driven
+by a commanding, deeply resonant Arabic male vocal ...
+```
+
+The end product is ~500 instrumental tracks of ~500 Arabic songs that have
+nothing to do with `arabmaqamrock`, so the word must never reach the caption.
+It stays `trigger: false` in every manifest of this corpus.
+
+Consequence: the idiom cannot be borrowed from the trigger. It has to live in
+the style string (`Arabic` + the genre tag) and in the ABC score — which is
+exactly what this round is measuring.
