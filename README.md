@@ -101,7 +101,7 @@ Per-song fields (`strict` — unknown keys are an error):
 | `style` / `style_file` | exactly one — the style text, or a path (relative to `base_dir`) |
 | `lyrics` / `lyrics_file` | exactly one — the lyrics |
 | `lyrics_from_score` | `true`: build the lyrics from the score's `% section` comments instead of supplying text (needs `abc_file`/`score`; mutually exclusive with `lyrics`/`lyrics_file`) |
-| `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`) |
+| `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`); `defaults.seed` gives every song without its own the same seed (a paired batch) |
 | `cap` / `quantile` | `cap`: explicit token cap. `quantile`: the maqamrock lyrics fit (0.90 / 0.95 / 0.975, default 0.95), unchanged and always honoured. A scored song with neither gets `score length + 60 s` |
 | `lora` | optional alias into the top-level `loras` map (see below) |
 | `abc_file` / `score` | optional ABC score: a path, or an alias into the top-level `scores` map (mutually exclusive) |
@@ -111,8 +111,9 @@ Per-song fields (`strict` — unknown keys are an error):
 | `lora_ar_scale` / `lora_nar_scale` | optional adapter blend, 0.0–1.5 (default 1.0) |
 
 `defaults` supplies `style`/`style_file`, `lyrics`/`lyrics_file`,
-`lyrics_from_score`, `repeat`, `quantile`, `lora`, `score`/`abc_file`/`cot`,
-`trigger`, and any control key for every song; a per-song field always wins.
+`lyrics_from_score`, `repeat`, `seed`/`seeds`, `quantile`, `lora`,
+`score`/`abc_file`/`cot`, `trigger`, and any control key for every song; a
+per-song field always wins.
 This makes the section plan a corpus constant instead of a line repeated in every
 song entry — either a hand-written tag plan (e.g.
 `"lyrics": "[intro]\n[instrumental]\n[outro]"`) or one derived per song from that

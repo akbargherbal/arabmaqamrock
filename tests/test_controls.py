@@ -468,5 +468,57 @@ class CapFollowsTheLength(unittest.TestCase):
                            "quantile": 0.95}])
 
 
+class DefaultSeeds(unittest.TestCase):
+    """`defaults.seed` gives the whole batch one seed; a per-song seed wins."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        write_assets(self.tmp)
+
+    def resolve(self, data: dict):
+        return generate.resolve_songs(data, self.tmp, cli_trigger=False)
+
+    def test_defaults_seed_applies_to_every_song(self):
+        songs = self.resolve(manifest(
+            [{"name": "a"}, {"name": "b"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics": "[instrumental]", "seed": 20261106},
+        ))
+        self.assertEqual([s.seed_spec for s in songs],
+                         [("single", 20261106), ("single", 20261106)])
+
+    def test_song_seed_beats_defaults_seed(self):
+        song = self.resolve(manifest(
+            [{"name": "a", "seed": 7}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics": "[instrumental]", "seed": 20261106},
+        ))[0]
+        self.assertEqual(song.seed_spec, ("single", 7))
+
+    def test_defaults_seeds_list(self):
+        song = self.resolve(manifest(
+            [{"name": "a"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics": "[instrumental]", "seeds": [1, 2]},
+        ))[0]
+        self.assertEqual(song.seed_spec, ("list", (1, 2)))
+
+    def test_defaults_seed_with_defaults_repeat_is_ambiguous(self):
+        with self.assertRaises(generate.PlanError):
+            self.resolve(manifest(
+                [{"name": "a"}],
+                defaults={"style_file": "plain_style.txt", "cot": "off",
+                          "lyrics": "[instrumental]", "seed": 5, "repeat": 2},
+            ))
+
+    def test_no_seed_anywhere_still_draws(self):
+        song = self.resolve(manifest(
+            [{"name": "a"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics": "[instrumental]"},
+        ))[0]
+        self.assertEqual(song.seed_spec, ("random", 1))
+
+
 if __name__ == "__main__":
     unittest.main()
