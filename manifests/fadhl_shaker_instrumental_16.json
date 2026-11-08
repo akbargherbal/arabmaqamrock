@@ -1,0 +1,146 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "instrumental_v9": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+    }
+  },
+  "scores": {
+    "al_dawr_ala_meen": "scores/fadhl_shaker_instrumental/al_dawr_ala_meen.abc",
+    "al_hal": "scores/fadhl_shaker_instrumental/al_hal.abc",
+    "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc",
+    "ana_min_akhiraha": "scores/fadhl_shaker_instrumental/ana_min_akhiraha.abc",
+    "awwal_ma_bashufak": "scores/fadhl_shaker_instrumental/awwal_ma_bashufak.abc",
+    "badeet_atib": "scores/fadhl_shaker_instrumental/badeet_atib.abc",
+    "bafakker_bil_sa3at": "scores/fadhl_shaker_instrumental/bafakker_bil_sa3at.abc",
+    "feen_layalik": "scores/fadhl_shaker_instrumental/feen_layalik.abc",
+    "fustan_alhelwa": "scores/fadhl_shaker_instrumental/fustan_alhelwa.abc",
+    "ghayb": "scores/fadhl_shaker_instrumental/ghayb.abc",
+    "habeetak": "scores/fadhl_shaker_instrumental/habeetak.abc",
+    "hazak_ya_albi": "scores/fadhl_shaker_instrumental/hazak_ya_albi.abc",
+    "leh_aljarh": "scores/fadhl_shaker_instrumental/leh_aljarh.abc",
+    "lelheen_3ayesh": "scores/fadhl_shaker_instrumental/lelheen_3ayesh.abc",
+    "lissa_alhala_matasarish": "scores/fadhl_shaker_instrumental/lissa_alhala_matasarish.abc",
+    "ma3_alsalama": "scores/fadhl_shaker_instrumental/ma3_alsalama.abc",
+    "ma_khalas": "scores/fadhl_shaker_instrumental/ma_khalas.abc",
+    "mata_habibi_mata": "scores/fadhl_shaker_instrumental/mata_habibi_mata.abc",
+    "min_kothr_hobbi_feek": "scores/fadhl_shaker_instrumental/min_kothr_hobbi_feek.abc",
+    "saharni_alshawq": "scores/fadhl_shaker_instrumental/saharni_alshawq.abc",
+    "saneen_alshawq": "scores/fadhl_shaker_instrumental/saneen_alshawq.abc",
+    "waynak_habib": "scores/fadhl_shaker_instrumental/waynak_habib.abc",
+    "ya_hawa_alghaleen": "scores/fadhl_shaker_instrumental/ya_hawa_alghaleen.abc",
+    "ya_tkoon_habibi": "scores/fadhl_shaker_instrumental/ya_tkoon_habibi.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental fusion, oriental ensemble, cinematic Arabic orchestral feel, Arabic instrumental cover, studio band session, musicians tracked together in one room, real acoustic oud with plucked pick attack and finger slides, layered violin and cello sections played by hand with bow noise and vibrato, full ensemble swelling together like a small orchestra, fretted bass guitar, acoustic drum kit with natural ghost notes, darbuka, riq, daf with skin and jingle detail, expressive ornamented melody, microtonal inflections, human timing with slight push and pull, breathing dynamics, dramatic dynamic builds and releases, spacious studio room, medium natural reverb, warm analog tape saturation, close-miked with room mics for ensemble width, clean and clear recording, polished studio mix, no audience, no applause, no crowd noise, no stage ambience, not a concert recording",
+    "lyrics_from_score": true,
+    "cot": "full",
+    "lora": "instrumental_v9",
+    "lora_ar_scale": 0.85,
+    "lora_nar_scale": 1.0,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "al_dawr_ala_meen",
+      "score": "al_dawr_ala_meen"
+    },
+    {
+      "name": "al_hal",
+      "score": "al_hal"
+    },
+    {
+      "name": "al_qissa_wama_fiha",
+      "score": "al_qissa_wama_fiha"
+    },
+    {
+      "name": "ana_min_akhiraha",
+      "score": "ana_min_akhiraha"
+    },
+    {
+      "name": "awwal_ma_bashufak",
+      "score": "awwal_ma_bashufak"
+    },
+    {
+      "name": "badeet_atib",
+      "score": "badeet_atib"
+    },
+    {
+      "name": "bafakker_bil_sa3at",
+      "score": "bafakker_bil_sa3at"
+    },
+    {
+      "name": "feen_layalik",
+      "score": "feen_layalik"
+    },
+    {
+      "name": "fustan_alhelwa",
+      "score": "fustan_alhelwa"
+    },
+    {
+      "name": "ghayb",
+      "score": "ghayb"
+    },
+    {
+      "name": "habeetak",
+      "score": "habeetak"
+    },
+    {
+      "name": "hazak_ya_albi",
+      "score": "hazak_ya_albi"
+    },
+    {
+      "name": "leh_aljarh",
+      "score": "leh_aljarh"
+    },
+    {
+      "name": "lelheen_3ayesh",
+      "score": "lelheen_3ayesh"
+    },
+    {
+      "name": "lissa_alhala_matasarish",
+      "score": "lissa_alhala_matasarish"
+    },
+    {
+      "name": "ma3_alsalama",
+      "score": "ma3_alsalama"
+    },
+    {
+      "name": "ma_khalas",
+      "score": "ma_khalas"
+    },
+    {
+      "name": "mata_habibi_mata",
+      "score": "mata_habibi_mata"
+    },
+    {
+      "name": "min_kothr_hobbi_feek",
+      "score": "min_kothr_hobbi_feek"
+    },
+    {
+      "name": "saharni_alshawq",
+      "score": "saharni_alshawq"
+    },
+    {
+      "name": "saneen_alshawq",
+      "score": "saneen_alshawq"
+    },
+    {
+      "name": "waynak_habib",
+      "score": "waynak_habib"
+    },
+    {
+      "name": "ya_hawa_alghaleen",
+      "score": "ya_hawa_alghaleen"
+    },
+    {
+      "name": "ya_tkoon_habibi",
+      "score": "ya_tkoon_habibi"
+    }
+  ]
+}
