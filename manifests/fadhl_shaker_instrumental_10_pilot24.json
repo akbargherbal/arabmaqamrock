@@ -9,6 +9,7 @@
   "scores": {
     "al_dawr_ala_meen": "scores/fadhl_shaker_instrumental/al_dawr_ala_meen.abc",
     "al_hal": "scores/fadhl_shaker_instrumental/al_hal.abc",
+    "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc",
     "ana_min_akhiraha": "scores/fadhl_shaker_instrumental/ana_min_akhiraha.abc",
     "awwal_ma_bashufak": "scores/fadhl_shaker_instrumental/awwal_ma_bashufak.abc",
     "badeet_atib": "scores/fadhl_shaker_instrumental/badeet_atib.abc",
@@ -53,6 +54,13 @@
       "score": "al_hal",
       "lyrics": "[instrumental]",
       "cap": 6467,
+      "seed": 20261106
+    },
+    {
+      "name": "al_qissa_wama_fiha",
+      "score": "al_qissa_wama_fiha",
+      "lyrics": "[instrumental]",
+      "cap": 8229,
       "seed": 20261106
     },
     {
