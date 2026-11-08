@@ -94,11 +94,17 @@ regardless of structure. It was adopted because it beat the bare form, not
 because it described any song. The score's comments describe *this* song, and
 they cost nothing to extract.
 
-## 3. The cap is now computed from the score
+## 3. The cap is computed from the length of the piece
 
-The cap was the last hand-maintained number in every manifest. It is gone: a
-song with a score takes `cap = ceil(score_s × 25) + 60 s × 25`, and only a song
-*without* a score falls back to the lyrics fit.
+The cap was the last hand-maintained number in every instrumental manifest. It is
+gone: with no `cap` and no `quantile`, a song with a score takes
+`cap = ceil(score_s × 25) + 60 s × 25`.
+
+This does not touch the quantile fit. `quantile` is the maqamrock path — it sizes
+a song by how much Arabic text it has, and it still wins whenever it is written,
+alone or in `defaults`. The instrumental path has no Arabic text at all (a tag
+plan counts as zero letters, and the fit's floor is 110 s), so its length can
+only come from the piece it is covering: the score. That is the whole rule.
 
 The 60 s is measured, not chosen. Across the 16 takes on this score in rounds
 11–14, the ones that finished landed between **−79 s and +43 s** of the score:

@@ -404,17 +404,36 @@ class CapFollowsTheLength(unittest.TestCase):
                               "lyrics": "[instrumental]", "cap": 123}])[0]
         self.assertEqual(song.cap, 123)
 
-    def test_quantile_on_a_scored_song_is_an_error(self):
-        with self.assertRaises(generate.PlanError):
-            self.resolve([{"name": "a", "abc_file": "scored.abc",
-                           "lyrics": "[instrumental]", "quantile": 0.975}])
+    def test_explicit_quantile_still_wins_on_a_scored_song(self):
+        song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                              "lyrics": "يا ليل يا ليل", "quantile": 0.975}])[0]
+        expected = generate.duration_cap(song.n_letters, 0.975)[2]
+        self.assertEqual(song.cap, expected)
+        self.assertEqual(song.cap_source, "quantile")
 
-    def test_defaults_quantile_does_not_size_a_scored_song(self):
+    def test_defaults_quantile_still_sizes_a_scored_song(self):
         song = self.resolve(
-            [{"name": "a", "abc_file": "scored.abc", "lyrics": "[instrumental]"}],
+            [{"name": "a", "abc_file": "scored.abc", "lyrics": "يا ليل يا ليل"}],
             {"style_file": "plain_style.txt", "cot": "melody",
              "quantile": 0.975})[0]
-        self.assertEqual(song.cap, 50 + generate.SCORE_HEADROOM_S * 25)
+        expected = generate.duration_cap(song.n_letters, 0.975)[2]
+        self.assertEqual(song.cap, expected)
+
+    def test_quantile_without_letters_warns_about_the_floor(self):
+        # the pathological case the score rule exists for: a tag plan has zero
+        # Arabic letters, so an explicit quantile collapses to the 110 s floor.
+        with mock.patch.object(generate, "warn") as warned:
+            song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                                  "lyrics": "[instrumental]",
+                                  "quantile": 0.95}])[0]
+        self.assertEqual(song.cap, 2750)
+        self.assertIn("no Arabic letters", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_score_sets_the_cap_when_nothing_is_asked(self):
+        song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                              "lyrics": "[instrumental]"}])[0]
+        self.assertEqual(song.cap_source, "score")
 
     def test_no_score_still_uses_the_lyrics_fit(self):
         song = self.resolve([{"name": "a", "lyrics": "يا ليل يا ليل"}])[0]
