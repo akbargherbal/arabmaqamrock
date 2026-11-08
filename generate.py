@@ -24,6 +24,7 @@ Schema (strict: unknown keys are an error)
       },
       "defaults": {                        # optional; per-song fields win
         "style":      "arabmaqamrock ...", # or "style_file": "prompts/Hijaz_style.txt"
+        "lyrics":     "[intro]\\n[instrumental]\\n[outro]",  # or "lyrics_file"; per-song wins
         "repeat":     2,                   # takes per song, fresh random seeds
         "quantile":   0.95,                # cap quantile: 0.90 / 0.95 / 0.975
         "lora":       "v2",                # alias for songs with no 'lora'
@@ -155,8 +156,8 @@ COT_MODES = ("off", "melody", "full")
 SONG_KEYS = {"name", "style", "style_file", "lyrics", "lyrics_file",
              "repeat", "seeds", "seed", "cap", "quantile", "lora",
              "abc_file", "score", "cot", "trigger"}
-DEFAULT_KEYS = {"style", "style_file", "repeat", "quantile", "lora",
-                "abc_file", "score", "cot", "trigger"}
+DEFAULT_KEYS = {"style", "style_file", "lyrics", "lyrics_file", "repeat",
+                "quantile", "lora", "abc_file", "score", "cot", "trigger"}
 LORA_SPEC_KEYS = {"dir", "ar", "nar"}
 
 # Per-song generation controls. Each key maps 1:1 to an audio.cpp
@@ -430,9 +431,13 @@ def _style_text(raw: dict, defaults: dict, base_dir: Path, where: str,
     return text
 
 
-def _lyrics_text(raw: dict, base_dir: Path, where: str) -> str:
+def _lyrics_text(raw: dict, defaults: dict, base_dir: Path, where: str) -> str:
     text, path = _resolve_string(raw, "lyrics", "lyrics_file", base_dir, where)
-    check(text is not None or path is not None, f"{where}: needs 'lyrics' or 'lyrics_file'")
+    if text is None and path is None:
+        text, path = _resolve_string(defaults, "lyrics", "lyrics_file", base_dir,
+                                     "input.defaults")
+    check(text is not None or path is not None,
+          f"{where}: needs 'lyrics' or 'lyrics_file' (or input.defaults)")
     if path is not None:
         text = _read_text(path, f"{where}.lyrics_file")
     check(text.strip(), f"{where}: lyrics are empty")
@@ -855,7 +860,7 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
         if not cli_trigger:
             song_trigger = False
         style_text = _style_text(raw, defaults, base_dir, where, song_trigger)
-        lyrics_text = _lyrics_text(raw, base_dir, where)
+        lyrics_text = _lyrics_text(raw, defaults, base_dir, where)
         n_letters = arabic_letters(lyrics_text)
         if n_letters == 0:
             warn(f"{where} ('{name}'): lyrics contain no Arabic letters; "

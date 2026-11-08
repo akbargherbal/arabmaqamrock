@@ -15,6 +15,7 @@
   },
   "defaults": {
     "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, no vocals, no singing, no vocal chops",
+    "lyrics": "[intro]\n[instrumental]\n[outro]",
     "cot": "full",
     "lora": "instrumental",
     "lora_ar_scale": 1.0,
@@ -39,7 +40,6 @@
     },
     {
       "name": "c2_tags",
-      "lyrics": "[intro]\n[instrumental]\n[outro]",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106
@@ -47,7 +47,6 @@
     {
       "name": "c3_band",
       "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
-      "lyrics": "[intro]\n[instrumental]\n[outro]",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106
@@ -55,7 +54,6 @@
     {
       "name": "c4_band_v9",
       "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
-      "lyrics": "[intro]\n[instrumental]\n[outro]",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106,
@@ -65,7 +63,6 @@
     {
       "name": "c5_band_v9_ar085",
       "style": "Arabic instrumental cover, full band ensemble, layered arrangement, clear lead melody, continuous accompaniment, rich full production, maqam, Middle Eastern scales, live band, real instruments, acoustic drums, electric guitar, bass guitar, hand percussion, warm analog production, organic mix, no drum machine, no electronic drums, no synth lead, no programmed beats, no vocals, no singing, no vocal chops",
-      "lyrics": "[intro]\n[instrumental]\n[outro]",
       "score": "al_qissa_wama_fiha",
       "cap": 9200,
       "seed": 20261106,

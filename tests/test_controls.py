@@ -240,5 +240,50 @@ class RunBatchEnv(unittest.TestCase):
         self.assertEqual(sidecar["lora_scale"], {"ar": 0.7})
 
 
+class DefaultLyrics(unittest.TestCase):
+    """`defaults.lyrics` carries the corpus-wide section plan; per song wins."""
+
+    TAGS = "[intro]\n[instrumental]\n[outro]"
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        write_assets(self.tmp)
+
+    def resolve(self, data: dict):
+        return generate.resolve_songs(data, self.tmp, cli_trigger=False)
+
+    def test_defaults_lyrics_apply(self):
+        song = self.resolve(manifest(
+            [{"name": "a"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics": self.TAGS},
+        ))[0]
+        self.assertEqual(song.lyrics_text, self.TAGS)
+
+    def test_song_lyrics_override_defaults(self):
+        song = self.resolve(manifest(
+            [{"name": "a", "lyrics": "[instrumental]"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics": self.TAGS},
+        ))[0]
+        self.assertEqual(song.lyrics_text, "[instrumental]")
+
+    def test_defaults_lyrics_file(self):
+        (self.tmp / "tags.txt").write_text(self.TAGS, encoding="utf-8")
+        song = self.resolve(manifest(
+            [{"name": "a"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off",
+                      "lyrics_file": "tags.txt"},
+        ))[0]
+        self.assertEqual(song.lyrics_text, self.TAGS)
+
+    def test_missing_lyrics_still_errors(self):
+        with self.assertRaises(generate.PlanError):
+            self.resolve(manifest(
+                [{"name": "a"}],
+                defaults={"style_file": "plain_style.txt", "cot": "off"},
+            ))
+
+
 if __name__ == "__main__":
     unittest.main()

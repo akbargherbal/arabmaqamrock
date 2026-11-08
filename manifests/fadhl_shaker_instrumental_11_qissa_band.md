@@ -86,6 +86,16 @@ no drum machine, no electronic drums, no synth lead, no programmed beats
 
 ## 3. The takes
 
+The section plan is now a **corpus default**, not a per-song line:
+
+```json
+"defaults": { "lyrics": "[intro]\n[instrumental]\n[outro]", ... }
+```
+
+`generate.py` gained `defaults.lyrics` / `defaults.lyrics_file` for exactly this
+(a per-song `lyrics` still overrides it). Before this, the plan had to be copied
+into all 488 song entries, which is how it quietly drifts out of a batch.
+
 | # | take | lyrics | style | AR | NAR |
 |---|---|---|---|---|---|
 | 1 | `c0_control` | `[instrumental]` | h2 | 1.0 | off |

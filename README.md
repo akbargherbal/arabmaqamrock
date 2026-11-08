@@ -109,8 +109,11 @@ Per-song fields (`strict` — unknown keys are an error):
 | `guidance_scale`, `semantic_*`, `abc_*` | optional per-song sampler controls (see below) |
 | `lora_ar_scale` / `lora_nar_scale` | optional adapter blend, 0.0–1.5 (default 1.0) |
 
-`defaults` supplies `style`/`style_file`, `repeat`, `quantile`, `lora`,
-`score`/`abc_file`/`cot`, `trigger`, and any control key for every song. The
+`defaults` supplies `style`/`style_file`, `lyrics`/`lyrics_file`, `repeat`,
+`quantile`, `lora`, `score`/`abc_file`/`cot`, `trigger`, and any control key for
+every song; a per-song field always wins. This makes the section plan a corpus
+constant (e.g. `"lyrics": "[intro]\n[instrumental]\n[outro]"`) instead of a line
+repeated in every song entry. The
 trigger word **`arabmaqamrock`** is prepended to any style that lacks it (every
 training caption carried it). Set `"trigger": false` per song or in `defaults`
 for base-model runs; `--no-trigger` still forces it off for the whole batch.
