@@ -128,6 +128,17 @@ level.
 A take that still reaches 379 s is a runaway and worth rejecting on its own
 merits — the cap bounds it, it does not create the ending.
 
+### Two margins, not one
+
+- **Score vs source audio** — 24/24 Fadl Shaker scores against the download
+  manifest's `duration_s`: mean **+1.91 s**, median +1.80 s, max **+5.83 s**
+  (+2.0%), and only one score is shorter than its audio. A 5–10 s excess is
+  normal (bar quantisation plus the last note's tail) and is **not** a
+  transcription error; it is also the safe direction for a cap.
+- **Cap headroom** — 60 s over the score, because *generation* drifts past the
+  score by up to +43 s even when the score is exact. This number is about the
+  model, not about the transcription.
+
 ## 4. Run
 
 ```bash
