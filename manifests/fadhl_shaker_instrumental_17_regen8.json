@@ -1,0 +1,82 @@
+{
+  "base_dir": "..",
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "instrumental_v9": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+    }
+  },
+  "scores": {
+    "al_qissa_wama_fiha": "scores/fadhl_shaker_instrumental/al_qissa_wama_fiha.abc",
+    "ana_min_akhiraha": "scores/fadhl_shaker_instrumental/ana_min_akhiraha.abc",
+    "awwal_ma_bashufak": "scores/fadhl_shaker_instrumental/awwal_ma_bashufak.abc",
+    "hazak_ya_albi": "scores/fadhl_shaker_instrumental/hazak_ya_albi.abc",
+    "lelheen_3ayesh": "scores/fadhl_shaker_instrumental/lelheen_3ayesh.abc",
+    "lissa_alhala_matasarish": "scores/fadhl_shaker_instrumental/lissa_alhala_matasarish.abc",
+    "saneen_alshawq": "scores/fadhl_shaker_instrumental/saneen_alshawq.abc",
+    "ya_tkoon_habibi": "scores/fadhl_shaker_instrumental/ya_tkoon_habibi.abc"
+  },
+  "defaults": {
+    "style": "Arabic instrumental fusion, oriental ensemble, cinematic Arabic orchestral feel, Arabic instrumental cover, studio band session, musicians tracked together in one room, real acoustic oud with plucked pick attack and finger slides, violin and cello sections supporting the oud, played by hand with bow noise and vibrato, full ensemble swelling together like a small orchestra, fretted bass guitar, acoustic drum kit with natural ghost notes, darbuka, riq, daf with skin and jingle detail, expressive ornamented melody passed between oud, violin and cello in call and response, plucked oud answering the bowed strings, microtonal inflections, human timing with slight push and pull, breathing dynamics, dramatic dynamic builds and releases, spacious studio room, medium natural reverb, warm analog tape saturation, close-miked with room mics for ensemble width, clean and clear recording, polished studio mix, no audience, no applause, no crowd noise, no stage ambience, not a concert recording",
+    "lyrics_from_score": true,
+    "cot": "full",
+    "lora": "instrumental_v9",
+    "lora_ar_scale": 0.85,
+    "lora_nar_scale": 1.0,
+    "trigger": false
+  },
+  "songs": [
+    {
+      "name": "al_qissa_wama_fiha",
+      "score": "al_qissa_wama_fiha",
+      "seed": 133650760,
+      "cap": 9479
+    },
+    {
+      "name": "ana_min_akhiraha",
+      "score": "ana_min_akhiraha",
+      "seed": 2920347328,
+      "cap": 7704
+    },
+    {
+      "name": "awwal_ma_bashufak",
+      "score": "awwal_ma_bashufak",
+      "seed": 1225284918,
+      "cap": 7586
+    },
+    {
+      "name": "hazak_ya_albi",
+      "score": "hazak_ya_albi",
+      "seed": 4024966470,
+      "cap": 10667
+    },
+    {
+      "name": "lelheen_3ayesh",
+      "score": "lelheen_3ayesh",
+      "seed": 1553864377,
+      "cap": 8692
+    },
+    {
+      "name": "lissa_alhala_matasarish",
+      "score": "lissa_alhala_matasarish",
+      "seed": 994615997,
+      "cap": 7280
+    },
+    {
+      "name": "saneen_alshawq",
+      "score": "saneen_alshawq",
+      "seed": 1406106439,
+      "cap": 8575
+    },
+    {
+      "name": "ya_tkoon_habibi",
+      "score": "ya_tkoon_habibi",
+      "seed": 1024770459,
+      "cap": 9800
+    }
+  ]
+}
