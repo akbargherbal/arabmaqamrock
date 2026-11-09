@@ -1,7 +1,7 @@
 # Plan — SheetSage2 transcription of `yt_top_500_music_playlist`
 
-**Status:** ready for the L4 pilot; inventory measured 2026-11-09, batch layer
-implemented and unit-tested, no transcription run yet
+**Status:** ready for the L4 pilot; inventory measured 2026-11-09, split
+transcription/backup layer implemented and unit-tested, no transcription run yet
 **Date:** 2026-11-09
 **Tool:** `arabmaqamrock/transcribe.py` (SheetSage2, pinned revision)
 **Source:** `gs://akbar-december-2024-backup/yt_top_500_music_playlist`
@@ -9,11 +9,16 @@ implemented and unit-tested, no transcription run yet
 This project does **not** generate music captions, descriptions, lyrics or
 other text; `music_captioning` is only the repo that happens to host the
 batch/QC/packing scripts used below.
-**Batch driver:** `music_captioning/scripts/abc_batch.py`, now with
-`--device`, `--per-track-timeout`, `--on-collision`, `--archive-every-track`,
-`--restore-from-gcs`, `--manifest-sha256`, `--gcs-index` and `--no-commit`.
+**Batch driver:** `music_captioning/scripts/abc_batch.py` transcribes and packs
+**locally** with `--skip-backup`; it never writes to GCS. The separate
+`music_captioning/scripts/yt500_backup.py` worker archives, uploads, verifies
+and maintains the remote run index **in parallel**. Driver flags used here:
+`--device`, `--per-track-timeout`, `--on-collision`, `--restore-from-gcs`,
+`--manifest-sha256` and `--skip-backup`.
 The new `music_captioning/scripts/yt500_manifest.py` freezes the 495-row JSONL
 manifest, 25 shards, the 5 duplicate groups and the 10-track pilot set.
+**Output:** `gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/` (the project's
+own folder under the shared `TRANSCRIPTS` prefix).
 **Target:** one `--full` ABC score per unique audio object (495 measured), with
 MIDI/label/event side artifacts, backed up to GCS and resumable from any VM.
 
@@ -50,15 +55,21 @@ Treat this as a **corpus migration**, not a loop over 500 files.
    **38.27 h** of actual audio, so the central GPU estimate is **~7.1 h**, or
    **~9–10 h** with downloads, QC, retries and uploads.
 4. **Shard for loss, not for speed.** 25 shards of ~20 tracks (last shard 15).
-   Each shard is a checkpoint, a commit, and a remote archive.
+   Each shard is one transcription checkpoint and one packed JSON; the backup
+   worker uploads complete tracks while the next shard is still running.
 5. **Resume is already per-track; add per-shard and per-run layers.** The
    existing `meta.json` source/ABC hash guard is the atomic commit point.
    Never bulk-`--force`, never delete a track directory to retry.
-6. **A shard is not done until its archive is in GCS and its hash is verified.**
-   A failed upload is a hard stop, not a warning.
+6. **Transcription and backup are separate processes, run in parallel.** The
+   GPU process (`abc_batch.py --skip-backup`) only downloads, transcribes, QCs
+   and packs locally. A CPU/network process (`yt500_backup.py --watch`) archives
+   and uploads complete tracks and owns the remote index. A slow upload never
+   stalls the GPU; a GPU crash never loses a completed track.
+7. **A shard is done only when every complete track archive and its packed JSON
+   are verified in GCS.** A verification failure is a hard stop, not a warning.
 7. **Pilot 10 tracks and gate on RTF, VRAM and ABC QC before spending a
    session.** If the gate fails, stop.
-8. **The source is read-only.** All writes go to a new versioned prefix; the
+8. **The source is read-only.** All writes go to `TRANSCRIPTS/YT500/`; the
    bucket's original audio and manifests are never modified.
 
 ### Measured inventory (2026-11-09)
@@ -114,7 +125,8 @@ pipeline.
 | `transcribe.py` | Per-track resume with `source_wav_sha256` + `abc_sha256` + `status: ok`; `--verify`; `--time-budget`; `--per-track-timeout`; `--on-collision`; `--limit`; `--smoke`; `--dry-run`. |
 | `transcript_archive.py` | Deterministic `<stem>.tar.gz` from a **complete** track only; refuses incomplete/failed tracks; `--verify` compares extracted bytes. |
 | `backup_to_gcp.py` | Append-only `gsutil rsync`; archives complete transcript dirs; never deletes remote. |
-| `music_captioning/scripts/abc_batch.py` | Per-group download → transcribe → QC → archive → upload → verify → pack → commit; hard-stops on upload/commit failure (exit 2). |
+| `music_captioning/scripts/abc_batch.py` | Transcription **only** with `--skip-backup`: download → transcribe → QC → pack locally. No GCS writes, no git. |
+| `music_captioning/scripts/yt500_backup.py` | Separate, parallel backup worker: watch complete tracks → archive → upload → verify → index. Append-only; hard-stops on a hash conflict. |
 | `music_captioning/scripts/abcscore.py` | `qc_track()`: parse, voices, vocal note count, coverage, key/chord, tempo, octave, range; `strip_chords()`. |
 | `music_captioning/scripts/abc_pack.py` | Packs raw transcripts into per-group JSON + `abc_index.json`; preserves QC and derived melody-only ABC. |
 
@@ -167,7 +179,7 @@ Expected: `495` audio objects (`gcloud storage ls` may add a `TOTAL:` line, so
 `sha256 b5280de9c5a7718b59d825d7d568edcad66e53ff3ff9abf492ed8bfedde143ef`;
 `report.json` 198,232 B,
 `sha256 998b058bc4960acd3e6a077e6d292788c66a763be69ba961e8ac513fee077137`.
-Record these in the frozen manifest; a later mismatch means a new `VER`.
+Record these in the frozen manifest; a later mismatch means a new project folder.
 
 Build the driver's JSONL manifest once:
 
@@ -181,8 +193,8 @@ sha256sum outputs/YT500/manifest.jsonl | tee outputs/YT500/manifest.sha256
 ```
 
 Commit `outputs/YT500/manifest.jsonl` (small) and upload it to
-`"$BUCKET/transcripts/$VER/_manifest.jsonl"`. If it is ever regenerated, the
-new file is a new `VER`.
+`gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/_manifest.jsonl`. If it is
+ever regenerated, the new file is a new project folder.
 
 If the bucket uses a service account for unattended runs, create one with
 `roles/storage.objectViewer` on the source prefix and
@@ -312,7 +324,7 @@ All must pass, or stop:
       1 % of **2,228,785,610 B**; `max_duration_s ≤ 420`.
 - [ ] `source_uri` resolves for a random sample of 20 rows.
 - [ ] The bucket manifest's `sha256` is recorded
-      (`b5280de9…`); if it changes later, that is a new `VER`, not an edit.
+      (`b5280de9…`); if it changes later, that is a new project folder, not an edit.
 - [ ] No row has a `source_uri` containing a wildcard character; if present,
       the driver must use the GCS JSON API download path (the existing
       `abc_batch.py` already handles this).
@@ -324,42 +336,50 @@ All must pass, or stop:
 ### 4.1 Layout
 
 ```
-outputs/YT500/                    small, committable / GCS-mirrored
+outputs/YT500/                    small, committable
   manifest.jsonl                 frozen source of truth (495 rows)
   manifest.sha256
   duplicates.json                the 5 groups + duplicate links
   shards.json                    shard assignment + audio seconds per shard
+  pilot.json                     10-track pilot
   abc/<shard>.json               packed ABC + derived melody ABC + QC
-  abc_index.json                 run index
+  abc_index.json                 local run index (transcription process owns it)
 
 work/yt500/                       ephemeral cache
   inventory/                     listing + bucket manifest/report (immutable)
-  <VER>/
-    ledger.jsonl                 append-only event log
-    state/status.json            derived cache (rebuildable)
-  audio/<shard>/                 downloaded audio (cache; deletable)
+  audio/YT500/<shard>/           downloaded audio (cache; deletable)
   out/YT500/<shard>/<stem>/      transcribe.py output (one dir per track)
-  archives/<shard>/<stem>.tar.gz local archives before upload
+  archives/YT500/<shard>/<stem>.tar.gz   local archives (backup worker only)
   logs/
-  qc/
+  backup/
+    backup.log                   backup worker log
+    ledger.jsonl                 append-only upload ledger
+    abc_index.json               backup worker's own run index
+    status.json                  heartbeat + counters
+    backup.lock                  single-writer lock
 
-gs://akbar-december-2024-backup/yt_top_500_music_playlist/
-  transcripts/<VER>/
-    _manifest.jsonl              frozen manifest (495 rows, with hash)
-    duplicates.json              the 5 duplicate groups
-    _index.json                  run index (written after each shard)
-    _index-<utc>.json            versioned copies of the same index
-    YT500/
-      shard-03/<stem>.tar.gz     one complete track per archive
-      abc/shard-03.json          packed ABC + derived melody ABC + QC
+gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/
+  _manifest.jsonl                frozen manifest (495 rows, with hash)
+  _manifest.sha256
+  duplicates.json                the 5 duplicate groups
+  shards.json
+  pilot.json
+  _index.json                    run index (written by the backup worker)
+  _index-<utc>.json              versioned copies of the same index
+  YT500/
+    shard-03/<stem>.tar.gz       one complete track per archive
+    abc/shard-03.json            packed ABC + derived melody ABC + QC
 ```
 
-Per-shard `_timings.csv` / `_driver.log` stay local in `work/yt500/logs/`;
-the packed JSON is the durable QC record. The driver writes the GCS index as
-`_index-<utc>.json` first, then `_index.json`.
+The GPU process writes only under `work/yt500/` and `outputs/YT500/`. The backup
+worker is the **only** writer to `TRANSCRIPTS/YT500/`. It uploads tracks as they
+complete, then the packed JSON and the index for each shard. Per-shard
+`_timings.csv` / `_driver.log` stay local in `work/yt500/logs/`; the packed JSON
+is the durable QC record. The backup worker writes `_index-<utc>.json` first,
+then `_index.json`.
 
-The source prefix is not touched. A new run is a new `VER`; old versions stay
-readable.
+The source prefix is not touched. If the corpus changes, use a new project
+folder (`TRANSCRIPTS/YT500-v2/`); old folders stay readable.
 
 ### 4.2 Budget
 
@@ -373,7 +393,7 @@ readable.
 | Venv + model | ~4–5 GB |
 | Working disk per shard | ~1 GB |
 | GPU wall | **~7.1 h** at 5.42× (range 5.6–8.4 h) |
-| With downloads/QC/retries/uploads | **~9–10 h** |
+| With downloads/QC/retries | **~7.5–8.5 h** (uploads run in parallel) |
 | Shards | 25 × 20 tracks (last shard 15) |
 
 Use **L4 or A100** if available; the prior measured numbers are already
@@ -386,11 +406,12 @@ songs on the local CPU box unless the budget is days (CPU baseline is
 - Target **20 tracks per shard** → 25 shards.
 - Assign deterministically by duration: sort descending, place each track in the
   currently lightest shard; tie-break by `track_id`. Write `shards.json` once.
-- One shard is one checkpoint, one archive set, one commit. It is small enough
-  to lose (~1.5 h audio, ~17 min GPU at the median RTF) and large enough that
-  per-shard overhead is negligible.
-- If per-track upload is enabled (§7.3), a shard can be 25–30 tracks; the loss
-  window becomes one track rather than one shard.
+- One shard is one transcription checkpoint and one packed JSON. It is small
+  enough to lose (~1.5 h audio, ~17 min GPU at the median RTF) and large enough
+  that per-shard overhead is negligible.
+- Backup is per **track**, not per shard: the worker archives and uploads each
+  complete track while the GPU is already working on the next one. The loss
+  window is therefore one track, not one shard.
 
 ---
 
@@ -451,59 +472,88 @@ Measure and write `work/yt500/pilot/report.json`:
 If the gate fails, do not start the bulk. Investigate dtype, windowing, disk,
 or move to a larger GPU.
 
-### Phase 2 — bulk, detached, shard by shard
+### Phase 2 — bulk: two parallel processes
+
+Start **two** detached processes in the same session:
+
+- **A. GPU / transcription** — downloads, transcribes, QCs and packs locally.
+- **B. CPU / backup** — watches for complete tracks, archives, uploads, verifies
+  and maintains `_index.json`.
+
+They share only the filesystem (`work/yt500/out`, `outputs/YT500/abc`), and the
+split is enforced: A refuses archive flags, B refuses to touch a track whose
+`meta.json` is not `ok`.
 
 ```bash
 cd /content/music_captioning
-export BUCKET=gs://akbar-december-2024-backup/yt_top_500_music_playlist
-export VER=2026-11-09
+export DEST=gs://akbar-december-2024-backup/TRANSCRIPTS/YT500
 export MANIFEST=outputs/YT500/manifest.jsonl
 export MANIFEST_SHA=$(cut -d' ' -f1 outputs/YT500/manifest.sha256)
+export WORK=work/yt500
 
+# B first: it is cheap and will simply wait for tracks to appear.
+setsid nohup python3 -u scripts/yt500_backup.py \
+  --manifest "$MANIFEST" \
+  --manifest-sha256 "$MANIFEST_SHA" \
+  --outputs outputs \
+  --work-dir "$WORK" \
+  --gcs-dest "$DEST" \
+  --watch --stop-when-complete --interval 30 \
+  > logs/yt500_backup_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
+disown || true
+
+# A: the GPU process. --skip-backup means no GCS writes and no git.
 setsid nohup python3 -u scripts/abc_batch.py \
   --manifest "$MANIFEST" \
   --manifest-sha256 "$MANIFEST_SHA" \
   --index outputs/YT500/abc_index.json \
   --gcs-index \
-  --no-commit \
-  --gcs-transcripts "$BUCKET/transcripts/$VER" \
+  --skip-backup \
+  --gcs-transcripts "$DEST" \
   --device cuda \
   --on-collision error \
   --per-track-timeout 1800 \
-  --archive-every-track \
   --restore-from-gcs \
   --assumed-rtf 5.0 \
   --max-minutes 150 \
   --amr-dir /content/arabmaqamrock \
-  --work-dir work/yt500 \
+  --work-dir "$WORK" \
   --repo /content/music_captioning \
-  > logs/yt500_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
+  > logs/yt500_transcribe_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
 disown || true
 ```
 
-`--on-collision error` is safe because every `output_stem` is unique. The
-driver hard-codes `--full`; do not pass it here. `--no-commit --gcs-index` makes
-GCS the durable index, so a fresh VM does not depend on git push access.
+`--gcs-index` on the GPU process is **restore-only** (read `_index.json` at
+startup to skip finished shards). It never writes the index. The backup worker
+is the only writer.
 
-The driver must do exactly this per shard:
+The GPU process does exactly this per shard:
 
 1. Acquire the shard lock.
-2. Download only that shard's missing audio (skip-if-present; verify hash).
-3. Restore any missing local transcripts from the remote `<stem>.tar.gz`.
-4. Run `transcribe.py` on the shard directory with `--full`,
-   `--on-collision error`, `--per-track-timeout`, `--time-budget`.
-5. Run `qc_track()` per track; write `qc/<stem>.json`.
-6. Archive each complete track; upload; verify size + md5; write
-   `shard-XX/_timings.csv` and `_driver.log`.
-7. Pack `abc/<shard>.json`; upload and verify.
-8. Write `_shard-XX.json` and only then mark the shard `done`.
-9. Commit `outputs/abc_index.json`, `outputs/YT500/` (`manifest.jsonl`,
-   `manifest.sha256`, `duplicates.json`, `shards.json`), `scripts/`, `docs/`
-   (never audio, never ABC text unless the repo is private) and push; verify
-   `HEAD == @{u}`.
+2. Download only that shard's missing audio (skip-if-present; verify SHA-256).
+3. Restore any missing local transcripts from `TRANSCRIPTS/YT500/YT500/<shard>/<stem>.tar.gz`.
+4. Run `transcribe.py` with `--full`, `--on-collision error`,
+   `--per-track-timeout`, `--time-budget`.
+5. Run `qc_track()` per track; write the QC record.
+6. Pack `outputs/YT500/abc/<shard>.json` and update the local index.
+7. Stop and start the next shard. **No network writes, no git.**
 
-The run loop stops cleanly between shards when `--max-minutes` is reached, so a
-session never dies mid-shard by design.
+The backup worker does this continuously, per track:
+
+1. Scan `work/yt500/out/YT500/<shard>/`.
+2. For each directory where `meta.json.status == "ok"` and `abc_sha256` matches
+   `score.abc`, create `<stem>.tar.gz` and upload it to
+   `TRANSCRIPTS/YT500/YT500/<shard>/`.
+3. Verify size + md5, append to `work/yt500/backup/ledger.jsonl`.
+4. When the shard's packed JSON and local index entry exist, upload the packed
+   JSON, then the backup index (versioned + `_index.json`).
+5. Never overwrite: a remote archive with a different `abc_sha256` is a hard
+   stop (`exit 2`).
+
+The GPU loop stops cleanly between shards when `--max-minutes` is reached, so a
+session never dies mid-shard by design. The backup worker keeps draining the
+backlog and exits when `--stop-when-complete` sees every shard terminal and
+indexed.
 
 ### Phase 3 — QC and retries
 
@@ -521,13 +571,13 @@ session never dies mid-shard by design.
 
 ### Phase 4 — pack, index, verify, restore drill
 
-- `abc_pack.py` builds `outputs/YT500/abc/<shard>.json` and the run index.
-- `_index.json` is derived: `n_source` (495), `n_transcribed` (495),
+- The GPU process writes `outputs/YT500/abc/<shard>.json` and the local index as
+  each shard finishes.
+- The backup worker mirrors those, and writes `_index.json` **last**, as
+  `_index-<utc>.json` first; a reader never sees a half-written index.
+- `_index.json` records `n_source` (495), `n_transcribed` (495),
   `n_duplicate_groups` (5), `n_ok`, `n_flagged`, `n_failed`, `n_quarantined`,
-  total audio/GPU seconds, RTF, model revision, shard list, and each shard's
-  archive hashes.
-- Remote `_index.json` is written **last**, as `_index-<utc>.json` plus a small
-  `LATEST` pointer; a reader never sees a half-written index.
+  total audio/GPU seconds, RTF, model revision and the shard list.
 - Restore drill: pick 3 random archives, download, extract to `/tmp`, run
   `transcribe.py --verify` against the manifest, compare `abc_sha256`, delete
   the temp tree. Do this after shard 1 and again at the end.
@@ -545,15 +595,15 @@ session never dies mid-shard by design.
 - Re-hash before and after transcription. If the source changed, mark
   `source_changed` and **do not overwrite** the existing ABC.
 - Never write to the source prefix. If the bucket manifest changes, create a
-  new `VER`; old outputs remain valid for the old version.
+  new project folder; old outputs remain valid for the old version.
 
 ### 6.2 Three-level resume
 
 | Level | Commit point | Rebuild from |
 |---|---|---|
 | **Track** | `meta.json` with `status: ok`, matching `source_wav_sha256` and `abc_sha256` | local `out/` or remote archive |
-| **Shard** | `_shard-XX.json` written only after every track in the shard is `ok|flagged` and its archive is verified remotely | GCS `transcripts/<VER>/` |
-| **Run** | `_index.json` lists done shards | remote `_index-*.json` + `_shard-*.json` |
+| **Shard** | packed `outputs/YT500/abc/<shard>.json` + local index entry; remote copy verified | GCS `TRANSCRIPTS/YT500/` |
+| **Run** | backup `_index.json` lists every terminal shard | remote `_index-*.json` + per-track archives |
 
 The tool's `existing_decision()` already enforces the track rule:
 
@@ -575,26 +625,34 @@ Additional rules:
 
 ### 6.3 Checkpoint and backup policy
 
-Order of durability: **GCS archive > git index > local disk > nothing.**
+Order of durability: **GCS archive > local disk > nothing.** Git is not part of
+the durable path for this run.
 
-- After each track (or every N=5 tracks), archive the complete directory and
-  upload it. Per-track is cheap (~1 s of upload per track) and bounds the loss
-  window to one track.
-- A shard is not `done` until every archive is uploaded and verified.
-- Keep local track directories until the shard's remote verification passes.
-  Then the audio cache may be deleted, but keep the local archive until the
-  run index is committed.
+- **Transcription and backup are decoupled.** The GPU process never uploads.
+  The backup worker never transcribes. They run concurrently.
+- The backup worker polls `work/yt500/out/YT500/<shard>/` (default every 30 s)
+  and uploads each track whose `meta.json.status == "ok"` and whose
+  `abc_sha256` matches `score.abc`. A track that is still being written is
+  invisible to it until `meta.json` is complete.
+- Per-track upload bounds the loss window to one track. There is no window
+  where a finished shard waits for a network operation.
+- The worker records every uploaded object in `work/yt500/backup/ledger.jsonl`
+  (remote URI, `abc_sha256`, size, action). A second pass trusts the ledger and
+  issues no uploads.
+- After upload, size + MD5 are verified against `gcloud storage hash`. A
+  mismatch is a hard stop (`exit 2`).
 - GCS is append-only: no `rsync -d`, no `cp` over an existing differing object.
-  If a remote object exists with a different hash, **fail loudly**; do not
-  overwrite.
-- Enable Object Versioning on the bucket if policy allows; otherwise use a new
-  `VER` prefix for every run.
-- Optional second copy: a second bucket/region for `transcripts/<VER>/`.
-- Git is the third copy of the small artifacts only: manifest, `duplicates.json`,
-  `shards.json`, `outputs/abc_index.json`, QC summaries, runbooks. Never audio,
-  never raw ABC text in a public repo. Put the frozen manifest at
-  `outputs/YT500/manifest.jsonl` (small, committable) and also upload it to
-  `transcripts/<VER>/_manifest.jsonl`; `work/` is a cache, not a durable store.
+  If a remote archive holds a different `abc_sha256`, **fail loudly**; do not
+  overwrite. A corpus change means a new project folder.
+- The packed JSON and `_index.json` for a shard are uploaded only after its
+  tracks, and the index is written as `_index-<utc>.json` first.
+- Keep local track directories until their remote copy is verified. The local
+  archive cache may then be pruned; the ledger and remote index are the
+  durable record.
+- Git holds only the small artifacts: manifest, `duplicates.json`,
+  `shards.json`, `pilot.json`, the scripts and this plan. Never audio, never
+  raw ABC text in a public repo.
+- Optional second copy: a second bucket/region for `TRANSCRIPTS/YT500/`.
 
 ### 6.4 Upload verification
 
@@ -605,23 +663,28 @@ Order of durability: **GCS archive > git index > local disk > nothing.**
   CRC32C instead; record which hash was used.
 - Verify the packed JSON the same way.
 - A failed verification is a hard stop (`exit 2`); the supervisor must not
-  restart into the next shard.
+  restart the backup worker blindly, because the remote object is the durable
+  copy.
 
 ### 6.5 Locking and single writer
 
-- `flock` on `work/yt500/locks/<shard>.lock` before download/transcribe/upload.
-- `flock` on `work/yt500/locks/run.lock` around index/pack/commit.
-- If a lock is held, exit 0 with "another worker owns this shard"; do not kill
-  the other process.
+- `flock` on `work/yt500/locks/<shard>.lock` before transcription.
+- `flock` on `work/yt500/backup/backup.lock`: exactly one backup worker. If the
+  lock is held, the new worker exits 0 with "another backup worker holds the
+  lock".
 - Never run two `transcribe.py` processes against the same `--out-dir`.
+- The only shared write between the two processes is the local packed JSON /
+  index, and `abc_pack.py` writes those atomically (`.tmp` + `os.replace`).
+  The backup worker opens them read-only.
 
 ### 6.6 Atomic writes
 
 - Local JSON: write `<name>.tmp`, `fsync`, `os.replace`.
 - Archives: write `.tmp`, verify size, `os.replace`.
 - GCS: object creation is atomic; readers see the complete object or nothing.
-- The run index is the exception: write `_index-<utc>.json` then update the
-  tiny `LATEST` pointer; never edit `_index.json` in place.
+- The run index is the exception: `yt500_backup.py` writes
+  `_index-<utc>.json` first, then replaces `_index.json`; never edit it in
+  place.
 
 ### 6.7 Failure taxonomy and retries
 
@@ -635,13 +698,14 @@ Order of durability: **GCS archive > git index > local disk > nothing.**
 | `timeout` | per-track timeout | retry with CPU or longer timeout, then quarantine |
 | `no-abc` | model produced none | one retry, then quarantine |
 | `invalid-abc` | ABC does not parse | one retry, then quarantine |
-| `stale` | source audio changed | **stop**; new `VER` or explicit `--force` |
+| `stale` | source audio changed | **stop**; new project folder or explicit `--force` |
 | `source_changed` | changed during the run | stop; re-freeze |
 | `download_failed` | one object | retry; >3 per shard = systemic stop |
 | `quarantined` | gave up | keep row, log tail, no silent drop |
 
-Hard stops (`exit 2`): auth/permission, disk full, upload mismatch, commit not
-landed, manifest hash drift. The supervisor must **not** restart after exit 2.
+Hard stops (`exit 2`): auth/permission, disk full, upload or md5 mismatch,
+append-only conflict, manifest hash drift. The supervisor must **not** restart
+after exit 2.
 
 ### 6.8 Session, disk, auth
 
@@ -651,16 +715,15 @@ Preflight (every session):
 ./transcribe.sh --doctor                 # venv, torch, transformers, ffmpeg, cuda
 df -h /content /tmp                      # > 15 GB free
 nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv
-gcloud storage ls "$BUCKET/state/latest/manifest.json" >/dev/null   # read test
-gcloud storage ls "$BUCKET/transcripts/$VER/" >/dev/null # write-prefix read test
+gcloud storage ls gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/ >/dev/null
 abc2midi --version                        # QC gate dependency
 ```
 
 - Run detached: `setsid nohup … & disown`; write a PID/heartbeat file.
-- Supervisor restarts on transient non-zero exits, with a cap on quick
-  failures; it must not restart on `exit 2`.
-- At session end: `gcloud storage ls -l -r` the shard, verify, `git push`, and
-  write `state/session-<timestamp>.json` with the last completed shard.
+- Supervisor restarts the GPU process on transient non-zero exits, with a cap
+  on quick failures; it must not restart either process on `exit 2`.
+- At session end: `gcloud storage ls -l -r` the project prefix, verify, and
+  write `work/yt500/backup/status.json` with the last completed shard.
 - Never leave a shard only in local disk.
 
 ### 6.9 Audit trail
@@ -675,8 +738,10 @@ abc2midi --version                        # QC gate dependency
 
 Events: `manifest_frozen`, `download`, `download_failed`, `transcribe_start`,
 `transcribe_end`, `qc`, `archive`, `upload`, `verify`, `quarantine`,
-`shard_done`, `session_end`. Status is rebuilt by replaying the ledger; the
-ledger is never edited.
+`shard_done`, `session_end`. Two append-only files carry the run:
+`work/yt500/logs/abc_*.log` (GPU process) and
+`work/yt500/backup/ledger.jsonl` (backup worker, one line per remote object with
+`abc_sha256`, bytes and `action`). Neither is edited.
 
 ### 6.10 Security and licensing
 
@@ -702,8 +767,7 @@ cd /content/music_captioning && git pull --ff-only
 # 2. Auth and identity
 gcloud auth login
 gcloud config set project <project>
-export BUCKET=gs://akbar-december-2024-backup/yt_top_500_music_playlist
-export VER=2026-11-09
+export DEST=gs://akbar-december-2024-backup/TRANSCRIPTS/YT500
 export MANIFEST=outputs/YT500/manifest.jsonl
 export MANIFEST_SHA=$(cut -d' ' -f1 outputs/YT500/manifest.sha256)
 
@@ -716,39 +780,33 @@ python3 scripts/abc_batch.py --list \
   --manifest-sha256 "$MANIFEST_SHA" \
   --index outputs/YT500/abc_index.json \
   --gcs-index \
-  --gcs-transcripts "$BUCKET/transcripts/$VER" \
+  --gcs-transcripts "$DEST" \
   --amr-dir /content/arabmaqamrock
 
-# 5. Run the same command; nothing else
-setsid nohup python3 -u scripts/abc_batch.py \
-  --manifest "$MANIFEST" \
-  --manifest-sha256 "$MANIFEST_SHA" \
-  --index outputs/YT500/abc_index.json \
-  --gcs-index --no-commit \
-  --gcs-transcripts "$BUCKET/transcripts/$VER" \
-  --device cuda --on-collision error --per-track-timeout 1800 \
-  --archive-every-track --restore-from-gcs --assumed-rtf 5.0 \
-  --max-minutes 150 --amr-dir /content/arabmaqamrock \
-  > logs/yt500_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
-disown || true
+# 5. Start backup, then the GPU process, exactly as in Phase 2
+#    (see the two setsid commands above; nothing else).
 ```
 
-The driver skips done shards, restores missing local transcripts from remote
-archives, and re-transcribes only tracks whose `meta.json` is absent or not
-`ok`. `--force` is not needed and must not be used.
+The GPU process skips shards the backup index marks terminal, restores missing
+local transcripts from `TRANSCRIPTS/YT500/YT500/<shard>/<stem>.tar.gz`, and
+re-transcribes only tracks whose `meta.json` is absent or not `ok`. The backup
+worker adopts matching remote archives instead of re-uploading them. `--force`
+is not needed and must not be used.
 
 ### 7.2 Event → recovery matrix
 
 | Event | What is lost | Recovery |
 |---|---|---|
 | One track crashes | that track | re-run the shard; hash guard skips the rest |
-| VM dies mid-shard | local audio + un-uploaded outputs | re-run; restore uploaded archives; redo ≤1 shard, or ≤1 track if per-track upload |
-| GCS upload fails | nothing (local kept) | retry; shard not marked done; hard stop if hash mismatch |
+| VM dies mid-shard | local audio + un-uploaded outputs | re-run both processes; adopt verified archives; redo ≤1 track |
+| Backup upload fails | nothing (local kept) | backup worker retries on the next pass; hard stop on hash mismatch |
 | Archive corrupt | one archive | `transcript_archive.py --verify`; re-archive from local; else re-transcribe |
-| Index commit fails | one commit | retry push; hard stop if `HEAD != @{u}` |
-| Bucket manifest changes | freeze | new `VER`; old outputs remain |
+| Index upload fails | nothing | retried next pass; `_index.json` is written last |
+| Bucket manifest changes | freeze | new project folder (`TRANSCRIPTS/YT500-v2/`); old outputs remain |
 | Auth expires | uploads | `gcloud auth login`; resume |
-| Disk full | current shard | clean `work/audio` for completed shards; never delete `out/` before verification |
+| Disk full | current shard | clean `work/audio` for verified shards; never delete `out/` before verification |
+| GPU process dies | current shard | restart it; the backup worker keeps draining |
+| Backup worker dies | nothing | restart it; the ledger makes every upload idempotent |
 | Model/venv lost | environment | rebuild; outputs unaffected |
 
 ### 7.3 Restore drill (do not skip)
@@ -805,8 +863,8 @@ Record the verdicts in `docs/yt500-results.md`.
       source/ABC hashes, or a written exception with a reason.
 - [ ] Each of the 5 duplicate groups has a `duplicate_of` link between two
       transcribed rows; both outputs exist and differ.
-- [ ] 25/25 shard archives, 495 track archives, and `abc/<shard>.json` in
-      `gs://.../yt_top_500_music_playlist/transcripts/<VER>/`.
+- [ ] 495 track archives and 25 `abc/<shard>.json` files in
+      `gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/`.
 - [ ] `_index.json` counts match the ledger: `n_ok`, `n_flagged`, `n_failed`,
       `n_quarantined`, `total_audio_h`, `total_gpu_h`, `rtf`.
 - [ ] `transcribe.py --verify` is clean against a restored sample.
@@ -829,7 +887,7 @@ Record the verdicts in `docs/yt500-results.md`.
 | D1 | Shards 01–08 | 2.5–3 h GPU |
 | D2 | Shards 09–17 | 2.5–3 h GPU |
 | D3 | Shards 18–25 + retries | 2.5–3 h GPU |
-| D3 | Pack, index, verify, restore drill, listening check | 2–3 h CPU |
+| D3 | Backup drain, restore drill, listening check | 1–2 h CPU, mostly parallel |
 
 On a single L4/T4 this is **3–4 GPU sessions**. On CPU it is **~61–73 hours**;
 do not schedule it that way.
@@ -840,7 +898,7 @@ do not schedule it that way.
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| Bucket manifest/audio changes after freeze | medium | stale plan or mixed corpus | record the manifest `sha256`; a change is a new `VER`; re-hash every download |
+| Bucket manifest/audio changes after freeze | medium | stale plan or mixed corpus | record the manifest `sha256`; a change is a new project folder; re-hash every download |
 | Near-duplicate group is actually a different performance | medium | one version under-represented | transcribe all 495 and keep `duplicate_of` as metadata; the 5 extra jobs are cheap |
 | VM killed mid-shard | high | ≤1 shard lost | per-track archive/upload; shard index; same-command resume |
 | Upload silently truncated | low | corrupt backup | size + MD5 verify; hard stop |
@@ -869,9 +927,9 @@ do not schedule it that way.
 4. **Duplicate policy.** **Recommendation: transcribe all 495 unique audio
    objects; skip only byte-identical/same-video duplicates (none here); mark the
    5 same-title groups with `duplicate_of` for downstream dedupe.**
-5. **Output prefix.** **Recommendation: a new
-   `.../yt_top_500_music_playlist/transcripts/<VER>/` prefix; never write into
-   the source audio tree.**
+5. **Output prefix.** **Recommendation:
+   `gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/` — a project folder under
+   the shared `TRANSCRIPTS` prefix, never inside the source audio tree.**
 6. **Lyrics/ASR.** Out of scope. If needed, it is a separate phase after the
    ABC corpus exists.
 
@@ -921,27 +979,33 @@ python3 scripts/yt500_manifest.py --download-pilot \
 python3 scripts/abc_batch.py --list \
   --manifest outputs/YT500/manifest.jsonl \
   --index outputs/YT500/abc_index.json --gcs-index \
-  --gcs-transcripts "$BUCKET/transcripts/$VER" \
+  --gcs-transcripts "$DEST" \
   --amr-dir /content/arabmaqamrock
 
-# One shard, detached (replace shard-03)
+# One shard, GPU only (replace shard-03); backup runs alongside
 setsid nohup python3 -u scripts/abc_batch.py \
   --manifest outputs/YT500/manifest.jsonl \
   --index outputs/YT500/abc_index.json \
-  --gcs-index --no-commit \
-  --gcs-transcripts "$BUCKET/transcripts/$VER" \
+  --gcs-index --skip-backup \
+  --gcs-transcripts "$DEST" \
   --device cuda --on-collision error --per-track-timeout 1800 \
-  --archive-every-track --restore-from-gcs --assumed-rtf 5.0 \
+  --restore-from-gcs --assumed-rtf 5.0 \
   --album shard-03 --max-minutes 150 \
   --amr-dir /content/arabmaqamrock \
   > logs/yt500_shard.out 2>&1 < /dev/null &
 disown || true
 
+# One backup pass (dry-run first, then real)
+python3 scripts/yt500_backup.py --once --dry-run \
+  --manifest outputs/YT500/manifest.jsonl \
+  --outputs outputs --work-dir work/yt500 --gcs-dest "$DEST"
+
 # Verify without a GPU
 python3 transcribe.py work/yt500/out/YT500/<shard> --verify
 python3 plumbing/transcript_archive.py work/yt500/out/YT500/<shard> --verify
 
-# Pack + index
+# Pack + index (local; the backup worker uploads them)
 python3 scripts/abc_pack.py --outputs outputs \
-  --manifest outputs/YT500/manifest.jsonl --raw-dir work/yt500/out
+  --manifest outputs/YT500/manifest.jsonl --raw-root work/yt500/out \
+  --raw-gcs "$DEST/YT500/shard-03" --raw-archive
 ```
