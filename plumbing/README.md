@@ -16,11 +16,23 @@ gs://akbar-december-2024-backup/arabmaqamrock/
   README.md                                                    what this prefix is
   binaries/<arch-tag>/audiocpp_cli + .sha256 + manifest.json   prebuilt, arch-selected
   runs/<timestamp>_<label>/                                    mirrored from ./out/
+    <take>.mp3                    default: trial audio (WAV stays local)
+    <take>.wav                    only for takes marked in UPLOAD_POLICY.json
+    UPLOAD_POLICY.json            optional per-run audio policy
+    transcripts/<take>.tar.gz     compressed complete transcription dirs
+    transcripts/_archive_index.json
+    ...                           logs, sidecars, manifests (unchanged)
   logs/                                                        mirrored from ./logs/
   run_manifest.json                                            written by backup_to_gcp.py
 ```
 
 `<arch-tag>` = `sm75-t4` (T4) · `sm80-a100` (A100) · `sm89-l4` (L4).
+
+Generation always writes WAV locally. `backup_to_gcp.py` transcodes finished
+WAVs to MP3 in `.cache/gcs_mp3/` (outside `out/`) and uploads only the MP3 by
+default. A take or run opted into WAV with `mark_production.py` uploads the WAV
+instead. Finished transcript song directories are archived to `<take>.tar.gz`
+before upload; incomplete ones are never archived.
 
 The GGUF model and the LoRA are **not** here — they come from Hugging Face and are
 re-downloaded on a fresh VM.
@@ -33,7 +45,10 @@ re-downloaded on a fresh VM.
 | `arch.sh` | compute capability ⇄ arch tag (`detect_compute_cap`, `arch_tag_for_cc`) |
 | `fetch_binary.sh` | stage `./bin/audiocpp_cli`: fetch the arch prebuilt from GCS, sha256-verify, else build from source; `--publish` uploads a new build |
 | `setup_transcribe.sh` | build the optional repo-local `.venv-sheetsage2` for `./transcribe.sh` (Python 3.11, CPU default; `--cuda` opt-in) |
-| `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`) |
+| `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`); transcodes finished WAVs to MP3 and archives completed transcript dirs by default |
+| `audio_export.py` | find finished WAVs, keep the MP3 cache outside `out/`, verify each encode; used by `backup_to_gcp.py` |
+| `transcript_archive.py` | deterministic `<take>.tar.gz` archives for complete transcript song dirs + `_archive_index.json`; `--verify`/`--dry-run` |
+| `mark_production.py` | write `UPLOAD_POLICY.json` to upload selected WAVs (or a whole run) instead of MP3 |
 | `audio_cpp.pin` | the audio.cpp commit a build should use (empty = track main) |
 | `instrumentalize_scores.py` | convert native YuE2/SheetSage2 scores to instrumental form (Vocal → Ins); vendored official helpers in `yue2_instrumental/` |
 | `check_lora.py` | validate a YuE2 AR or NAR LoRA safetensors header (28 layers, tensor count, rank) before loading it on the GPU |
@@ -49,7 +64,16 @@ re-downloaded on a fresh VM.
 
 python plumbing/backup_to_gcp.py --once     # one backup pass
 python plumbing/backup_to_gcp.py            # daemon every 5 min
+# inspect the policies without uploading:
+python plumbing/backup_to_gcp.py --once --dry-run
+python plumbing/audio_export.py out/<run> --dry-run
+python plumbing/transcript_archive.py out/<run>/transcripts --dry-run
+# select a take for WAV upload:
+python plumbing/mark_production.py out/<run> --take <name>_<seed>
 ```
+
+Escape hatches: `--audio-upload wav` restores the old upload-everything-WAV
+behaviour, and `--legacy-transcripts` uploads raw transcript directories.
 
 The transcription venv and its module cache are git-ignored
 (`.venv-sheetsage2/`, `.cache/`). Nothing in the generation path imports them.
@@ -68,6 +92,10 @@ pgrep -af backup_to_gcp.py
   `cuda_loader_path.sh` for that. When audio.cpp moves, the binary can go stale —
   `binaries/<tag>/manifest.json` records the commit, and `fetch_binary.sh --build
   --publish` rebuilds and re-records it.
+- **MP3 trials need `ffmpeg`.** If it is missing (or an encode fails), the
+  sidecar uploads the WAV for that take instead of dropping audio. The MP3
+  cache is local (`.cache/gcs_mp3/`) and is never placed inside `out/`, so
+  `transcribe.py` still sees one audio file per take.
 - **Building needs no GPU** (`nvcc` cross-compiles for `--cuda-arch`); it needs the
   CUDA toolkit + cmake + ccache and takes ~21 min cold.
 - `GCP_ROOT` (bucket root) is runtime-supplied, never hardcoded in the scripts beyond a

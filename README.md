@@ -320,6 +320,18 @@ plans/<name>_<seed>/score.abc   model-planned score (cot != off, no score given)
 
 `out/latest` names the newest run. Re-run with `--out-dir <folder>` to resume.
 
+Generation always writes the `.wav` locally. The GCS backup sidecar treats
+runs as trials by default: it transcodes finished WAVs to MP3 and uploads only
+the MP3. To keep a take (or a whole run) as WAV in GCS:
+
+```bash
+python plumbing/mark_production.py out/<run> --take <name>_<seed>
+# or: python plumbing/mark_production.py out/<run> --all
+```
+
+The next backup pass uploads the selected WAVs. Revert to the old upload
+behaviour for one pass with `backup_to_gcp.py --audio-upload wav`.
+
 ## Optional: symbolic transcription
 
 Turn a finished run into melody **ABC** scores on CPU with SheetSage2. This is
@@ -336,7 +348,10 @@ model in the audio.cpp stack.
 Scores land in `out/<run>/transcripts/<name>_<seed>/score.abc`, with MIDI/event
 side artifacts, a per-track `meta.json`, and a run-level manifest. Existing
 scores are skipped only when their recorded source-WAV hash still matches; use
-`--force` after re-rendering a take.
+`--force` after re-rendering a take. The GCS backup sidecar archives each
+completed song directory to `<name>_<seed>.tar.gz` before upload (failed or
+interrupted tracks are never archived); see
+[docs/transcription.md](docs/transcription.md).
 
 See [docs/transcription.md](docs/transcription.md) for CPU/GPU options, resume
 guards, and licensing. ABC scores can also be used as a symbolic guide for a new

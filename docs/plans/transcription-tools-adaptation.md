@@ -178,6 +178,11 @@ out/<run>/
   input audio.
 - Because the output lives under `out/`, the existing backup sidecar mirrors it
   automatically. No `--gcs` flag is needed.
+- **Update (2026-11-09):** the backup sidecar now archives each *complete* song
+  directory to `transcripts/<take>.tar.gz` before upload and excludes the raw
+  `transcripts/<take>/` directory. Failed/interrupted tracks are never
+  archived. See `docs/plans/gcs-storage-reduction.md`; raw uploads remain
+  available with `backup_to_gcp.py --legacy-transcripts`.
 
 A separate output tree remains possible with `--out-dir`; nothing depends on the
 default.

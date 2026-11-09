@@ -247,9 +247,23 @@ Outputs live under `out/<run>/transcripts/`, so the existing backup sidecar
 (`plumbing/backup_to_gcp.py`) mirrors them with the rest of the run. There is no
 separate `--gcs` flag.
 
+By default the sidecar archives each **complete** song directory to
+`transcripts/<take>.tar.gz` before upload, and excludes the raw
+`transcripts/<take>/` directory. Completion means `meta.json` says
+`status: "ok"` and its `abc_sha256` matches `score.abc`; failed or interrupted
+tracks are never archived. The local working copy is kept, so resume works as
+before. Run-level files (`_timings.csv`, `transcribe_manifest.json`,
+`_driver.log`, `_archive_index.json`) stay uncompressed.
+
 ```bash
 python3 plumbing/backup_to_gcp.py --once --dry-run
+python3 plumbing/transcript_archive.py out/<run>/transcripts --dry-run
+python3 plumbing/transcript_archive.py out/<run>/transcripts --verify
 ```
+
+Use `--legacy-transcripts` to upload the raw directories instead, or
+`--compression xz` for a smaller archive. Extract one song with
+`tar -xzf transcripts/<take>.tar.gz -C transcripts/`.
 
 ## Licensing
 

@@ -145,8 +145,12 @@ STEP 8 — report in chat
     expect roughly 80-90 minutes for 24 takes.
   - PID, log path (logs/run10.out), run dir (out/latest), and the completion
     marker (logs/run10_done.txt).
-  - The GCS prefix where the WAVs will land:
-    gs://akbar-december-2024-backup/arabmaqamrock/runs/<run dir>/
+  - The GCS prefix where the audio will land
+    `gs://akbar-december-2024-backup/arabmaqamrock/runs/<run dir>/`.
+    Since the backup sidecar now uploads MP3 for trials, expect `<take>.mp3`
+    there; the local `out/latest/*.wav` files stay local. If a take must be WAV
+    in GCS, mark it first:
+    `python3 plumbing/mark_production.py <run> --take <name>_<seed>`.
   - Anything abnormal you saw in step 1/2.
 
 TRAPS

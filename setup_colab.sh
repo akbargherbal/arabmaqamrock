@@ -10,7 +10,7 @@
 #      install GNU time if absent (run_one.sh wraps the binary in /usr/bin/time)
 #   2. stage the prebuilt audiocpp_cli for this GPU's arch (./plumbing/fetch_binary.sh)
 #   3. download the YuE2 GGUF model + LoRA from Hugging Face
-#   4. start the GCS backup sidecar (detached)
+#   4. start the GCS backup sidecar (detached; MP3 trials + transcript archives)
 #
 # Idempotent: re-running skips what is already present. Nothing here needs a build
 # unless the prebuilt is missing (then fetch_binary.sh falls back to a source build).
@@ -56,6 +56,7 @@ echo "== 1. tooling =="
 command -v nvidia-smi >/dev/null 2>&1 && ok "nvidia-smi: $(nvidia-smi --query-gpu=name --format=csv,noheader | head -n1)" || die "no nvidia-smi (no GPU?)"
 [ -n "$GCS_CLI" ] && ok "gcs cli: $GCS_CLI" || die "need gcloud or gsutil on PATH (and gcloud auth login)"
 command -v hf >/dev/null 2>&1 && ok "hf cli present" || die "hf missing: pip install -U 'huggingface_hub[cli]'"
+command -v ffmpeg >/dev/null 2>&1 && ok "ffmpeg present (MP3 trial upload)" || warn "ffmpeg missing — backup will upload WAVs instead of MP3"
 [ -n "${HF_TOKEN:-}" ] && ok "HF_TOKEN set" || warn "HF_TOKEN not set in this shell (public repos only)"
 command -v gsutil >/dev/null 2>&1 && ok "gsutil present (backup daemon)" || warn "gsutil missing — backup daemon will not run"
 
@@ -122,3 +123,5 @@ else
   echo "Optional symbolic transcription: ./plumbing/setup_transcribe.sh"
 fi
 echo "Backup verify:  ${GCS_CLI} ls ${GCP_PREFIX}/runs/"
+echo "Upload plan (no writes): python3 plumbing/backup_to_gcp.py --once --dry-run"
+echo "Keep a take as WAV:      python3 plumbing/mark_production.py out/<run> --take <name>_<seed>"
