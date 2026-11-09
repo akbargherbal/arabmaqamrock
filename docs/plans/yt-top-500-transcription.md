@@ -5,6 +5,10 @@ implemented and unit-tested, no transcription run yet
 **Date:** 2026-11-09
 **Tool:** `arabmaqamrock/transcribe.py` (SheetSage2, pinned revision)
 **Source:** `gs://akbar-december-2024-backup/yt_top_500_music_playlist`
+**Scope:** **music transcription only** (audio → ABC/MIDI side artifacts).
+This project does **not** generate music captions, descriptions, lyrics or
+other text; `music_captioning` is only the repo that happens to host the
+batch/QC/packing scripts used below.
 **Batch driver:** `music_captioning/scripts/abc_batch.py`, now with
 `--device`, `--per-track-timeout`, `--on-collision`, `--archive-every-track`,
 `--restore-from-gcs`, `--manifest-sha256`, `--gcs-index` and `--no-commit`.
@@ -93,7 +97,7 @@ different songs and are not duplicates.
 | | |
 |---|---|
 | **In scope** | Audio → SheetSage2 `--full` transcription: `score.abc` (Vocal + Ins + chord symbols), `transcription.mid`, `melody_vocal.mid`, `melody_instrumental.mid`, `chords.mid`, `events.json`, `*.lab`, `notation/`, `meta.json`. |
-| **Out of scope** | Lyrics/ASR, lyric-to-note alignment, maqam labelling, score editing, re-rendering. The `maqam-edit` workflow is a later, human-driven pass over selected scores. |
+| **Out of scope** | **Music captioning / text description generation**, lyrics/ASR, lyric-to-note alignment, maqam labelling, score editing, re-rendering. The `maqam-edit` workflow is a later, human-driven pass over selected scores. |
 | **Unit of work** | One **unique audio object**. All 495 measured objects are transcribed; `duplicate_of` is a metadata link. Only byte-identical/same-video rows are aliases and skipped. |
 | **Success** | Every one of the 495 tracks has `meta.json.status ∈ {ok, flagged}` and a verified remote archive, or a written exception with a reason. |
 
