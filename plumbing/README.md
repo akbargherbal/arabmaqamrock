@@ -14,6 +14,7 @@ prefix*, so exporting one never silently relocates the other.
 ```
 gs://akbar-december-2024-backup/arabmaqamrock/
   README.md                                                    what this prefix is
+  binaries/index.json                                          aggregate register of every prebuilt
   binaries/<arch-tag>/audiocpp_cli + .sha256 + manifest.json   prebuilt, arch-selected
   runs/<timestamp>_<label>/                                    mirrored from ./out/
     <take>.mp3                    default: trial audio (WAV stays local)
@@ -43,6 +44,7 @@ re-downloaded on a fresh VM.
 |---|---|
 | `env.sh` | sourced by the others: repo root, `GCP_BACKUP_BASE`/`GCP_PREFIX`, `gcs_*` wrappers (`gcloud storage`, else `gsutil`) |
 | `arch.sh` | compute capability ⇄ arch tag (`detect_compute_cap`, `arch_tag_for_cc`) |
+| `binary_registry.py` | read every `binaries/<arch>/manifest.json` and print/publish the aggregate `binaries/index.json` register (arch, GPU, build date, CUDA, commit, sha256); flags missing arches |
 | `fetch_binary.sh` | stage `./bin/audiocpp_cli`: fetch the arch prebuilt from GCS, sha256-verify, else build from source; `--publish` uploads a new build |
 | `setup_transcribe.sh` | build the optional repo-local `.venv-sheetsage2` for `./transcribe.sh` (Python 3.11, CPU default; `--cuda` opt-in) |
 | `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`); transcodes finished WAVs to MP3 and archives completed transcript dirs by default |
@@ -58,6 +60,10 @@ re-downloaded on a fresh VM.
 ```bash
 ./plumbing/fetch_binary.sh                  # prebuilt for this GPU
 ./plumbing/fetch_binary.sh --build --publish --cuda-arch 75   # rebuild + re-publish
+
+python plumbing/binary_registry.py            # what is on GCS, and when it was built
+python plumbing/binary_registry.py --write-index   # refresh binaries/index.json
+python plumbing/binary_registry.py --check    # manifest sha256 vs published .sha256
 
 ./plumbing/setup_transcribe.sh              # optional SheetSage2 env (CPU)
 ./transcribe.sh out/latest --dry-run

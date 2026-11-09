@@ -8,3 +8,8 @@
 # commit is unknown (their GCS manifest.json records audio.cpp_commit=unknown
 # and ggml eb8e21b). Fill this in the next time a build is verified, and the
 # manifest written by `--publish` will record it.
+#
+# Pinned 2026-11-09 from the sm80-a100 build (CUDA 12.0.140, g++ 12.4.0,
+# ggml 0.12.0 vendored). Its GCS manifest is the provenance record:
+#   gs://akbar-december-2024-backup/arabmaqamrock/binaries/sm80-a100/manifest.json
+7d20b414da088c3ffe56bd8803398d9d158cb847

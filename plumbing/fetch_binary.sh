@@ -30,10 +30,10 @@ ARCH_FILE="$BIN_DIR/.arch"        # the tag the staged binary came from
 PIN_FILE="$PLUMBING_DIR/audio_cpp.pin"
 AUDIO_CPP_REPO="https://github.com/0xShug0/audio.cpp"
 
-FORCE=0; DO_BUILD=0; DO_PUBLISH=0; DRY=0; CC=""
+FORCE=0; DO_BUILD=0; DO_PUBLISH=0; DRY=0; CAP=""   # CAP = compute capability
 while [ $# -gt 0 ]; do
   case "$1" in
-    --cuda-arch) CC="${2:?--cuda-arch needs a value}"; shift 2 ;;
+    --cuda-arch) CAP="${2:?--cuda-arch needs a value}"; shift 2 ;;
     --build)     DO_BUILD=1; shift ;;
     --publish)   DO_PUBLISH=1; shift ;;
     --force)     FORCE=1; shift ;;
@@ -48,8 +48,8 @@ log() { printf '[fetch_binary] %s\n' "$*"; }
 RUN() { if [ "$DRY" = 1 ]; then echo "  dry-run: $*"; else "$@"; fi; }
 
 # --- resolve the target arch -------------------------------------------------
-[ -n "$CC" ] || CC="$(detect_compute_cap)"
-TAG="$(arch_tag_for_cc "$CC")"
+[ -n "$CAP" ] || CAP="$(detect_compute_cap)"
+TAG="$(arch_tag_for_cc "$CAP")"
 
 if [ -x "$BIN" ] && [ "$FORCE" != 1 ]; then
   log "bin/audiocpp_cli already staged (arch: $(cat "$ARCH_FILE" 2>/dev/null || echo '?')); --force to re-stage"
@@ -93,7 +93,7 @@ fetch_prebuilt() {
 
 # --- 2. build from source (fallback / --build) -------------------------------
 build_from_source() {
-  if [ -z "$CC" ]; then
+  if [ -z "$CAP" ]; then
     log "--build needs --cuda-arch <CC> (no GPU here to detect it)"
     exit 2
   fi
@@ -121,8 +121,8 @@ build_from_source() {
     log "no pin (plumbing/audio_cpp.pin empty) — tracking audio.cpp main"
     RUN git -C "$ac" reset --hard FETCH_HEAD 2>/dev/null || true
   fi
-  log "building audiocpp_cli (--cuda-arch $CC) — cold build ~21 min"
-  ( cd "$ac" && RUN scripts/build_linux.sh --backend cuda --cuda-arch "$CC" --ccache \
+  log "building audiocpp_cli (--cuda-arch $CAP) — cold build ~21 min"
+  ( cd "$ac" && RUN scripts/build_linux.sh --backend cuda --cuda-arch "$CAP" --ccache \
         --model-set custom --models yue2 --target audiocpp_cli )
   RUN mkdir -p "$BIN_DIR"
   RUN cp "$ac/build/linux-cuda-release/bin/audiocpp_cli" "$BIN"
@@ -144,7 +144,7 @@ publish_binary() {
   gcs_cp "$BIN" "$remote/audiocpp_cli" >/dev/null
   printf '%s  audiocpp_cli\n' "$h" > "$BIN.sha256"
   gcs_cp "$BIN.sha256" "$remote/audiocpp_cli.sha256" >/dev/null
-  python3 - "$TAG" "$CC" "$h" "$size" "$commit" "$cuda" "$remote" > "$BIN.manifest.json" <<'PY'
+  python3 - "$TAG" "$CAP" "$h" "$size" "$commit" "$cuda" "$remote" > "$BIN.manifest.json" <<'PY'
 import json, sys, datetime
 tag, cc, h, size, commit, cuda, src = sys.argv[1:8]
 print(json.dumps({
@@ -164,7 +164,7 @@ PY
 
 # --- dispatch ----------------------------------------------------------------
 if [ "$DRY" = 1 ]; then
-  log "arch=$CC tag=${TAG:-?} build=$DO_BUILD publish=$DO_PUBLISH"
+  log "arch=$CAP tag=${TAG:-?} build=$DO_BUILD publish=$DO_PUBLISH"
   [ "$DO_BUILD" = 1 ] && { build_from_source; exit 0; }
   fetch_prebuilt || { log "(dry-run) would fall back to building from source"; }
   exit 0
