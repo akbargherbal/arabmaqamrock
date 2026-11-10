@@ -38,6 +38,7 @@ the manifest lives in `manifests/`. A manifest with assets next to it can omit
 | `fadhl_shaker_instrumental_05_melody_habeetak.json` | 4 | Round 05: melody-only vs no-chords vs full transcription on `حبيتك`; full + chords + surgery won. |
 | `fadhl_shaker_instrumental_06_habeetak_polish.json` | 7 | Round 06: improve the winning full-transcription take with NAR v9 vs Arabic NAR, section tags, a compact style, and 32 ODE steps. |
 | `fadhl_shaker_instrumental_07_prompt_sweep.json` | 6 | Round 07: generic (song-agnostic) style-prompt sweep — bare vs generic cover vs generic dense vs prose control vs +Arabic vs section tags; no instrument/key/BPM hardcoding. |
+| `yt500_instrumental_489.json` | 489 | YT500 corpus, exactly the round-18 recipe (style, instrumental_v9 LoRAs, scales, `cot=full`, `lyrics_from_score`). Scores are materialized by `plumbing/yt500_generation_corpus.py --fetch`; 489 of 495 tracks. |
 
 Validate any manifest without a GPU:
 

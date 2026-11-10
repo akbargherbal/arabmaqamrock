@@ -1,7 +1,8 @@
 # YT500 instrumental generation — 489 scores, A100 batch, resumable across Colab sessions
 
-**Status:** plan, not yet run
-**Written:** 2026-11-10
+**Status:** CPU side implemented; A100 pilot pending
+**Implemented:** 2026-11-10 — corpus builder, 489-score manifest, GCS bundle,
+resume/batch driver, `generate.py --requests-out`, offline tests.
 **Source corpus:** `gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/`
 **Reference recipe:** `manifests/fadhl_shaker_instrumental_18.json`
 **Goal:** turn every usable YT500 ABC score into an instrumental track using
@@ -477,16 +478,41 @@ Expected: 489 scores, hashes OK, 4 + 2 exclusions listed.
 ### 8.1 A/B test — batch vs per-track (4 tracks)
 
 The batch path is only worth using if it is both correct and materially faster.
-Write a 4-song pilot manifest with **explicit seeds**, then render it twice:
+Build a 4-song pilot manifest with **explicit seeds** (the master manifest has
+no seeds), then render it twice:
 
 ```bash
-# A: per-track baseline (one process per song)
+mkdir -p work/yt500_gen
+python3 - <<'PY'
+import json, pathlib
+m = json.load(open("manifests/yt500_instrumental_489.json"))
+idx = {r["name"]: r for r in
+       json.load(open("outputs/YT500/generation/index.json"))["tracks"]}
+ready = sorted((r for r in idx.values()
+                if r["generation_status"] == "ready"),
+               key=lambda r: r["duration_s"])
+names = ["yt500-0071-UO5jte9NP-U", "yt500-0136-pUnEijzCb1c"]
+for r in (ready[0], ready[-1]):
+    if r["name"] not in names:
+        names.append(r["name"])
+names = names[:4]
+pilot = {**m,
+         "base_dir": str(pathlib.Path.cwd()),
+         "scores": {n: m["scores"][n] for n in names},
+         "songs": [{"name": n, "score": n, "seed": 1000 + i}
+                   for i, n in enumerate(names)]}
+json.dump(pilot, open("work/yt500_gen/pilot4.json", "w"), indent=2)
+print(names)
+PY
+
+# A: per-track baseline (one process per song, same seeds)
 python3 generate.py work/yt500_gen/pilot4.json \
-  --out-dir out/ab_single --label ab_single
+  --out-dir out/ab_single
 
 # B: one loaded session, same 4 requests
 python3 plumbing/run_yt500_generation.py --run --batch \
-  --manifest work/yt500_gen/pilot4.json --out-dir out/ab_batch --max-songs 4
+  --corpus work/yt500_gen/pilot4.json --max-songs 4 \
+  --out-root out --label ab_batch
 ```
 
 The 4 tracks cover a normal score, a long score, an `octave_suspect` flagged
@@ -776,6 +802,26 @@ python3 -m pytest tests/test_yt500_generation_corpus.py \
   tests/test_run_yt500_generation.py -q
 python3 generate.py manifests/yt500_instrumental_489.json --dry-run
 ```
+
+### 13.1 Implementation status (2026-11-10)
+
+Done on CPU and pushed:
+
+- `plumbing/yt500_generation_corpus.py` builds, verifies, uploads and fetches
+  the corpus. `--build --upload` produced the bundle at
+  `gs://akbar-december-2024-backup/GENERATION/YT500_INSTRUMENTAL/`.
+- `manifests/yt500_instrumental_489.json`: 489 songs, exact manifest-18
+  `defaults`/`loras`, no per-song caps.
+- `outputs/YT500/generation/index.json`: 495 rows (489 ready, 4 no-abc,
+  2 inline-key).
+- `plumbing/run_yt500_generation.py`: GCS done-set scan, session manifest,
+  per-track fallback, `--batch`/`--batch-chunk`, marker writer.
+- `generate.py --requests-out`: request-list generation without inference.
+- Offline gates: `--fetch` + `--verify` = 489/489; `generate.py --dry-run` =
+  489 songs, 0 unparsed, 489 `cot=full`; full test suite 137 passed.
+
+Still A100-only: `--request-sequence` presence, the 4-track A/B, the 12-track
+stability pilot, and the measured decode rate.
 
 ---
 

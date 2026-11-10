@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "generated_at": "2026-11-10T06:27:18Z",
+  "counts": 6,
+  "exclusions": [
+    {
+      "name": "yt500-0655-dcxCOzupe00",
+      "reason": "no-abc",
+      "detail": "transcribe_status='no-abc'"
+    },
+    {
+      "name": "yt500-0495-DXJhlamah70",
+      "reason": "inline_key_change",
+      "detail": [
+        {
+          "line": 145,
+          "key": "[K:G#m]",
+          "action": "pitched-prefix-before-key",
+          "segment": "d'6b6c'4c'4b2[K:G#m]z8z2"
+        }
+      ]
+    },
+    {
+      "name": "yt500-0006-INJSYLVA_fg",
+      "reason": "no-abc",
+      "detail": "transcribe_status='no-abc'"
+    },
+    {
+      "name": "yt500-0460-WYMdfrp_sGs",
+      "reason": "inline_key_change",
+      "detail": [
+        {
+          "line": 231,
+          "key": "[K:F]",
+          "action": "pitched-prefix-before-key",
+          "segment": "\"C#\"z4B4B4B4B4B4G2[K:F]z6"
+        }
+      ]
+    },
+    {
+      "name": "yt500-0176-h9BH8M5ot2c",
+      "reason": "no-abc",
+      "detail": "transcribe_status='no-abc'"
+    },
+    {
+      "name": "yt500-0552-AsE0VyQX1B0",
+      "reason": "no-abc",
+      "detail": "transcribe_status='no-abc'"
+    }
+  ]
+}

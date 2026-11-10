@@ -16,3 +16,9 @@ __pycache__/
 /happy_accident/
 /local_workspace/
 /datasets/
+
+# generated YT500 instrumental generation corpus (derived ABC, not tracked)
+/scores/yt500_src/
+/scores/yt500_instrumental/
+/work/yt500_gen/
+/outputs/YT500/generation/scores.tar.gz

@@ -1170,6 +1170,45 @@ def _short_sha(value: str | None) -> str:
     return value[:8] if value else "(none)"
 
 
+def build_requests(songs: list[Song], tracks: list[Track],
+                   prompt_info: dict, run_dir: Path) -> list[dict]:
+    """Build the `audiocpp_cli --request-sequence` payload.
+
+    One request per track, with the resolved style, tag-plan lyrics, cap, CoT
+    mode and absolute score path. Session-level assets (model, VAE, LoRAs,
+    scales) stay on the command line, not in the request.
+    """
+    by_name = {s.name: s for s in songs}
+    requests: list[dict] = []
+    for t in tracks:
+        song = by_name[t.name]
+        info = prompt_info[t.name]
+        check(t.seed is not None, f"{t.name}: no seed resolved for a request")
+        options: dict = {
+            "style": song.style_text,
+            "cot": t.cot,
+            "semantic_max_tokens": t.cap,
+        }
+        if info.get("abc_file"):
+            options["abc_file"] = str((run_dir / info["abc_file"]).resolve())
+        options.update(t.controls)
+        requests.append({
+            "id": f"{t.name}_{t.seed}",
+            "lyrics": song.lyrics_text,
+            "seed": t.seed,
+            "options": options,
+        })
+    return requests
+
+
+def write_requests(path: Path, requests: list[dict]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(requests, ensure_ascii=False, indent=1) + "\n",
+                   encoding="utf-8")
+    tmp.replace(path)
+
+
 # --- preflight / assets ----------------------------------------------------
 
 def gpu_info() -> dict | None:
@@ -1658,6 +1697,10 @@ def build_parser() -> argparse.ArgumentParser:
                         "a song that supplies an ABC score must resolve to melody or full")
     p.add_argument("--dry-run", action="store_true",
                    help="validate and print the plan; writes nothing, needs no GPU")
+    p.add_argument("--requests-out", default=None, metavar="PATH",
+                   help="resolve the run, write the audiocpp_cli "
+                        "--request-sequence JSON to PATH, then exit without "
+                        "generating; requires the GPU assets (preflight)")
     p.add_argument("--force", action="store_true",
                    help="regenerate tracks that already succeeded")
     p.add_argument("--limit", type=int, default=None,
@@ -1677,6 +1720,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         check(args.limit is None or _is_pos_int(args.limit), "--limit must be an integer >= 1")
+        check(not (args.dry_run and args.requests_out),
+              "--requests-out needs a real run dir and preflight; do not combine it with --dry-run")
         input_path = Path(args.json)
         lora_ar = Path(args.lora_ar).expanduser() if args.lora_ar else LORA_AR
         lora_nar = Path(args.lora_nar).expanduser() if args.lora_nar else LORA_NAR
@@ -1708,6 +1753,13 @@ def main(argv: list[str] | None = None) -> int:
         run_dir.mkdir(parents=True, exist_ok=True)
         fp = asset_fingerprint(lora_ar, lora_nar, loras=loras)
         prompt_info = materialize(run_dir, songs, raw, input_path, tracks, fp, gpu)
+
+        if args.requests_out:
+            requests = build_requests(songs, tracks, prompt_info, run_dir)
+            out_path = Path(args.requests_out)
+            write_requests(out_path, requests)
+            print(f"wrote {len(requests)} request(s): {out_path}")
+            return 0
 
         print_plan(songs, tracks, run_dir, dry_run=False)
         print()
