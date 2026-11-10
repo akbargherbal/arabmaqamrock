@@ -1,6 +1,8 @@
 # YT500 instrumental generation — 489 scores, A100 batch, resumable across Colab sessions
 
-**Status:** CPU side implemented; A100 pilot pending
+**Status:** A100 run in progress (2026-11-10) — see the living
+[run log](yt500-instrumental-run-log.md) for measured A/B numbers, pilot state,
+decisions and anomalies.
 **Implemented:** 2026-11-10 — corpus builder, 489-score manifest, GCS bundle,
 resume/batch driver, `generate.py --requests-out`, offline tests.
 **Source corpus:** `gs://akbar-december-2024-backup/TRANSCRIPTS/YT500/`
