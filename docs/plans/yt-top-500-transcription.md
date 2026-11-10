@@ -560,7 +560,12 @@ indexed.
 - First pass: `--retry-failed` is **off**; a poison track must not loop every
   session.
 - After the first full pass, run a second pass with `--retry-failed` and
-  `--max-download-failures` raised.
+  `--max-download-failures` raised — **only if the shard's packed JSON has not
+  been archived yet**. Re-packing rewrites `generated_at`, and the backup
+  worker rejects a changed object for an already-uploaded shard as an
+  append-only violation (`exit=2`). Once a shard is archived, a retry needs a
+  new packed-object namespace (or is skipped) and must be an explicit,
+  approved operation.
 - Retry only **transient** failures automatically (network, 5xx, timeout).
 - Deterministic failures (`no-abc`, `invalid-abc`) get one retry, then
   `quarantined` with the log tail.
@@ -619,7 +624,8 @@ Additional rules:
 - `_timings.csv` is **not** a commit point; the tool overwrites it per run.
   Copy it to `reports/<shard>/<timestamp>_timings.csv` and to GCS.
 - Never delete a track directory to "retry". Use `--force` on that track or
-  `--retry-failed` for the shard.
+  `--retry-failed` for the shard, **before** the shard is archived; afterwards
+  the append-only packed JSON blocks a re-pack (see Phase 3).
 - A re-run of the same command must be a no-op for completed tracks. Test this
   in the pilot: run the pilot twice; the second run should skip all 10.
 
