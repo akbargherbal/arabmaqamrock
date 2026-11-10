@@ -729,7 +729,9 @@ When `--status` reports `done=489 pending=0`:
    `input.json` `defaults`/`loras` to manifest 18.
 3. **Take audit.** List `truncated: true` / `truncated: maybe`; re-render those
    with an explicit higher cap if needed (one at a time, never `--force` in
-   bulk).
+   bulk). Mid-run duration-gate outliers are already catalogued in
+   [yt500-instrumental-quality-audit.md](yt500-instrumental-quality-audit.md)
+   (`outputs/YT500/generation/quality_audit_duration.json`).
 4. **Audio audit.** Every MP3 non-zero and > ~100 KB; optional random listen of
    10 tracks.
 5. **Publish.** Write

@@ -189,8 +189,32 @@ def fetch_metadata(gcs_runs: str, meta_root: Path,
 
 # --- done set ---------------------------------------------------------------
 
-def scan_done(meta_root: Path, corpus: dict) -> tuple[set[str], list[dict], dict]:
-    """Return (done names, per-run counts, mismatches)."""
+def load_retry_names(path: Path) -> set[str]:
+    """Read names that must be re-rendered even though a marker exists.
+
+    Used for takes whose ``_time.txt``/sidecar reached GCS but whose MP3 did
+    not (the VM died between marker upload and MP3 export). One name per line;
+    blank lines and ``#`` comments are ignored.
+    """
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return set()
+    names = set()
+    for line in text.splitlines():
+        name = line.split("#", 1)[0].strip()
+        if name:
+            names.add(name)
+    return names
+
+
+def scan_done(meta_root: Path, corpus: dict,
+              retry: set[str] | None = None) -> tuple[set[str], list[dict], dict]:
+    """Return (done names, per-run counts, mismatches).
+
+    ``retry`` names are subtracted from the done set so the next session
+    re-renders them; the old markers stay in GCS untouched.
+    """
     done: set[str] = set()
     per_run: dict[str, int] = {}
     mismatches: list[dict] = []
@@ -220,6 +244,8 @@ def scan_done(meta_root: Path, corpus: dict) -> tuple[set[str], list[dict], dict
             done.add(name)
             count += 1
         per_run[run_dir.name] = count
+    if retry:
+        done -= retry
     return done, [{"run": k, "done": v} for k, v in sorted(per_run.items())], mismatches
 
 
@@ -494,12 +520,15 @@ def acquire_lock(path: Path):
 
 
 def print_status(corpus: dict, done: set[str], per_run: list[dict],
-                 mismatches: list[dict], *, plan_only: bool = False) -> None:
+                 mismatches: list[dict], *, plan_only: bool = False,
+                 retry: set[str] | None = None) -> None:
     pending = [n for n in corpus["names"] if n not in done]
     print(f"corpus       {len(corpus['names'])}")
     print(f"gcs done     {len(done)}   ({len(per_run)} session runs)")
     print(f"pending      {len(pending)}")
     print(f"mismatches   {len(mismatches)}")
+    if retry:
+        print(f"retry        {len(retry)}   (markers treated as pending)")
     if mismatches:
         for item in mismatches[:10]:
             print(f"  {item['run']}/{item['name']}: score hash mismatch")
@@ -540,6 +569,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--model-dir", type=Path,
                     default=ROOT / "models" / "Yue2-3B-GGUF")
     ap.add_argument("--fetch-corpus", action="store_true")
+    ap.add_argument("--retry-file", type=Path, default=None,
+                    help="names to re-render even if a marker exists "
+                         "(default: <work-dir>/retry_names.txt if present)")
     ap.add_argument("--marker", type=Path, default=None,
                     help="completion marker (default: logs/yt500_gen_<utc>_done.txt)")
     args = ap.parse_args(argv)
@@ -552,15 +584,17 @@ def main(argv: list[str] | None = None) -> int:
             return rc
 
     corpus = load_corpus(args.corpus)
+    retry_file = args.retry_file or (args.work_dir / "retry_names.txt")
+    retry = load_retry_names(retry_file)
     meta_root = args.meta_dir or (args.work_dir / "meta")
     if args.meta_dir is None:
         print(f"reading metadata: {args.runs}")
         fetch_metadata(args.runs, meta_root)
-    done, per_run, mismatches = scan_done(meta_root, corpus)
+    done, per_run, mismatches = scan_done(meta_root, corpus, retry)
 
     if args.status or args.plan_only:
         print_status(corpus, done, per_run, mismatches,
-                     plan_only=args.plan_only)
+                     plan_only=args.plan_only, retry=retry)
         return 0
     if not args.run:
         ap.error("choose --status, --plan-only or --run")

@@ -90,6 +90,30 @@ class ScanDoneTest(unittest.TestCase):
             self.assertEqual(per_run, [])
             self.assertEqual(mismatches, [])
 
+    def test_retry_names_are_pending_again(self):
+        with tempfile.TemporaryDirectory() as td:
+            meta = Path(td)
+            run = meta / "20260101_yt500inst"
+            run.mkdir()
+            corpus = make_corpus(["a", "b"])
+            (run / "batch_manifest.json").write_text(json.dumps({
+                "tracks": [
+                    {"name": "a", "seed": 7, "abc_sha256": corpus["score_hashes"]["a"]},
+                    {"name": "b", "seed": 8, "abc_sha256": corpus["score_hashes"]["b"]},
+                ]}))
+            (run / "a_7_time.txt").write_text("Exit status: 0\n")
+            (run / "b_8_time.txt").write_text("Exit status: 0\n")
+            done, _, _ = driver.scan_done(meta, corpus, {"b"})
+            self.assertEqual(done, {"a"})
+
+    def test_retry_file_parsing_ignores_comments_and_blanks(self):
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "retry_names.txt"
+            path.write_text("# reason\n\na\n  b  # live\n\n")
+            self.assertEqual(driver.load_retry_names(path), {"a", "b"})
+            missing = Path(td) / "nope.txt"
+            self.assertEqual(driver.load_retry_names(missing), set())
+
 
 class SessionManifestTest(unittest.TestCase):
     def test_session_prunes_scores_and_uses_absolute_base(self):

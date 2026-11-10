@@ -138,3 +138,8 @@ reverted:
 
 - Post-bulk: length audit + outlier re-render; 2-vs-4-worker concurrency
   benchmark to see whether the idle seams are worth ~2× on the next corpus.
+- Duration-gate outliers found mid-run (27/457, 6 severe short) are documented
+  with names, seeds, caps and GCS paths in
+  [yt500-instrumental-quality-audit.md](yt500-instrumental-quality-audit.md);
+  the machine-readable list is
+  `outputs/YT500/generation/quality_audit_duration.json`.
