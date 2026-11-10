@@ -1,4 +1,4 @@
-# YT500 instrumental generation — 489 scores, resumable across Colab sessions
+# YT500 instrumental generation — 489 scores, A100 batch, resumable across Colab sessions
 
 **Status:** plan, not yet run
 **Written:** 2026-11-10
@@ -6,7 +6,8 @@
 **Reference recipe:** `manifests/fadhl_shaker_instrumental_18.json`
 **Goal:** turn every usable YT500 ABC score into an instrumental track using
 exactly the Fadl Shaker round-18 prompt, LoRA pair and scales; run without a
-time cap; survive a Colab disconnect without restoring the old run env.
+time cap on an **A100**; survive a Colab disconnect without restoring the old
+run env.
 
 ---
 
@@ -15,8 +16,15 @@ time cap; survive a Colab disconnect without restoring the old run env.
 - The transcription finished: **495 tracks, 491 with a parsed ABC**, 4 failed.
 - **489 scores are ready to generate.** Two are deferred for an inline-key
   conversion problem; the other 4 have no ABC at all (see §1).
-- **This cannot be done in one Colab session.** 489 tracks × 5–7 min of GPU is
-  **41–57 GPU-hours**. Expect 4–8 sessions. The plan never imposes a time cap.
+- **A100 target.** VRAM is not the issue; the per-process model load is. The
+  existing per-track path pays ~4 min of load per song (~34 h across 489).
+  Use `audiocpp_cli --request-sequence` to keep one session loaded and render
+  the whole pending set in one process. That is the shortest path; the
+  per-track `generate.py` path remains the fallback.
+- **One session is possible only if batch mode works well.** The A100 decode
+  rate is measured by a 4-track A/B pilot. Optimistic: 8–16 GPU-hours (1–2
+  sessions). Pessimistic: 24–33 h (2–4 sessions). The plan never imposes a time
+  cap.
 - **Resume is GCS-driven, not run-dir-driven.** The existing
   `plumbing/backup_to_gcp.py` uploads each take's `_time.txt` and sidecar.
   A small driver reads those markers from GCS, filters the 489-song master
@@ -78,23 +86,35 @@ The 3 recovered scores (key token moved to the bar start; rests precede it):
 
 ---
 
-## 2. Can it run in one session? No.
+## 2. A100: the shortest path is batch mode, not more sessions
 
-| Session length | Tracks at 5 min | Tracks at 7 min |
-|---|---:|---:|
-| 4 h | ~48 | ~34 |
-| 8 h | ~96 | ~69 |
-| 12 h | ~144 | ~103 |
+The target GPU is now an **A100 (sm80, 40 or 80 GB)**. VRAM is not the
+constraint; the dominant cost is the **per-process model load**. The project's
+own notes measure that fixed cost on a T4 at ~4 min per `audiocpp_cli` process
+(AR init ~68 s, NAR LoRA merge ~117 s, NAR init ~64 s). An A100 loads faster,
+but the shape of the problem does not change: `generate.py` starts one process
+per track (`run_one.sh`), so the load is paid 489 times.
 
-489 tracks therefore need **4–8 sessions**, plus model-load and preflight
-overhead. The design deliberately has **no `--max-minutes`, no `--limit` and no
-session timer**. It runs all pending songs until the VM dies or the user stops
-it. On the next VM the same command continues.
+The binary supports `--request-sequence`, which keeps the session loaded and
+renders a list of requests in one process. The A100 plan therefore has two paths:
 
-The per-track estimate comes from the project's own measurement
-(`docs/plans/model-and-tool-selection.md`: 5–7 minutes of GPU per render). The
-pilot in §7 measures it again on the actual L4/Colab GPU before committing
-40+ hours.
+| Path | Fixed cost | 489 tracks |
+|---|---|---|
+| Per-track `generate.py` (fallback) | one model load per track (T4 ≈ 4 min; A100 lower) | load paid 489×; on T4 alone ≈ **34 h** |
+| **Batch `--request-sequence` (preferred)** | one model load per process/chunk | load paid ~1–10×; total dominated by decode |
+
+The A100 decode rate is not yet measured. If it is 1–2 min/track in batch mode,
+the whole corpus is **8–16 GPU-hours**, i.e. **1–2 A100 sessions**. If it is
+3–4 min/track, expect **24–33 h**, i.e. **2–4 sessions**. The pilot in §8
+measures this before the bulk run; do not trust the estimate until then.
+
+Either way the design has **no `--max-minutes`, no `--limit` and no session
+timer**. It runs all pending songs until the VM dies or the user stops it.
+
+> The batch path is conditional: the A100 prebuilt must expose
+> `--request-sequence`, and a 4-track A/B test must produce equivalent audio.
+> If either check fails, use the per-track `generate.py` path. The resume and
+> backup contracts are the same for both.
 
 ---
 
@@ -116,9 +136,13 @@ GENERATION/YT500_INSTRUMENTAL/                  (derived, frozen)
         v
 Colab: scores/yt500_instrumental/ + manifests/yt500_instrumental_489.json
         |
-        |  pending driver: read GCS done markers -> write session manifest
+        |  pending driver: read GCS done markers -> write session requests
         v
-generate.py  ->  out/<UTC>_yt500inst/  ->  WAV + MP3 + sidecars + _time.txt
+A100 fast path:  audiocpp_cli --request-sequence  (one loaded session)
+   or fallback:  generate.py -> run_one.sh         (one process per track)
+        |
+        v
+out/<UTC>_yt500inst/  ->  WAV + per-take _time.txt + sidecar + MP3
         |
         |  plumbing/backup_to_gcp.py (concurrent daemon, MP3 policy)
         v
@@ -133,8 +157,99 @@ Two processes per session, exactly like the transcription run:
 
 | Process | Role |
 |---|---|
-| `plumbing/run_yt500_generation.py` | GCS-aware driver: computes pending, writes the session manifest, runs `generate.py`. |
+| `plumbing/run_yt500_generation.py` | GCS-aware driver: computes pending, writes the session manifest or request list, runs the A100 batch or the per-track fallback. |
 | `plumbing/backup_to_gcp.py` | Uploads finished takes and metadata every few minutes. Never transcodes, never deletes remote. |
+
+### 3.1 A100 fast path — batch the requests
+
+The repo's happy-accident notes record the fixed cost of one `audiocpp_cli`
+process on a T4: **AR init ~68 s, NAR LoRA merge ~117 s, NAR init ~64 s**
+(~4.1 min). `run_one.sh` starts a new process for every track, so on a T4 the
+per-track path spends roughly **34 hours on model loading alone** across 489
+tracks; an A100 loads faster but still pays it once per track.
+`--request-sequence` keeps the loaded session and renders a list of requests,
+paying that cost once per batch.
+
+Preflight on the A100:
+
+```bash
+nvidia-smi -L
+nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader
+./plumbing/fetch_binary.sh --dry-run    # expect the sm80-a100 tag
+./bin/audiocpp_cli --help | grep -E -- '--request-sequence|--task'
+```
+
+The prebuilt for `sm80-a100` is already published under
+`gs://akbar-december-2024-backup/arabmaqamrock/binaries/sm80-a100/`.
+`setup_colab.sh` stages it automatically.
+
+A request record is:
+
+```json
+{
+  "id": "yt500-0001-fbK2ySlxAW4_391847",
+  "lyrics": "[intro]\n[verse]\n[chorus]\n[outro]",
+  "seed": 391847,
+  "options": {
+    "style": "<the exact manifest-18 style string>",
+    "cot": "full",
+    "semantic_max_tokens": 8450,
+    "abc_file": "/content/arabmaqamrock/scores/yt500_instrumental/yt500-0001-fbK2ySlxAW4.abc"
+  }
+}
+```
+
+The session options are the same for every request and match `run_one.sh`:
+model + VAE GGUF, the instrumental AR LoRA, the NAR v9 LoRA, their scales
+(0.85 / 1.0), and `yue2.attention=flash`.
+
+```bash
+./bin/audiocpp_cli --task gen --family yue2 --model models/Yue2-3B-GGUF \
+  --backend cuda --threads 8 \
+  --session-option yue2.model_gguf=yue2-3b-bf16.gguf \
+  --session-option yue2.vae_gguf=yue2-vae-f16.gguf \
+  --session-option yue2.ar_lora=/content/arabmaqamrock/loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors \
+  --session-option yue2.ar_lora_scale=0.85 \
+  --session-option yue2.nar_lora=/content/arabmaqamrock/loras/nar/nar_lora_joint_v9.bf16.safetensors \
+  --session-option yue2.nar_lora_scale=1.0 \
+  --session-option yue2.attention=flash \
+  --request-sequence work/yt500_gen/session_<utc>/requests.json \
+  --out-dir out/<utc>_yt500inst --log
+```
+
+The binary writes `<out-dir>/<id>.wav` (and per-request artifacts in
+`<out-dir>/<id>/`). The batch wrapper then writes the same per-take files that
+`run_one.sh` would have written — `_time.txt` with `Exit status: 0`, a `.json`
+sidecar with `status: ok`, `wav_sha256`, seed, score hash and wall time — so the
+existing MP3 export, backup and resume scanner work unchanged. The wrapper must
+watch the output directory and write each marker **as the WAV appears and its
+size settles**, not only when the process exits; otherwise a killed batch would
+lose every completed request in the chunk.
+
+Implementation note: add a small `--requests-out PATH` mode to `generate.py`
+that runs the existing manifest/score/cap/lyrics resolution, writes
+`batch_manifest.json`, dumps one request per track, and exits without a GPU.
+The batch driver consumes that file. This keeps a single source of truth for
+caps, tag plans, seeds and score hashes; do not re-implement the resolver in the
+driver.
+
+**A/B gate before trusting the batch path:**
+
+1. Pick 4 tracks with fixed seeds.
+2. Render them with the normal per-track `run_one.sh` into `out/ab_single/`.
+3. Render the same 4 requests with `--request-sequence` into `out/ab_batch/`.
+4. Compare durations and non-silence; with the same seed and options the audio
+   should match. If it does not, or if `style`/`cot`/`abc_file` are silently
+   ignored, stop and use the per-track path.
+5. Measure wall time. Require batch ≤ 60% of the per-track wall (≥1.7× faster).
+6. Run a 12–20-track batch once and watch VRAM and per-request failures. If the
+   process grows or one failure kills the batch, chunk the request list (for
+   example 20–50 tracks per process); the load cost is still paid per chunk,
+   not per track.
+
+The resume contract is identical: a completed `<id>.wav` plus its `_time.txt`
+and sidecar is a done take; a missing marker is pending. On a fresh VM the
+driver rebuilds the request list from the GCS done-set and starts a new batch.
 
 ---
 
@@ -244,8 +359,8 @@ grep -c 'length not parsed' /tmp/yt500_dryrun.txt  # expect 0
 
 The dry run needs no GPU. It must show 489 tracks, no score-tag errors, no
 missing caps, and the same `cot`/LoRA aliases/scales on every row. It prints a
-projected T4 time of ~53 h (`389.6 s/track`); the L4 pilot replaces that with a
-measured number.
+projected T4 time of ~53 h (`389.6 s/track`); the A100 pilot replaces that with
+a measured number.
 
 ---
 
@@ -315,16 +430,25 @@ git pull --ff-only
 Preflight:
 
 ```bash
-nvidia-smi --query-gpu=name,memory.total --format=csv,noheader
+nvidia-smi -L
+nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader
+./plumbing/fetch_binary.sh --dry-run    # expect the sm80-a100 tag
+./bin/audiocpp_cli --help | grep -E -- '--request-sequence|--task'
 command -v gsutil && echo "gsutil OK"
 python3 plumbing/backup_to_gcp.py --once --dry-run | tail -20
 df -h /content
 ```
 
+- `compute_cap` must be `8.0` on an A100. If the prebuilt tag is not
+  `sm80-a100`, stop and check `plumbing/fetch_binary.sh` before generating.
+- `--request-sequence` must appear in the binary help. If it does not, use the
+  per-track `generate.py` fallback.
 - `gsutil` must exist; the backup daemon uses `gsutil rsync`. If only `gcloud`
   is present, install `gsutil` before generating.
-- At least ~30 GB free on `/content` for a 100-track session (WAVs are ~50 MB
-  each and stay local until the session ends).
+- At least ~50 GB free on `/content` for a long session (WAVs are ~50 MB each
+  and stay local until the session ends); ~30 GB is enough for ~100 tracks.
+  Run `backup_to_gcp.py --once`, then remove an already-backed-up old
+  `out/<run>` if space is tight.
 - If the daemon is not running, start it:
 
 ```bash
@@ -350,77 +474,110 @@ Expected: 489 scores, hashes OK, 4 + 2 exclusions listed.
 
 ## 8. Phase 4 — pilot and resume round-trip (do this before the full run)
 
-### 8.1 Pilot set
+### 8.1 A/B test — batch vs per-track (4 tracks)
 
-Generate **8 tracks** (~45–60 min) chosen to cover the edge cases:
-
-- one ordinary track;
-- one long score (near 418 s);
-- one short score (near 143 s);
-- one `octave_suspect` flagged track;
-- one of the 3 key-normalized tracks (`yt500-0071-UO5jte9NP-U`);
-- one score with many section changes;
-- one score containing `% interlude` (mapped to `bridge`);
-- one member of a duplicate-title group.
-
-Use the driver's `--max-songs 8` for this only. This is a **test** limit, not a
-time limit; the full run has no such cap.
+The batch path is only worth using if it is both correct and materially faster.
+Write a 4-song pilot manifest with **explicit seeds**, then render it twice:
 
 ```bash
-setsid nohup python3 plumbing/run_yt500_generation.py --run --max-songs 8 \
-  > logs/yt500_pilot.out 2>&1 < /dev/null &
+# A: per-track baseline (one process per song)
+python3 generate.py work/yt500_gen/pilot4.json \
+  --out-dir out/ab_single --label ab_single
+
+# B: one loaded session, same 4 requests
+python3 plumbing/run_yt500_generation.py --run --batch \
+  --manifest work/yt500_gen/pilot4.json --out-dir out/ab_batch --max-songs 4
+```
+
+The 4 tracks cover a normal score, a long score, an `octave_suspect` flagged
+score, and one key-normalized score (`yt500-0071-UO5jte9NP-U`).
+
+Gate:
+
+- same seed and options produce equivalent audio (durations match; if the
+  pipeline is deterministic, the WAVs match). If `style`, `cot`, `abc_file` or
+  the LoRA are silently ignored, stop.
+- batch wall time ≤ 60% of the per-track wall time (≥1.7× faster). Record the
+  measured min/track for each path.
+
+If the A/B fails, use the per-track `generate.py` path for the rest of this plan.
+
+### 8.2 Batch stability pilot (12 tracks)
+
+Add 8 more edge cases to the 4 above: a short score, a long score, a score with
+many section changes, a score containing `% interlude` (mapped to `bridge`), a
+member of a duplicate-title group, and 3 ordinary tracks. Run them in one
+`--request-sequence` process:
+
+```bash
+setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
+  --max-songs 12 > logs/yt500_pilot.out 2>&1 < /dev/null &
 disown || true
 ```
 
 One liveness check, then end the turn. The wrapper writes
-`logs/yt500_pilot_done.txt`.
+`logs/yt500_pilot_done.txt` and a per-run `requests.json` plus `batch_manifest.json`.
 
-### 8.2 Gate
+Watch:
+
+- VRAM over the whole batch (`nvidia-smi` / the per-run `_gpu.csv` if written);
+- per-request completion: every request has a WAV + `_time.txt` + sidecar;
+- one failed request does not kill the batch; if it does, chunk the request list
+  into 20–50-track processes for the full run.
+
+### 8.3 Gate
 
 | Check | Pass condition |
 |---|---|
-| Generation | 8/8 sidecars `status: ok`, `exit: 0` |
-| Audio | 8 non-empty WAVs; MP3s exported |
+| Generation | 12/12 sidecars `status: ok`, `exit: 0` |
+| Audio | 12 non-empty WAVs; MP3s exported |
 | Length | duration within ±15% of the score nominal, no `truncated: true` |
 | Vocals | listening check: no sung vocal, no vocal chops |
 | Arrangement | oud/strings/darbuka audible; sections follow the score |
-| Backup | 8 MP3s + `_time.txt` + sidecars visible under the GCS run dir |
+| Backup | 12 MP3s + `_time.txt` + sidecars visible under the GCS run dir |
 | Score copy | each run dir has `scores/<name>.abc` matching the corpus hash |
 | Model | `batch_manifest.json` has one unique `style_sha256`, `lora_ar_sha256`, `lora_nar_sha256`, `cot=full` |
-| Speed | measured min/track updates the session estimate |
+| Speed | measured A100 batch min/track updates the session estimate |
 
 If the pilot sings, the score conversion is the first suspect: inspect
 `reports/<name>.json` for `vocal_notes_after > 0`. If the arrangement is wrong,
 stop before the bulk run.
 
-### 8.3 Resume round-trip test
+### 8.4 Resume round-trip test
 
 This is the important test:
 
 ```bash
-# flush the backup for the 8 pilot takes
+# flush the backup for the 12 pilot takes
 python3 plumbing/backup_to_gcp.py --once
 
 # simulate a fresh VM: remove the local run, keep GCS
 mv out/<pilot-run> /tmp/<pilot-run>.local
 
-# the driver must now see 8 done from GCS and 481 pending
+# the driver must now see 12 done from GCS and 477 pending
 python3 plumbing/run_yt500_generation.py --status
 python3 plumbing/run_yt500_generation.py --plan-only | tail -20
 ```
 
-Expected: `done=8 pending=481`, and a new session manifest that does **not**
-contain the 8 pilot names. Do not launch the full run until this passes.
+Expected: `done=12 pending=477`, and a new session request list that does **not**
+contain the 12 pilot names. Do not launch the full run until this passes.
 
 ---
 
 ## 9. Phase 5 — the uncapped full run
 
+Use `--batch` once the A/B gate passes; omit it if the batch path failed.
+
 ```bash
-setsid nohup python3 plumbing/run_yt500_generation.py --run \
+setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
+  --batch-chunk 50 \
   > logs/yt500_gen_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
 disown || true
 ```
+
+`--batch-chunk 50` bounds the loss if one request kills the process; each chunk
+still pays the load cost once, so 489 tracks cost about 10 loads, not 489. Use
+`--batch-chunk 0` for a single process if the 12-track stability pilot is clean.
 
 The wrapper writes a completion marker
 `logs/yt500_gen_<utc>_done.txt` and a summary of done/pending.
@@ -428,7 +585,7 @@ The wrapper writes a completion marker
 One immediate liveness check:
 
 ```bash
-pgrep -af "run_yt500_generation.py|generate.py|audiocpp_cli" | head
+pgrep -af "run_yt500_generation.py|audiocpp_cli|generate.py" | head
 tail -30 logs/yt500_gen_*.out
 gsutil ls gs://akbar-december-2024-backup/arabmaqamrock/runs/ | tail
 ```
@@ -436,8 +593,8 @@ gsutil ls gs://akbar-december-2024-backup/arabmaqamrock/runs/ | tail
 Then end the turn. There is no `sleep`, no poll loop and no time cap. The user
 returns when the marker exists or when they decide to stop.
 
-If the VM dies mid-song, only that song is lost. The per-track `_time.txt`,
-sidecar and MP3 of every completed song are uploaded by the daemon.
+If the VM dies mid-chunk, only the in-flight request is lost. The per-take
+`_time.txt`, sidecar and MP3 of every completed song are uploaded by the daemon.
 
 ---
 
@@ -457,8 +614,9 @@ python3 plumbing/yt500_generation_corpus.py --verify
 # 3. see where we are
 python3 plumbing/run_yt500_generation.py --status
 
-# 4. continue, detached, uncapped
-setsid nohup python3 plumbing/run_yt500_generation.py --run \
+# 4. continue, detached, uncapped (batch fast path)
+setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
+  --batch-chunk 50 \
   > logs/yt500_gen_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
 disown || true
 ```
@@ -557,7 +715,7 @@ When `--status` reports `done=489 pending=0`:
 | Backup lag / no marker for a finished song | one extra regeneration; acceptable |
 | Two VMs running | stop one. There is no cross-VM lock; the done-set is only as fresh as the last backup pass |
 | Disk under ~30 GB | stop, run `backup_to_gcp.py --once`, remove local `out/<old-run>` (already backed up), resume |
-| OOM / driver crash | check `nvidia-smi`; lower nothing in the recipe; resume. The 3B GGUF fits the reference L4 |
+| OOM / driver crash | check `nvidia-smi`; lower nothing in the recipe; resume. The 3B GGUF fits an A100 comfortably |
 | A take sings | inspect the converter report; the score was not fully instrumentalized. Do not retry with `--force` blindly |
 | Truncated take | re-render that song with an explicit `cap` from its nominal length + 60 s |
 | `gsutil` missing | the daemon cannot run; install `gsutil` (Colab usually has it) |
@@ -574,13 +732,20 @@ New files:
 | File | Purpose |
 |---|---|
 | `plumbing/yt500_generation_corpus.py` | build / fetch / verify the 489-score corpus and manifest |
-| `plumbing/run_yt500_generation.py` | GCS done-set scanner, pending manifest writer, detached session driver, `--status`/`--plan-only`/`--max-songs` |
+| `plumbing/run_yt500_generation.py` | GCS done-set scanner, pending manifest/request writer, detached session driver; `--status`/`--plan-only`/`--max-songs`, and `--batch`/`--batch-chunk` for the A100 fast path |
 | `docs/plans/yt500-instrumental-generation.md` | this plan |
 | `manifests/yt500_instrumental_489.json` | generated; committed |
 | `outputs/YT500/generation/index.json` + `exclusions.json` | generated audit; committed if small |
 
-No change is needed to `generate.py`, `run_one.sh`, `instrumentalize_scores.py`
-or `backup_to_gcp.py`.
+No change is needed to `run_one.sh`, `instrumentalize_scores.py` or
+`backup_to_gcp.py`. The batch path needs two small code additions:
+
+1. `generate.py --requests-out PATH`: run the existing resolution and manifest
+   write, dump the request list, exit without a GPU. This is the only change to
+   an existing script, and it does not alter the normal generation path.
+2. `plumbing/run_yt500_generation.py --batch`: consume the request list, invoke
+   `audiocpp_cli --request-sequence`, and write the per-take `_time.txt` and
+   sidecar that `run_one.sh` would have written.
 
 `.gitignore` additions:
 
@@ -594,10 +759,15 @@ Tests (pure Python, no GPU):
 
 - corpus builder: 489 ready, 4 `no-abc`, 2 inline-key, 3 key-normalized, unique names,
   reference defaults equal to manifest 18;
-- every ready score has a section tag and either a parsed duration or a cap;
+- every ready score has a section tag and a parsed duration;
 - done-set parser: a synthetic run with 2 ok and 1 failed marker → 2 done;
 - score-hash mismatch → not done;
-- `--plan-only` excludes done names and never emits `--force`.
+- `--plan-only` excludes done names and never emits `--force`;
+- batch request writer: one request per pending take, stable `<name>_<seed>` ids,
+  `style`/`cot`/`semantic_max_tokens`/`abc_file` present, LoRAs only as session
+  options;
+- batch marker writer: a completed WAV produces `_time.txt` + sidecar, and the
+  done-set parser counts it.
 
 Run:
 
@@ -611,15 +781,21 @@ python3 generate.py manifests/yt500_instrumental_489.json --dry-run
 
 ## 14. Open decisions
 
-1. **MP3 or WAV masters?** The plan uses the repo's default MP3 trial policy
+1. **Batch or per-track?** Use `--batch` only if the 4-track A/B passes
+   (equivalent audio, ≥1.7× faster). Otherwise the per-track fallback is the
+   safe default and the plan still resumes correctly.
+2. **Batch chunk size.** Start with 50 requests per process; use 0 (one process)
+   only if the 12-track stability pilot is clean. Smaller chunks cost more model
+   loads but lose less on a crash.
+3. **MP3 or WAV masters?** The plan uses the repo's default MP3 trial policy
    (~2.5 GB for 489 tracks). WAV masters are ~25 GB and can be marked later.
-2. **The 2 deferred scores.** Leave them out for now, or schedule a manual
+4. **The 2 deferred scores.** Leave them out for now, or schedule a manual
    re-spelling pass. They are 0.4% of the corpus.
-3. **Pilot size.** 8 tracks is recommended; 24 is also reasonable but costs
-   ~2.5 h before the bulk run.
-4. **Listening sample.** How many tracks to audition before accepting the
+5. **Pilot size.** 4 A/B + 12 stability tracks is recommended; 24 is also
+   reasonable but costs more before the bulk run.
+6. **Listening sample.** How many tracks to audition before accepting the
    corpus; 10 stratified by duration/flags is the default.
-5. **Where the operator runs the one-time corpus build.** Any machine with
+7. **Where the operator runs the one-time corpus build.** Any machine with
    Python + `gcloud` works; it needs no GPU and uploads the bundle to GCS.
 
 ---
@@ -636,8 +812,9 @@ cd /content/arabmaqamrock && git pull --ff-only
 python3 plumbing/yt500_generation_corpus.py --fetch
 python3 plumbing/run_yt500_generation.py --status
 
-# continue, uncapped, detached
-setsid nohup python3 plumbing/run_yt500_generation.py --run \
+# continue, uncapped, detached (batch fast path)
+setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
+  --batch-chunk 50 \
   > logs/yt500_gen_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
 disown || true
 
