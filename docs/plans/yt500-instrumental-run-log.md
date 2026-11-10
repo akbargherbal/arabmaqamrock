@@ -13,7 +13,7 @@ GCS run tree is the source of truth; nothing local must survive.
 | Bulk | `supervise_yt500_generation.py --mode batch --batch-chunk 50` |
 | Completion | `logs/yt500_supervisor_done.txt` = `exit=0 pending=0`; `work/yt500_gen/supervisor_status.json` |
 | Started at HEAD | `2e48cdb`; A100-SXM4-80GB, CC 8.0; binary sha `78f478…d023` (`sm80-a100`) |
-| Pilot | 12/12 `ok`, no crash, durations −7.9%…+15.1% vs score; resume round-trip `done=12 pending=477` |
+| Pilot | 12/12 `ok`, no crash, durations −7.9%…+15.1% vs score; resume `done=12 pending=477`; batch **1.63×** normalized (3.46 vs 2.12 audio-s per wall-s) |
 
 ## Insights worth keeping
 
@@ -37,7 +37,14 @@ GCS run tree is the source of truth; nothing local must survive.
    during takes, mean 49% because of idle seams; peak VRAM 10.6 GB of 82 GB.
    More throughput needs overlapping sessions in the seams, not a bigger model.
    Concurrency is deferred: the driver is serial (`run.lock`, no shard flag).
-6. **A/B listening PASS** (user, 2026-11-10). Listening set kept at
+6. **Resume bug found and fixed here.** `gcloud storage ls <glob>` returns
+   *objects*, not run folders. The driver fed those to `sync_meta`, so every
+   run's files landed in one flat metadata dir and `scan_done` saw no
+   `batch_manifest.json` — a fully uploaded run reported **done=0**. Fixed in
+   `list_remote_runs()` (collapse each object to its run prefix) with a
+   regression test. If a fresh VM reports `0 session runs` despite GCS having
+   runs, check that this fix is in `plumbing/run_yt500_generation.py`.
+7. **A/B listening PASS** (user, 2026-11-10). Listening set kept at
    `gs://akbar-december-2024-backup/arabmaqamrock/listen/ab_20261110/`
    with `COMPARE.txt` proving batch == per-track.
 

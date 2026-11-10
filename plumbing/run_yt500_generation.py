@@ -140,22 +140,38 @@ def sync_meta(remote: str, local: Path) -> None:
 
 
 def list_remote_runs(gcs_runs: str) -> list[str]:
-    pattern = gcs_runs.rstrip("/") + "/*_yt500inst*/"
+    """Return the run directories (bucket prefixes), not their objects.
+
+    ``gcloud storage ls`` expands the glob to *objects*, not folders, so a
+    returned line looks like ``.../runs/<run>/batch_manifest.json``. Feeding
+    that to ``sync_meta`` would rsync each object into its own folder under
+    the metadata root and ``scan_done`` would then find no per-run
+    ``batch_manifest.json`` (resume would see 0 done). Collapse every line to
+    its first path component after the runs root and dedupe.
+    """
+    base = gcs_runs.rstrip("/")
+    pattern = base + "/*_yt500inst*/"
     if shutil.which("gcloud"):
         cmd = ["gcloud", "storage", "ls", pattern]
     elif shutil.which("gsutil"):
         cmd = ["gsutil", "ls", "-d", pattern]
     else:
-        raise SystemExit("need gsutil or gcloud to list the GCS run tree")
+        raise SystemExit("need gsutil or gcloud to read the GCS run tree")
     proc = subprocess.run(cmd, capture_output=True, text=True)
     if proc.returncode != 0:
         return []
-    out = []
+    out = set()
     for line in proc.stdout.splitlines():
         line = line.strip()
-        if line.startswith("gs://"):
-            out.append(line.rstrip("/"))
-    return sorted(set(out))
+        if not line.startswith(base + "/"):
+            continue
+        rest = line[len(base) + 1:].lstrip("/")
+        if not rest:
+            continue
+        name = rest.split("/", 1)[0]
+        if name.endswith("_yt500inst") or "_yt500inst-" in name:
+            out.add(f"{base}/{name}")
+    return sorted(out)
 
 
 def fetch_metadata(gcs_runs: str, meta_root: Path,

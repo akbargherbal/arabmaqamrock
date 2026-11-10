@@ -223,3 +223,40 @@ class PrepareOnlyTest(unittest.TestCase):
             self.assertEqual(len(sessions), 1)
             payload = json.loads(sessions[0].read_text())
             self.assertEqual([s["seed"] for s in payload["songs"]], [100, 101])
+
+
+class ListRemoteRunsTest(unittest.TestCase):
+    """`gcloud storage ls <glob>` returns objects; they must collapse to runs.
+
+    Regression: feeding an object URI to sync_meta rsynced each file into its
+    own folder, so scan_done found no per-run batch_manifest.json and a fresh
+    VM reported done=0 for a fully uploaded run.
+    """
+
+    def test_objects_collapse_to_run_prefixes(self):
+        stdout = "\n".join([
+            "gs://b/runs/20261110-083615_yt500inst/batch_manifest.json",
+            "gs://b/runs/20261110-083615_yt500inst/yt500-x_1_time.txt",
+            "gs://b/runs/20261110-090000_yt500inst-2/batch_manifest.json",
+            "gs://b/runs/other_label/batch_manifest.json",
+        ]) + "\n"
+
+        class Proc:
+            returncode = 0
+
+        old_run = driver.subprocess.run
+        old_which = driver.shutil.which
+        driver.shutil.which = lambda name: "/usr/bin/" + name
+        driver.subprocess.run = lambda *a, **k: Proc()
+        try:
+            driver.subprocess.run = lambda *a, **k: Proc()
+            Proc.stdout = stdout
+            runs = driver.list_remote_runs("gs://b/runs")
+        finally:
+            driver.subprocess.run = old_run
+            driver.shutil.which = old_which
+
+        self.assertEqual(runs, [
+            "gs://b/runs/20261110-083615_yt500inst",
+            "gs://b/runs/20261110-090000_yt500inst-2",
+        ])
