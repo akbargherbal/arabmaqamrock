@@ -70,6 +70,12 @@ the sounding key of the following section, so it is **not** an automatic fix.
 Leave them out of the first pass; treat a manual re-spelling as a later,
 separate job.
 
+The 3 recovered scores (key token moved to the bar start; rests precede it):
+
+- `yt500-0071-UO5jte9NP-U`
+- `yt500-0378-iMZ1skkbUWI`
+- `yt500-0439-lt_pQqHYZSY`
+
 ---
 
 ## 2. Can it run in one session? No.
