@@ -530,10 +530,10 @@ If the A/B fails, use the per-track `generate.py` path for the rest of this plan
 
 ### 8.2 Batch stability pilot (12 tracks)
 
-Add 8 more edge cases to the 4 above: a short score, a long score, a score with
-many section changes, a score containing `% interlude` (mapped to `bridge`), a
-member of a duplicate-title group, and 3 ordinary tracks. Run them in one
-`--request-sequence` process:
+Run a 12-track batch for process stability. The exact set is less important
+than exercising one loaded session across several requests; use the first 12
+pending tracks, or a `pilot12.json` that includes the 4 A/B tracks plus 8
+ordinary/edge-case scores.
 
 ```bash
 setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
@@ -541,8 +541,9 @@ setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
 disown || true
 ```
 
-One liveness check, then end the turn. The wrapper writes
-`logs/yt500_pilot_done.txt` and a per-run `requests.json` plus `batch_manifest.json`.
+One immediate liveness check, then end the turn. The driver writes
+`logs/yt500_gen_<timestamp>_done.txt` and the per-run `requests.json`,
+`batch_manifest.json` and `batch_run_summary.json`.
 
 Watch:
 
