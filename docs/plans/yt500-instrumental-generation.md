@@ -112,10 +112,13 @@ measures this before the bulk run; do not trust the estimate until then.
 Either way the design has **no `--max-minutes`, no `--limit` and no session
 timer**. It runs all pending songs until the VM dies or the user stops it.
 
-> The batch path is conditional: the A100 prebuilt must expose
-> `--request-sequence`, and a 4-track A/B test must produce equivalent audio.
-> If either check fails, use the per-track `generate.py` path. The resume and
-> backup contracts are the same for both.
+> The batch path is conditional on the 4-track A/B producing equivalent audio.
+> The published `sm80-a100` binary **does** advertise
+> `--request-sequence <json>` (verified from the binary strings: it accepts a
+> JSON array or a `{"requests": [...]}` object, and supports `abc_file`,
+> `semantic_max_tokens`, `style`, `cot` and `seed`). The A/B still has to
+> confirm the semantics on the actual GPU. The resume and backup contracts are
+> the same for both paths.
 
 ---
 
@@ -177,7 +180,7 @@ Preflight on the A100:
 nvidia-smi -L
 nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader
 ./plumbing/fetch_binary.sh --dry-run    # expect the sm80-a100 tag
-./bin/audiocpp_cli --help | grep -E -- '--request-sequence|--task'
+bash -c '. ./cuda_loader_path.sh && ./bin/audiocpp_cli --help' 2>&1 | grep -E -- '--request-sequence|--task'
 ```
 
 The prebuilt for `sm80-a100` is already published under
@@ -434,7 +437,7 @@ Preflight:
 nvidia-smi -L
 nvidia-smi --query-gpu=name,compute_cap,memory.total --format=csv,noheader
 ./plumbing/fetch_binary.sh --dry-run    # expect the sm80-a100 tag
-./bin/audiocpp_cli --help | grep -E -- '--request-sequence|--task'
+bash -c '. ./cuda_loader_path.sh && ./bin/audiocpp_cli --help' 2>&1 | grep -E -- '--request-sequence|--task'
 command -v gsutil && echo "gsutil OK"
 python3 plumbing/backup_to_gcp.py --once --dry-run | tail -20
 df -h /content
@@ -821,8 +824,10 @@ Done on CPU and pushed:
 - Offline gates: `--fetch` + `--verify` = 489/489; `generate.py --dry-run` =
   489 songs, 0 unparsed, 489 `cot=full`; full test suite 137 passed.
 
-Still A100-only: `--request-sequence` presence, the 4-track A/B, the 12-track
-stability pilot, and the measured decode rate.
+Still A100-only: the 4-track A/B, the 12-track stability pilot, and the measured
+decode rate. The published `sm80-a100` binary's `--request-sequence` support is
+already verified from its strings (`--request-sequence <json>`, `abc_file`,
+`semantic_max_tokens`; input accepts an array or `{"requests": [...]}`).
 
 ---
 
