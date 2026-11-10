@@ -13,6 +13,7 @@ GCS run tree is the source of truth; nothing local must survive.
 | Bulk | `supervise_yt500_generation.py --mode batch --batch-chunk 50` |
 | Completion | `logs/yt500_supervisor_done.txt` = `exit=0 pending=0`; `work/yt500_gen/supervisor_status.json` |
 | Started at HEAD | `2e48cdb`; A100-SXM4-80GB, CC 8.0; binary sha `78f478…d023` (`sm80-a100`) |
+| Pilot | 12/12 `ok`, no crash, durations −7.9%…+15.1% vs score; resume round-trip `done=12 pending=477` |
 
 ## Insights worth keeping
 
@@ -25,8 +26,9 @@ GCS run tree is the source of truth; nothing local must survive.
    At 489 songs: ~9.5–10 h batch vs ~15.5 h per-track.
 3. **Length varies with seed; `truncated` does not catch it.** The same 416 s
    score rendered **276 s at seed 1003** and **478 s at seed 1992596191**.
-   Early EOS is silent. Post-run action: audit `wav_duration_s` vs score and
-   re-render outliers with an explicit cap/seed.
+   Early EOS is silent. The 12-track pilot was clean (all within −8%…+15%), so
+   this is occasional, not systematic. Post-run action: audit `wav_duration_s`
+   vs score and re-render outliers with an explicit cap/seed.
 4. **Seeds are random and frozen.** `secrets.randbelow(2**32)`, one take/song,
    written into `batch_manifest.json` and filenames before generation.
    Done-detection is score-hash + `Exit status: 0`, seed-agnostic: finished
