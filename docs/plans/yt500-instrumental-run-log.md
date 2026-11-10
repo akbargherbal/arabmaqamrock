@@ -10,11 +10,28 @@ GCS run tree is the source of truth; nothing local must survive.
 |---|---|
 | Corpus | 489 ready (4 `no-abc` + 2 `inline-key` excluded); 158 songs >300 s, 40 >350 s, 6 >400 s |
 | Mode | **batch**, `--batch-chunk 50` (deviation from the 1.7× gate — approved) |
-| Bulk | launched 2026-11-10T08:58:38Z, supervisor PID 124626: `supervise_yt500_generation.py --mode batch --batch-chunk 50` |
-| Completion | `logs/yt500_supervisor_done.txt` = `exit=0 pending=0`; `work/yt500_gen/supervisor_status.json` |
+| Bulk | launched 2026-11-10T08:58:38Z, supervisor PID 124626: `supervise_yt500_generation.py --mode batch --batch-chunk 50`; **interrupted at 09:37:15Z (SIGTERM, exit 143)** |
+| Last GCS state | **22 done / 467 pending**, 3 `*_yt500inst` session runs (12 pilot + 10 bulk) |
+| Completion | **not reached**; no `logs/yt500_supervisor_done.txt` was written |
 | Backup | daemon every **2 min** (user request; PID 129551), plus `--once` after every chunk session; audio uploaded as MP3 192k |
 | Started at HEAD | `2e48cdb`; A100-SXM4-80GB, CC 8.0, UUID `GPU-d4da84f7-5872-e2ec-3273-257b7d7cdb43`; binary sha `78f478…d023` (`sm80-a100`) |
 | Pilot | 12/12 `ok`, no crash, durations −7.9%…+15.1% vs score; resume `done=12 pending=477`; batch **1.63×** normalized (3.46 vs 2.12 audio-s per wall-s) |
+
+## What stopped it (2026-11-10)
+
+- The **pilot's first resume check failed** with `done=0` because `gcloud storage ls`
+  returns objects, not run folders; every run's metadata was flattened and
+  `scan_done` saw no `batch_manifest.json`. Fixed in `ee21fb9` with a regression
+  test. After the fix, the 12 pilot tracks count normally.
+- The serial bulk launched at 08:58, reached 20 done, and was paused for a
+  user-authorized 8-way concurrency trial. The trial was negative (0/64 takes in
+  ~8 min; batch-1 decode is latency-bound), so it was stopped and reverted.
+- The serial supervisor was relaunched at 09:36:41; at **09:37:15 it received
+  SIGTERM (exit 143)** — consistent with the Colab VM being shut down, not a
+  generation error. The last backup pass saw `out/` missing, but GCS already
+  held the 22 completed takes.
+- `exit=143` is not a task failure: relaunch the supervisor and it resumes from
+  GCS. Use `--status --work-dir /tmp/yt500_status` while a supervisor is alive.
 
 ## Insights worth keeping
 
@@ -64,7 +81,7 @@ GCS run tree is the source of truth; nothing local must survive.
 cd /content/arabmaqamrock && git pull --ff-only
 ./setup_colab.sh
 python3 plumbing/yt500_generation_corpus.py --fetch
-python3 plumbing/run_yt500_generation.py --status      # done/pending from GCS
+python3 plumbing/run_yt500_generation.py --status --work-dir /tmp/yt500_status   # done/pending from GCS
 setsid nohup python3 plumbing/supervise_yt500_generation.py \
   --mode batch --batch-chunk 50 \
   > logs/yt500_supervisor.out 2>&1 < /dev/null &

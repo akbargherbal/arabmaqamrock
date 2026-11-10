@@ -587,8 +587,8 @@ python3 plumbing/backup_to_gcp.py --once
 mv out/<pilot-run> /tmp/<pilot-run>.local
 
 # the driver must now see 12 done from GCS and 477 pending
-python3 plumbing/run_yt500_generation.py --status
-python3 plumbing/run_yt500_generation.py --plan-only | tail -20
+python3 plumbing/run_yt500_generation.py --status --work-dir /tmp/yt500_status
+python3 plumbing/run_yt500_generation.py --plan-only --work-dir /tmp/yt500_status | tail -20
 ```
 
 Expected: `done=12 pending=477`, and a new session request list that does **not**
@@ -648,7 +648,7 @@ python3 plumbing/yt500_generation_corpus.py --fetch
 python3 plumbing/yt500_generation_corpus.py --verify
 
 # 3. see where we are
-python3 plumbing/run_yt500_generation.py --status
+python3 plumbing/run_yt500_generation.py --status --work-dir /tmp/yt500_status
 
 # 4. continue, detached, uncapped, autonomous
 setsid nohup python3 plumbing/supervise_yt500_generation.py \
@@ -756,6 +756,9 @@ When `--status` reports `done=489 pending=0`:
 | Truncated take | re-render that song with an explicit `cap` from its nominal length + 60 s |
 | `gsutil` missing | the daemon cannot run; install `gsutil` (Colab usually has it) |
 | GCS auth expired | `gcloud auth login` is interactive; ask the user, do not block the chat |
+| `--status` says `done=0` while GCS has runs | driver older than `ee21fb9` (the `gcloud storage ls` object-vs-run-prefix bug); pull, do not regenerate |
+| Supervisor `exit=143` / no marker | SIGTERM from VM/Colab teardown, not a generation failure; relaunch the supervisor |
+| `Directory not empty` / `CommandException` in status | a status check shared `work/yt500_gen/meta` with a live driver; use `--work-dir /tmp/yt500_status` |
 | Score hash mismatch on resume | the corpus bundle changed or is stale; re-run `--fetch --verify`; do not skip the track |
 | Append-only conflict | the driver never overwrites; a conflict means a manual/mixed run. Stop and report |
 
@@ -873,7 +876,7 @@ python3 plumbing/yt500_generation_corpus.py --build --upload
 cd /content/arabmaqamrock && git pull --ff-only
 ./setup_colab.sh
 python3 plumbing/yt500_generation_corpus.py --fetch
-python3 plumbing/run_yt500_generation.py --status
+python3 plumbing/run_yt500_generation.py --status --work-dir /tmp/yt500_status
 
 # continue, uncapped, detached (batch fast path)
 setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
