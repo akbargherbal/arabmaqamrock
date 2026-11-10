@@ -13,7 +13,7 @@ GCS run tree is the source of truth; nothing local must survive.
 | Bulk | launched 2026-11-10T08:58:38Z, supervisor PID 124626: `supervise_yt500_generation.py --mode batch --batch-chunk 50` |
 | Completion | `logs/yt500_supervisor_done.txt` = `exit=0 pending=0`; `work/yt500_gen/supervisor_status.json` |
 | Backup | daemon every **2 min** (user request; PID 129551), plus `--once` after every chunk session; audio uploaded as MP3 192k |
-| Started at HEAD | `2e48cdb`; A100-SXM4-80GB, CC 8.0; binary sha `78f478…d023` (`sm80-a100`) |
+| Started at HEAD | `2e48cdb`; A100-SXM4-80GB, CC 8.0, UUID `GPU-d4da84f7-5872-e2ec-3273-257b7d7cdb43`; binary sha `78f478…d023` (`sm80-a100`) |
 | Pilot | 12/12 `ok`, no crash, durations −7.9%…+15.1% vs score; resume `done=12 pending=477`; batch **1.63×** normalized (3.46 vs 2.12 audio-s per wall-s) |
 
 ## Insights worth keeping
@@ -105,9 +105,12 @@ reverted:
 - **q8_0 weights** (`--load-option yue2.weight_type=q8_0`): 8,308 tokens in
   123.5 s = **66 tok/s vs 139 tok/s bf16 — 2× slower** (likely on-the-fly
   dequant). Rejected on speed *and* because it changes weights.
-- **`mem_saver=0`**: 66 tok/s, but that run overlapped the backup daemon
-  encoding a 50-take flush, so it is **confounded, not a validated gain**.
-  Not adopted.
+- **`mem_saver=0`**: 66 tok/s, but that run overlapped an orphaned second
+  driver that had survived an earlier cleanup, so it is **confounded, not a
+  validated gain**. Not adopted.
+- Lesson: `--status` must use its own `--work-dir` (e.g.
+  `--work-dir /tmp/yt500_status`) while the supervisor runs. Two drivers
+  sharing `work/yt500_gen/meta` produce `OSError: Directory not empty`.
 - Batched decode exists in the binary only for CFG (positive/negative passes);
   there is no CLI knob to batch separate songs. A real multi-x needs engine
   work, not VM resources.
