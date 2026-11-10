@@ -594,37 +594,41 @@ contain the 12 pilot names. Do not launch the full run until this passes.
 
 ---
 
-## 9. Phase 5 — the uncapped full run
+## 9. Phase 5 — the uncapped, unattended full run
 
-Use `--batch` once the A/B gate passes; omit it if the batch path failed.
+Use `--mode batch` once the A/B gate passes; use `--mode per-track` if it failed.
 
 ```bash
-setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
-  --batch-chunk 50 \
-  > logs/yt500_gen_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
+setsid nohup python3 plumbing/supervise_yt500_generation.py \
+  --mode batch --batch-chunk 50 \
+  > logs/yt500_supervisor.out 2>&1 < /dev/null &
 disown || true
 ```
+
+The supervisor calls the driver for every pending song, flushes
+`backup_to_gcp.py --once`, rechecks GCS, and repeats until `pending=0`. It
+resets its stall counter on progress; after three no-progress attempts it
+switches batch → per-track; if still stuck it writes `exit=2` and stops. It
+writes `logs/yt500_supervisor_done.txt` and
+`work/yt500_gen/supervisor_status.json`. There is no time cap, and it needs no
+user confirmation after launch.
 
 `--batch-chunk 50` bounds the loss if one request kills the process; each chunk
 still pays the load cost once, so 489 tracks cost about 10 loads, not 489. Use
 `--batch-chunk 0` for a single process if the 12-track stability pilot is clean.
 
-The wrapper writes a completion marker
-`logs/yt500_gen_<utc>_done.txt` and a summary of done/pending.
-
 One immediate liveness check:
 
 ```bash
-pgrep -af "run_yt500_generation.py|audiocpp_cli|generate.py" | head
-tail -30 logs/yt500_gen_*.out
+pgrep -af "supervise_yt500_generation.py|run_yt500_generation.py|audiocpp_cli|generate.py" | head
+tail -30 logs/yt500_supervisor.out
 gsutil ls gs://akbar-december-2024-backup/arabmaqamrock/runs/ | tail
 ```
 
-Then end the turn. There is no `sleep`, no poll loop and no time cap. The user
-returns when the marker exists or when they decide to stop.
-
-If the VM dies mid-chunk, only the in-flight request is lost. The per-take
-`_time.txt`, sidecar and MP3 of every completed song are uploaded by the daemon.
+Then end the turn. The supervisor continues while the VM is alive. If the VM
+dies mid-chunk, only the in-flight request is lost; the per-take `_time.txt`,
+sidecar and MP3 of every completed song are uploaded by the daemon. On a new VM,
+launch the same supervisor; it resumes from GCS.
 
 ---
 
@@ -644,10 +648,10 @@ python3 plumbing/yt500_generation_corpus.py --verify
 # 3. see where we are
 python3 plumbing/run_yt500_generation.py --status
 
-# 4. continue, detached, uncapped (batch fast path)
-setsid nohup python3 plumbing/run_yt500_generation.py --run --batch \
-  --batch-chunk 50 \
-  > logs/yt500_gen_$(date +%Y%m%d_%H%M).out 2>&1 < /dev/null &
+# 4. continue, detached, uncapped, autonomous
+setsid nohup python3 plumbing/supervise_yt500_generation.py \
+  --mode batch --batch-chunk 50 \
+  > logs/yt500_supervisor.out 2>&1 < /dev/null &
 disown || true
 ```
 
@@ -763,6 +767,7 @@ New files:
 |---|---|
 | `plumbing/yt500_generation_corpus.py` | build / fetch / verify the 489-score corpus and manifest |
 | `plumbing/run_yt500_generation.py` | GCS done-set scanner, pending manifest/request writer, detached session driver; `--status`/`--plan-only`/`--max-songs`, and `--batch`/`--batch-chunk` for the A100 fast path |
+| `plumbing/supervise_yt500_generation.py` | unattended loop: run sessions, flush backup, retry stalls, write one final marker |
 | `docs/plans/yt500-instrumental-generation.md` | this plan |
 | `manifests/yt500_instrumental_489.json` | generated; committed |
 | `outputs/YT500/generation/index.json` + `exclusions.json` | generated audit; committed if small |
@@ -776,6 +781,8 @@ No change is needed to `run_one.sh`, `instrumentalize_scores.py` or
 2. `plumbing/run_yt500_generation.py --batch`: consume the request list, invoke
    `audiocpp_cli --request-sequence`, and write the per-take `_time.txt` and
    sidecar that `run_one.sh` would have written.
+3. `plumbing/supervise_yt500_generation.py`: run sessions back-to-back, flush
+   backup, retry stalls, and write one final marker; no user input.
 
 `.gitignore` additions:
 
@@ -797,7 +804,9 @@ Tests (pure Python, no GPU):
   `style`/`cot`/`semantic_max_tokens`/`abc_file` present, LoRAs only as session
   options;
 - batch marker writer: a completed WAV produces `_time.txt` + sidecar, and the
-  done-set parser counts it.
+  done-set parser counts it;
+- supervisor: pending parser, progress resets the stall counter, a bounded stall
+  exits 2, and a completed run writes the single final marker.
 
 Run:
 
