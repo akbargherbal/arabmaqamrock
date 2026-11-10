@@ -79,7 +79,14 @@ serial/one-generator rule, on the user's call.
   duration sanity, crash behaviour.
 - Fallback: any OOM, corrupted take or throughput regression → stop all 8,
   verify GCS, restart the serial supervisor.
-- Result: **pending**.
+- Result: **negative — stopped after ~8 min.** All 8 loaded and shared the GPU
+  (100% util, 48–57 GB VRAM, no OOM), but **0/64 takes completed** in the time
+  serial produced ~5 per worker. Aggregate throughput was flat: batch-1
+  autoregressive decode is latency-bound, so concurrent workers time-slice the
+  same SMs instead of multiplying them. Parallel model load also cost ~4.5 min
+  vs ~30 s for one process. Reverted to the serial supervisor. Do not retry
+  concurrency on this model; real speedups would need batched decoding inside
+  the engine, quantization, or fewer steps — not more VRAM.
 
 ## Open items
 
