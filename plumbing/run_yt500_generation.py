@@ -140,7 +140,7 @@ def sync_meta(remote: str, local: Path) -> None:
 
 
 def list_remote_runs(gcs_runs: str) -> list[str]:
-    pattern = gcs_runs.rstrip("/") + "/*_yt500inst/"
+    pattern = gcs_runs.rstrip("/") + "/*_yt500inst*/"
     if shutil.which("gcloud"):
         cmd = ["gcloud", "storage", "ls", pattern]
     elif shutil.which("gsutil"):
