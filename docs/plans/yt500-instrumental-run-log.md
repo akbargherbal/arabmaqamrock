@@ -48,6 +48,15 @@ GCS run tree is the source of truth; nothing local must survive.
 7. **A/B listening PASS** (user, 2026-11-10). Listening set kept at
    `gs://akbar-december-2024-backup/arabmaqamrock/listen/ab_20261110/`
    with `COMPARE.txt` proving batch == per-track.
+8. **Per-take cost is AR decode.** One 270 s take: prefill **1.5 s**, AR decode
+   **48.4 s** (6,751 tokens ≈ 139 tok/s), sampling 1.2 s, NAR synth **12.3 s**,
+   the rest VAE/export. Decode moves ~3.4 GB of weights per token ≈ 470 GB/s,
+   only ~23% of the A100's ~2 TB/s — so it is **latency/occupancy-bound**, not
+   bandwidth-bound. That is why 8 parallel processes gave no aggregate gain
+   (they share the same SMs) and why the only real levers are batching decode
+   across songs (engine has batched KV/attention internally, but only for CFG;
+   it is not exposed across requests) or quantized weights. More VRAM/RAM does
+   nothing for this.
 
 ## Restart
 
@@ -87,6 +96,23 @@ serial/one-generator rule, on the user's call.
   vs ~30 s for one process. Reverted to the serial supervisor. Do not retry
   concurrency on this model; real speedups would need batched decoding inside
   the engine, quantization, or fewer steps — not more VRAM.
+
+## Speed probes (quality-preserving only)
+
+User constraint: no quality degradation. Probes run on one real request, then
+reverted:
+
+- **q8_0 weights** (`--load-option yue2.weight_type=q8_0`): 8,308 tokens in
+  123.5 s = **66 tok/s vs 139 tok/s bf16 — 2× slower** (likely on-the-fly
+  dequant). Rejected on speed *and* because it changes weights.
+- **`mem_saver=0`**: 66 tok/s, but that run overlapped the backup daemon
+  encoding a 50-take flush, so it is **confounded, not a validated gain**.
+  Not adopted.
+- Batched decode exists in the binary only for CFG (positive/negative passes);
+  there is no CLI knob to batch separate songs. A real multi-x needs engine
+  work, not VM resources.
+- Conclusion: keep bf16 + serial. ~70 s/take is the honest floor at this
+  recipe/quality; the A100 is already ~3× the L4 baseline.
 
 ## Open items
 
