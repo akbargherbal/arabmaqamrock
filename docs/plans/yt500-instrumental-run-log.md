@@ -65,6 +65,22 @@ disown || true
 Never delete runs/scores/objects; never `--force` in bulk. Flush before a
 deliberate disconnect: `python3 plumbing/backup_to_gcp.py --once`.
 
+## Concurrency experiment (user-requested, 2026-11-10 09:10Z)
+
+Serial supervisor paused at `done=20 pending=469`. User explicitly authorized an
+**8 concurrent sessions** trial and accepted the crash risk in writing
+("if it crashes it's me not you"). This is a deliberate deviation from the
+serial/one-generator rule, on the user's call.
+
+- 8 disjoint shards × 8 songs = 64 takes; each worker has its own `--work-dir`
+  lock, label `conc0..conc7`, `--threads 4`; all write under `out/` so the
+  backup daemon still sees them.
+- Measures: aggregate throughput vs serial, peak VRAM, per-take `status`,
+  duration sanity, crash behaviour.
+- Fallback: any OOM, corrupted take or throughput regression → stop all 8,
+  verify GCS, restart the serial supervisor.
+- Result: **pending**.
+
 ## Open items
 
 - Post-bulk: length audit + outlier re-render; 2-vs-4-worker concurrency
