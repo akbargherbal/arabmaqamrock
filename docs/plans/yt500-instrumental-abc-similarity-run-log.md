@@ -102,6 +102,13 @@ Deliverables and the final numbers are in
 | 20:50 | 162 | 157 | 91 | 27.1 | 1 `no-abc` (`yt500-0208`, recovery attempted, not recoverable) |
 | 21:13 | 212 | 210 | 141 | 26.4 | 2 `no-abc` (`yt500-0208`, `yt500-0277`) |
 | 21:38 | 264 | 262 | 193 | 26.1 | 3 `no-abc` (`…0208`, `…0277`, `…0329`) |
+| 22:02 | 317 | 317 | 246 | 25.9 | 5 `no-abc` (adds `…0388`, `…0457`) |
+
+**Stopped for VM shutdown at 22:02Z.** Clean stop: GPU job frozen, loops
+stopped, final push+verify+publish completed; local verified == remote ==
+archives == **317**, `_STATE`/`_PARTIAL` accounted 317, no `_SUCCESS`.
+Resume from `docs/runbooks/yt500-abc-similarity-resume.md`; 138 tracks remain
+plus the 5 known failures. Analysis gate is still ≥437.
 
 The `yt500-0181` and `yt500-0214` `no-abc` exporter cases were auto-recovered
 (`drop.tail-note`); recovery runs every 120 s and is idempotent.

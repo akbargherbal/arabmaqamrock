@@ -1,5 +1,93 @@
 # YT500 ABC similarity — resume notes
 
+## CURRENT STATE — clean stop for VM shutdown, 2026-11-11T22:02Z
+
+- **317 / 460 verified transcripts**, all pushed and archived:
+  local verified == remote `.output.abc` == remote archives == **317**.
+- `verify`: total 323 dirs, 317 verified, 317 archives ok, **0 archives bad**.
+- **5 failures**, all `no-abc` (recovery attempted, not recoverable):
+  `yt500-0208-G8CygooGxFE`, `yt500-0277-89bDyAU6Wfg`,
+  `yt500-0329-NlwSdL64lIc`, `yt500-0388-Gst0fsBDOUA`,
+  `yt500-0457-Q7c_ExWZDRw`.
+- **138 tracks still unprocessed** (the 5 failures will be retried and fail
+  again). 1 track was in flight at the stop; it was not published.
+- Session 2026-11-11 20:05–22:02Z: 246 new tracks, median **25.9 s/track**
+  (13.0–82.8 s), no new failure class beyond `no-abc`.
+- GCS dataset prefix: `_STATE.json`/`_PARTIAL.json` accounted **317**,
+  `complete: false`, **no `_SUCCESS`** (correct). Analysis prefix holds
+  `STABLE.json` from 20:23Z.
+- The run was isolated in a git worktree because another agent shared the VM;
+  `/content` and that worktree do **not** survive the shutdown. Everything
+  needed is in GCS + this branch.
+
+### Resume tomorrow (fresh VM, ~70 min of GPU left for 138 tracks)
+
+```bash
+cd /content
+git clone https://github.com/akbargherbal/arabmaqamrock.git
+cd arabmaqamrock
+git checkout feat/yt500-abc-similarity && git pull --ff-only
+git log -1 --oneline          # expect this doc's commit or newer
+
+mkdir -p work/yt500_abc logs/yt500_abc /content/yt500/{audio,input,transcripts}
+gsutil -q cp gs://akbar-december-2024-backup/DATASET/yt500_instrumental/tracks.jsonl \
+  work/yt500_abc/tracks.jsonl
+./plumbing/setup_transcribe.sh --cuda          # venv does not survive
+
+# inputs (460 tiny files) + inventory
+python3 - <<'PY'
+import json,subprocess,os
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+rows=[json.loads(l) for l in open("work/yt500_abc/tracks.jsonl") if l.strip()]
+d=Path("work/yt500_abc/input"); d.mkdir(parents=True,exist_ok=True)
+def one(r):
+    n=r["name"]; o=d/f"{n}.input.abc"
+    if o.is_file(): return
+    t=o.with_suffix(".part")
+    subprocess.run(["gsutil","-q","cp",
+      f"gs://akbar-december-2024-backup/DATASET/yt500_instrumental/tracks/{n}/score.abc",str(t)],check=True)
+    os.replace(t,o)
+with ThreadPoolExecutor(max_workers=32) as ex: list(ex.map(one,rows))
+PY
+python3 plumbing/stage_yt500_transcription.py --inventory-only --force \
+  --tracks work/yt500_abc/tracks.jsonl --inputs work/yt500_abc/input \
+  --inventory work/yt500_abc/inventory.json
+
+# restore the 317 verified outputs, then stage audio
+python3 plumbing/yt500_transcribe_sync.py pull
+python3 plumbing/yt500_transcribe_sync.py verify     # expect 317
+python3 plumbing/stage_yt500_transcription.py \
+  --inventory work/yt500_abc/inventory.json \
+  --audio-dir /content/yt500/audio --input-dir /content/yt500/input --skip-size-check
+
+# relaunch exactly one of each (logs + pids)
+TARGET=460 TIME_BUDGET=7200 setsid nohup bash -c \
+  'exec plumbing/supervise_yt500_transcription.sh' \
+  < /dev/null >> logs/yt500_abc/supervisor.log 2>&1 &
+echo $! > logs/yt500_abc/supervisor.pid; disown
+setsid nohup bash -c 'while true; do
+    .venv-sheetsage2/bin/python plumbing/recover_yt500_abc.py --transcripts /content/yt500/transcripts || true
+    python3 plumbing/yt500_transcribe_sync.py push || true
+    python3 plumbing/publish_yt500_bundle.py dataset --target 460 \
+      --failures work/yt500_abc/failures.json || true
+    sleep 120; done' < /dev/null >> logs/yt500_abc/push.log 2>&1 &
+echo $! > logs/yt500_abc/push.pid; disown
+TARGET=437 setsid nohup bash -c 'exec plumbing/watch_and_finalize_yt500.sh' \
+  < /dev/null >> logs/yt500_abc/watcher.log 2>&1 &
+echo $! > logs/yt500_abc/watcher.pid; disown
+```
+
+`transcribe.py` hash-skips the 317 restored tracks, so the run resumes at the
+138 unprocessed ones. Then the watcher finalizes at ≥437 (analysis + both
+bundles + `_SUCCESS` only when `ok+failed == 460`).
+
+**Do not** delete the remote prefix, `--force` a published track, or publish
+`_SUCCESS` before the cohort is accounted for.
+
+---
+
+
 Branch: `feat/yt500-abc-similarity`
 Durable transcripts: `gs://akbar-december-2024-backup/DATASET/yt500_instrumental_transcripts/`
 Analysis products: `gs://akbar-december-2024-backup/ANALYSIS/yt500_instrumental_abc/`
