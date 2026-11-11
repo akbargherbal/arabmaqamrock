@@ -806,6 +806,15 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
     if parse_err:
         lines.append(f"- parse-error examples: " +
                      ", ".join(f"`{m['name']}`" for m in parse_err[:3]))
+    lines += ["", "## Failure taxonomy", ""]
+    miss = stats.get("_missing", []) or []
+    perr = stats.get("_parse_errors", []) or []
+    lines.append(f"- missing-output: **{len(miss)}**")
+    for m in miss[:3]:
+        lines.append(f"  - `{m['name']}`: {m.get('error', 'no output')}")
+    lines.append(f"- parse-error: **{len(perr)}**")
+    for m in perr[:3]:
+        lines.append(f"  - `{m['name']}`: {m.get('error', 'parse failed')}")
     lines += ["", "## Worst 20 matched tracks", "",
               "| name | composite | rank | lift | codes |",
               "|---|---:|---:|---:|---|"]
