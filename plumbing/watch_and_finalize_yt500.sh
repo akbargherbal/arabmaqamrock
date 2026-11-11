@@ -32,7 +32,9 @@ while true; do
   n=$(count_ok)
   echo "$(date -u +%FT%TZ) watcher: verified=$n target=$TARGET"
   if [ "$n" -ge "$TARGET" ] \
+     && ! pgrep -f "supervise_yt500_transcription.sh" >/dev/null 2>&1 \
      && ! pgrep -f "transcribe.py ${OUT%/transcripts}/audio" >/dev/null 2>&1; then
+    echo "$(date -u +%FT%TZ) watcher: target met and supervisor exited at $n"
     break
   fi
   if ! pgrep -f "supervise_yt500_transcription.sh" >/dev/null 2>&1 \
