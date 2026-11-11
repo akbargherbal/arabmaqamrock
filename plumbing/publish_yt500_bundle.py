@@ -110,6 +110,23 @@ def cmd_dataset(args) -> int:
 
     manifest_text = "\n".join(json.dumps(r, sort_keys=True) for r in manifest) + "\n"
     sums_text = "\n".join(s for s, _ in sums) + "\n"
+    failures = []
+    if args.failures and Path(args.failures).is_file():
+        payload = read_json(Path(args.failures))
+        failures = payload if isinstance(payload, list) else payload.get("failures", [])
+    target = int(args.target)
+    accounted = len(manifest) + len(failures)
+    complete = accounted >= target
+    state = {
+        "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "role": "output_transcript",
+        "target": target,
+        "ok": len(manifest),
+        "failed": len(failures),
+        "accounted": accounted,
+        "complete": complete,
+    }
+    status = "complete" if complete else "PARTIAL"
     card = f"""# YT500 instrumental — OUTPUT transcripts
 
 **This is the OUTPUT side.** Every `*.output.abc` here is a SheetSage2
@@ -117,7 +134,8 @@ transcript of the generated instrumental audio. The **INPUT** scores are the
 conditioner: `{INPUT_DATASET}/tracks/<name>/score.abc`.
 Match them by `<name>`; `output.meta.json` records `input_sha256`.
 
-- tracks: {len(manifest)}
+- **status: {status}** — {accounted}/{target} accounted (ok={len(manifest)}, failed={len(failures)})
+- tracks published: {len(manifest)}
 - model: `m-a-p/SheetSage2` revision `b83c3d79a6d98bcffaf8f9ed112c90aa887887bc`
 - mode: `--full` (melody + chord symbols)
 - flat mirror: `<name>.output.abc`, `<name>.output.meta.json`
@@ -151,18 +169,27 @@ Layout::
     write(out / "manifest.jsonl", manifest_text)
     write(out / "SHA256SUMS", sums_text)
 
+    write(out / "_STATE.json", json.dumps(state, sort_keys=True) + "\n")
     pairs = [(out / "DATASET_CARD.md", f"{prefix}/DATASET_CARD.md"),
              (out / "README.md", f"{prefix}/README.md"),
              (out / "manifest.jsonl", f"{prefix}/manifest.jsonl"),
-             (out / "SHA256SUMS", f"{prefix}/SHA256SUMS")]
+             (out / "SHA256SUMS", f"{prefix}/SHA256SUMS"),
+             (out / "_STATE.json", f"{prefix}/_STATE.json")]
     for local, remote in pairs:
         gsutil(["cp", str(local), remote])
-    write(out / "_SUCCESS", json.dumps({
-        "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "tracks": len(manifest), "role": "output_transcript"}) + "\n")
-    gsutil(["cp", str(out / "_SUCCESS"), f"{prefix}/_SUCCESS"])
+    if complete:
+        write(out / "_SUCCESS", json.dumps({**state, "tracks": len(manifest)},
+                                           sort_keys=True) + "\n")
+        gsutil(["cp", str(out / "_SUCCESS"), f"{prefix}/_SUCCESS"])
+        gsutil(["rm", f"{prefix}/_PARTIAL.json"], check=False)
+    else:
+        write(out / "_PARTIAL.json", json.dumps({**state, "tracks": len(manifest)},
+                                                sort_keys=True) + "\n")
+        gsutil(["cp", str(out / "_PARTIAL.json"), f"{prefix}/_PARTIAL.json"])
+        gsutil(["rm", f"{prefix}/_SUCCESS"], check=False)
     print(json.dumps({"dataset": prefix, "tracks": len(manifest),
-                      "objects_hashed": len(sums)}))
+                      "accounted": accounted, "target": target,
+                      "complete": complete, "objects_hashed": len(sums)}))
     return 0
 
 
@@ -245,6 +272,10 @@ def main(argv=None) -> int:
     d.add_argument("--publish-dir", default=str(REPO / "work/yt500_abc/publish"))
     d.add_argument("--staging", default=str(REPO / "work/yt500_abc/publish_bundle/dataset"))
     d.add_argument("--prefix", default=DATASET_PREFIX)
+    d.add_argument("--target", type=int, default=460,
+                   help="cohort size; _SUCCESS only at ok+failed >= target")
+    d.add_argument("--failures", default="",
+                   help="optional failures.json to count irrecoverable tracks")
     d.set_defaults(func=cmd_dataset)
     a = sub.add_parser("analysis")
     a.add_argument("--input-dir", default=str(REPO / "work/yt500_abc/input"))

@@ -52,7 +52,11 @@ python3 analysis/run_yt500_similarity.py run \
   --audit 30 --permutations 10000 --blocks 256
 
 COMMIT=$(git rev-parse HEAD)
-python3 plumbing/publish_yt500_bundle.py dataset
+DATASET_TARGET="${DATASET_TARGET:-460}"
+FAIL_ARGS=()
+[ -f "$WORK/failures.json" ] && FAIL_ARGS=(--failures "$WORK/failures.json")
+python3 plumbing/publish_yt500_bundle.py dataset \
+  --target "$DATASET_TARGET" "${FAIL_ARGS[@]}"
 python3 plumbing/publish_yt500_bundle.py analysis --commit "$COMMIT"
 
 echo

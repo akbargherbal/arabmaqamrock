@@ -37,11 +37,17 @@ while true; do
   fi
   if ! pgrep -f "supervise_yt500_transcription.sh" >/dev/null 2>&1 \
      && ! pgrep -f "transcribe.py ${OUT%/transcripts}/audio" >/dev/null 2>&1; then
-    echo "$(date -u +%FT%TZ) watcher: transcription jobs stopped at $n"
-    break
+    if [ "$n" -ge "$TARGET" ]; then
+      echo "$(date -u +%FT%TZ) watcher: jobs stopped at $n (target $TARGET met)"
+      break
+    fi
+    echo "$(date -u +%FT%TZ) watcher: jobs stopped at $n < $TARGET; PARTIAL, not finalizing"
+    python3 plumbing/publish_yt500_bundle.py dataset --target "$TARGET" \
+      --failures "${WORK_DIR:-work/yt500_abc}/failures.json" || true
+    exit 3
   fi
   sleep 120
 done
 
-echo "$(date -u +%FT%TZ) watcher: finalizing"
-TARGET=0 exec plumbing/finalize_yt500_similarity.sh
+echo "$(date -u +%FT%TZ) watcher: finalizing (target met)"
+exec plumbing/finalize_yt500_similarity.sh
