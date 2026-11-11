@@ -94,3 +94,14 @@ Deliverables and the final numbers are in
 - Supervisor (`TARGET=460`, `TIME_BUDGET=7200`), 120 s recovery→push→publish
   loop, and watcher (`TARGET=437`) launched 20:05Z.
 
+### Progress checkpoints (resume)
+
+| UTC | verified | remote | new | median s | failures |
+|---|---:|---:|---:|---:|---|
+| 20:23 | 109 | 109 | 38 | 26.0 | 0 (STABLE) |
+| 20:50 | 162 | 157 | 91 | 27.1 | 1 `no-abc` (`yt500-0208`, recovery attempted, not recoverable) |
+
+The `yt500-0181` and `yt500-0214` `no-abc` exporter cases were auto-recovered
+(`drop.tail-note`); recovery runs every 120 s and is idempotent.
+
+
