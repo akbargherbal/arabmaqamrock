@@ -74,3 +74,23 @@ python3 analysis/run_yt500_similarity.py run \
 
 Deliverables and the final numbers are in
 `work/yt500_abc/similarity/summary.md` and the analysis GCS prefix.
+
+## Resume — 2026-11-11 20:05Z (fresh Colab L4 VM)
+
+- Remote at resume: 71 flat `.output.abc` (65 with archives); `_PARTIAL` said
+  65 because the six tracks `yt500-0088…0098` were uploaded flat but their
+  archives were not yet written. `pull` + `verify` recovered all **71 verified**;
+  the next push wrote their archives (remote archives 71).
+- Inventory rebuilt: **460/460** input sha256 verified.
+- Audio re-staged byte-exact: **460/460** (2.9 GB), inputs 460/460.
+- Phase 0 self-test re-passed on this VM: identity **1.0**, scalar↔matrix
+  **3.677e-07**, 460² matrix **0.16 s**.
+- `recover_yt500_abc.py` had a latent `FileExistsError`: it pre-creates
+  `__init__.py` in the temp package and then symlinks every `*.py`. Fixed
+  (`f2233f0`) to skip already-materialised files; recovery now runs clean.
+- Work isolation: an unrelated agent sharing the VM switched the primary
+  checkout to `main` mid-setup. This run continues in a dedicated git worktree
+  of `feat/yt500-abc-similarity`; `/content/yt500/transcripts` is unchanged.
+- Supervisor (`TARGET=460`, `TIME_BUDGET=7200`), 120 s recovery→push→publish
+  loop, and watcher (`TARGET=437`) launched 20:05Z.
+
