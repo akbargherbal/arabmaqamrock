@@ -133,6 +133,7 @@ def cmd_push(args) -> int:
     dirs = sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith((".", "_")))
     pushed, unchanged, bad = 0, 0, []
     publish_dir = Path(args.publish_dir)
+    jobs = []
     for tdir in dirs:
         name = tdir.name
         ok, why, abc_sha = verified_pair(tdir)
@@ -148,24 +149,35 @@ def cmd_push(args) -> int:
             bad.append({"name": name, "reason": "archive missing after archive_transcripts"})
             continue
         arch_sha = sha256_file(archive)
-
         key = f"{abc_sha}:{meta_sha}:{arch_sha}"
         if state.get(name) == key and not args.force:
             unchanged += 1
             continue
+        jobs.append((name, tdir / "score.abc", abc_sha, meta_path, meta_sha,
+                     archive, arch_sha, key))
+
+    def _push_one(job):
+        name, abc, abc_sha, meta_path, meta_sha, archive, arch_sha, key = job
         try:
-            changed = upload(f"{prefix}/{name}.output.abc", tdir / "score.abc", abc_sha)
+            changed = upload(f"{prefix}/{name}.output.abc", abc, abc_sha)
             changed |= upload(f"{prefix}/{name}.output.meta.json", meta_path, meta_sha)
             changed |= upload(f"{prefix}/archives/{name}.output-transcript.tar.gz",
                               archive, arch_sha)
+            return name, key, changed, None
         except subprocess.CalledProcessError as exc:
-            bad.append({"name": name, "reason": f"upload failed: {exc.stderr.strip()[:200]}"})
-            continue
-        state[name] = key
+            return name, key, 0, exc.stderr.strip()[:200]
+
+    if jobs:
+        with ThreadPoolExecutor(max_workers=args.workers) as ex:
+            for name, key, changed, err in ex.map(_push_one, jobs):
+                if err:
+                    bad.append({"name": name, "reason": f"upload failed: {err}"})
+                    continue
+                state[name] = key
+                pushed += changed
+                if args.verbose:
+                    print(f"pushed {name}", flush=True)
         write_json_atomic(state_file, state)
-        pushed += changed
-        if args.verbose:
-            print(f"pushed {name} ({abc_sha[:12]})", flush=True)
 
     # 2. archive index
     index = root / TA.INDEX_NAME
@@ -274,6 +286,7 @@ def main(argv=None) -> int:
         p.add_argument("--session", default=None)
         p.add_argument("--verbose", action="store_true")
         p.add_argument("--force", action="store_true")
+        p.add_argument("--workers", type=int, default=6)
     args = ap.parse_args(argv)
     return {"push": cmd_push, "pull": cmd_pull, "verify": cmd_verify}[args.cmd](args)
 
