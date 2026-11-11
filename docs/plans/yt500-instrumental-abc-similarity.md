@@ -35,6 +35,10 @@ statistics, in minutes not hours.
   **Peak RAM < 300 MB, no GPU.**
 - **Nothing is sampled away.** The full matrix is cheap once it is linear
   algebra, so baseline, `composite_adj`, retrieval rank and lift stay exact.
+- **Unattended after stabilization.** Once the stable gate passes (§17) the
+  agent runs to completion without the operator: it restarts its own processes,
+  backs up every ~2–10 minutes, resumes after a VM loss with no reconstruction,
+  and surfaces only at completion or a hard blocker.
 - **Validation before GPU spend:** the cheap pipeline is prototyped and
   parity-tested locally against the vendored oracle on 489 corpus scores plus
   11 real input/output pairs already on disk.
@@ -767,6 +771,72 @@ Nothing in `transcribe.py`, `generate.py` or the dataset needs to change.
 | 5 | Audit size | 30, widen to 60 if ρ < 0.85. |
 | 6 | Decision thresholds | CLI flags; defaults from cohort percentiles (§9.4), not the 10-track constants. |
 | 7 | Side naming | input = `*.input.abc` (only the read-only dataset keeps `score.abc`); output = `*.output.abc`; assert `input_sha256 != output_sha256`. |
+
+---
+
+## 17. Unattended operation (autonomy policy)
+
+The operator is present for setup and stabilization only. Once the **stable
+gate** passes, the run is expected to finish without supervision: the agent
+takes control, makes routine decisions itself, and does not ask for approval.
+
+### 17.1 Stable gate (declare once)
+
+All of the following, recorded in `logs/yt500_abc/STATUS.md` and the remote
+`_STATE.json`:
+
+1. Phase 0 self-test passed and the code committed/pushed.
+2. Phase 1 probe 3/3 ok with chord symbols.
+3. **20+ new tracks** transcribed since resume, median ≤ 60 s/track, and no new
+   failure class in the last 20 consecutive tracks.
+4. A sync push verified: remote `<name>.output.abc` count == local verified
+   count; `_STATE.json`/`_PARTIAL.json` reflect the real count.
+5. Supervisor, push loop and watcher running detached, each with a PID file and
+   a log (no foreground job).
+
+On passing, the agent writes `STABLE` with the UTC timestamp and continues
+**without waiting for the operator**.
+
+### 17.2 Standing authority (no approval needed)
+
+Start/restart the supervisor, transcription sessions, recovery, push loop and
+watcher; retry failed tracks; rerun exporter recovery; stage missing audio;
+pull/push transcripts and bundles; publish partial bundles; adjust
+`TIME_BUDGET`/session length; re-run the analysis if interrupted; commit and
+push code and run logs; restart after a Colab disconnect.
+
+### 17.3 Requires the operator
+
+GCS/HF authentication or credentials; any write to the read-only dataset;
+deleting archives or transcripts; changing metric definitions, weights or
+default thresholds; changing the GCS prefixes; publishing `_SUCCESS` when
+`ok + failed < 460`; abandoning the run below the 437 gate; any scope or cost
+change.
+
+### 17.4 Run-to-completion contract
+
+- Keep exactly **one** supervisor, **one** push loop, **one** watcher; never two
+  `transcribe.py` processes. Check PID files before starting anything.
+- On process death: log it, wait ≤ 60 s, restart. After **5 restarts with no
+  new verified track**, write `logs/yt500_abc/BLOCKED.md`, publish the partial
+  state, and continue with whatever remains runnable; do not spin.
+- Cadence: transcripts push every ~2 min; bundle state (`manifest`,
+  `SHA256SUMS`, `_STATE`) every ~10 min; code + run log commit/push after every
+  increment; session ledger at start and end.
+- Resume is automatic: `pull → count → hash-skip → continue`. No manual
+  reconstruction, no `--force` on tracks that already have a verified output.
+- Stop only on (a) all 460 accounted for, analysis and both bundles published
+  and checksum-verified, or (b) a hard blocker recorded in `BLOCKED.md` and
+  `_STATE.json`. Completion needs no approval.
+- A VM loss cannot be survived by any process on it. The agent's obligation is
+  that the *next* session resumes with zero reconstruction from GCS + the
+  pushed branch (and, if the operator wants true VM-death resilience, the run
+  should move to a persistent VM — out of scope here).
+
+### 17.5 Operator return
+
+Read `_STATE.json`, `logs/yt500_abc/STATUS.md` and `similarity/summary.md`.
+No interaction is required unless `BLOCKED.md` exists.
 
 ---
 
