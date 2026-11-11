@@ -63,14 +63,17 @@ def load_inventory(path: Path | None) -> list[dict]:
 
 
 def abc_dir_map(directory: Path) -> dict[str, Path]:
+    """Map track name -> input ABC.  Accepts the role-labelled name first."""
     out = {}
     directory = Path(directory)
     if not directory.is_dir():
         return out
+    for p in sorted(directory.glob("*.input.abc")):
+        out[p.name[: -len(".input.abc")]] = p
     for p in sorted(directory.glob("*.abc")):
-        out[p.stem] = p
+        out.setdefault(p.stem, p)
     for p in sorted(directory.glob("*/score.abc")):
-        out[p.parent.name] = p
+        out.setdefault(p.parent.name, p)
     return out
 
 
@@ -123,27 +126,49 @@ def git_sha() -> str:
 # --------------------------------------------------------------------------- #
 # Pairs assembly
 # --------------------------------------------------------------------------- #
-def build_pairs(inputs_dir: Path, transcripts_dir: Path,
-                inventory_path: Path | None) -> tuple[list[dict], list[dict], list[dict]]:
-    inputs = abc_dir_map(inputs_dir)
+def _rel(path: Path, root: Path) -> str:
+    try:
+        return str(path.relative_to(root))
+    except ValueError:
+        return str(path)
+
+
+def _resolve(root: Path, value: str | None) -> Path:
+    if not value:
+        raise ValueError("missing path")
+    p = Path(value)
+    return p if p.is_absolute() else Path(root) / p
+
+
+def build_pairs(input_dir: Path, transcripts_dir: Path,
+                inventory_path: Path | None,
+                output_dir: Path | None = None,
+                work_root: Path | None = None
+                ) -> tuple[list[dict], list[dict], list[dict], list[str]]:
+    inputs = abc_dir_map(input_dir)
     transcripts = transcript_map(transcripts_dir)
     inv = load_inventory(inventory_path)
     names = [r["name"] for r in inv] or sorted(inputs)
     inv_by = {r["name"]: r for r in inv}
+    work_root = Path(work_root) if work_root else Path(input_dir).parent
+    output_dir = Path(output_dir) if output_dir else work_root / "output"
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    pairs, missing, parse_errors = [], [], []
+    pairs, missing, parse_errors, hash_violations = [], [], [], []
     for name in names:
         rec = inv_by.get(name, {})
         ip = inputs.get(name)
         tp = transcripts.get(name)
         row = {
             "name": name,
-            "input_abc": str(ip) if ip else None,
-            "output_abc": str(tp[0]) if tp else None,
+            "role": "matched_pair",
+            "input_abc": _rel(ip, work_root) if ip else None,
+            "output_abc": None,
             "status": "ok",
             "error": None,
             "input_sha256": sha256_file(ip) if ip else None,
-            "output_sha256": sha256_file(tp[0]) if tp else None,
+            "output_sha256": None,
+            "audio_sha256": None,
             "nominal_s": rec.get("nominal_s"),
             "wav_s": rec.get("wav_s"),
             "tier": rec.get("tier"),
@@ -152,12 +177,14 @@ def build_pairs(inputs_dir: Path, transcripts_dir: Path,
         }
         if ip is None or not ip.is_file():
             row["status"] = "missing-input"
-            row["error"] = "input score.abc missing"
+            row["error"] = "input <name>.input.abc missing"
         elif tp is None:
             row["status"] = "missing-output"
             row["error"] = "no transcript score.abc"
         else:
             text = read_text(tp[0])
+            out_sha = sha256_file(tp[0])
+            row["output_sha256"] = out_sha
             if not valid_abc(text):
                 row["status"] = "parse-error"
                 row["error"] = "output is not valid ABC (X:/K: missing)"
@@ -167,10 +194,11 @@ def build_pairs(inputs_dir: Path, transcripts_dir: Path,
                 except Exception as exc:  # noqa: BLE001
                     meta = {}
                     row["error"] = f"meta.json unreadable: {exc}"
+                row["audio_sha256"] = meta.get("source_wav_sha256")
                 if meta.get("status") not in (None, "ok"):
                     row["status"] = "parse-error"
                     row["error"] = f"transcript meta status={meta.get('status')!r}"
-                elif meta.get("abc_sha256") and meta["abc_sha256"] != row["output_sha256"]:
+                elif meta.get("abc_sha256") and meta["abc_sha256"] != out_sha:
                     row["status"] = "parse-error"
                     row["error"] = "score.abc does not match meta.abc_sha256"
 
@@ -183,12 +211,26 @@ def build_pairs(inputs_dir: Path, transcripts_dir: Path,
             if score is None or not score.notes:
                 row["status"] = "parse-error"
                 row["error"] = row["error"] or "parse_abc returned 0 notes"
+
+        if row["status"] == "ok":
+            # Publish-side local copy under the role-labelled name.
+            dest = output_dir / f"{name}.output.abc"
+            tmp = dest.with_suffix(".abc.tmp")
+            tmp.write_bytes(tp[0].read_bytes())
+            tmp.replace(dest)
+            row["output_abc"] = _rel(dest, work_root)
+            row["output_sha256"] = sha256_file(dest)
+            if not row["input_sha256"] or row["input_sha256"] == row["output_sha256"]:
+                hash_violations.append(name)
+                row["status"] = "hash-collision"
+                row["error"] = "input_sha256 == output_sha256 (sides swapped?)"
+
         pairs.append(row)
         if row["status"] == "missing-output":
             missing.append({"name": name, "error": row["error"]})
         elif row["status"] == "parse-error":
             parse_errors.append({"name": name, "error": row["error"]})
-    return pairs, missing, parse_errors
+    return pairs, missing, parse_errors, hash_violations
 
 
 # --------------------------------------------------------------------------- #
@@ -341,11 +383,19 @@ def cmd_run(args) -> int:
     t_start = time.monotonic()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    pairs, missing, parse_errors = build_pairs(
-        Path(args.inputs), Path(args.transcripts), Path(args.inventory))
-    write_json(Path(args.work or out) / "pairs.json",
+    work_root = Path(args.work) if args.work else Path(args.input_dir).parent
+    pairs, missing, parse_errors, hash_violations = build_pairs(
+        Path(args.input_dir), Path(args.transcripts), Path(args.inventory),
+        output_dir=Path(args.output_dir) if args.output_dir else work_root / "output",
+        work_root=work_root)
+    write_json(work_root / "pairs.json",
                {"generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "count": len(pairs), "pairs": pairs})
+                "count": len(pairs), "hash_violations": hash_violations,
+                "pairs": pairs})
+    if hash_violations:
+        print(f"run: ABORT — input_sha256 == output_sha256 for {len(hash_violations)} "
+              f"rows: {hash_violations[:5]}", file=sys.stderr)
+        return 2
 
     ok = [r for r in pairs if r["status"] == "ok"]
     if len(ok) < 3:
@@ -359,8 +409,8 @@ def cmd_run(args) -> int:
     cohort, parse_fail = [], list(parse_errors)
     for r in ok:
         try:
-            fi_score = oracle.parse_abc(read_text(Path(r["input_abc"])))
-            fo_score = oracle.parse_abc(read_text(Path(r["output_abc"])))
+            fi_score = oracle.parse_abc(read_text(_resolve(work_root, r["input_abc"])))
+            fo_score = oracle.parse_abc(read_text(_resolve(work_root, r["output_abc"])))
         except Exception as exc:  # noqa: BLE001
             parse_fail.append({"name": r["name"], "error": f"parse exception: {exc}"})
             continue
@@ -404,6 +454,9 @@ def cmd_run(args) -> int:
     matched["n_chords_out"] = [f["n_chords"] for f in feats_out]
     matched["total_sec_in"] = [f["total_sec"] for f in feats_in]
     matched["total_sec_out"] = [f["total_sec"] for f in feats_out]
+    matched["input_sha256"] = [r.get("input_sha256") for r in cohort]
+    matched["output_sha256"] = [r.get("output_sha256") for r in cohort]
+    matched["audio_sha256"] = [r.get("audio_sha256") for r in cohort]
     matched["tier"] = [r.get("tier") for r in cohort]
     matched["country"] = [r.get("country") for r in cohort]
     matched["duration_quartile"] = [r.get("duration_quartile") for r in cohort]
@@ -499,7 +552,7 @@ def cmd_run(args) -> int:
     write_json(out / "cohort_stats.json", stats)
 
     # cohort.json / failures.json next to pairs
-    work = Path(args.work or out)
+    work = work_root
     write_json(work / "cohort.json",
                {"cohort_size": N, "total": len(pairs),
                 "missing": missing, "parse_errors": parse_fail,
@@ -535,9 +588,9 @@ def write_all_pairs(path: Path, names: list[str], M: dict, comp: np.ndarray,
         for g in S.CHEAP_GROUPS:
             cols[g] = groups[g].ravel().astype(np.float32)
         df = pd.DataFrame(cols)
-        df.insert(0, "orig_id", np.tile(names_arr, N))
-        df.insert(0, "inst_id", np.repeat(names_arr, N))
-        df["matched"] = df["inst_id"].values == df["orig_id"].values
+        df.insert(0, "input_id", np.tile(names_arr, N))
+        df.insert(0, "output_id", np.repeat(names_arr, N))
+        df["matched"] = df["output_id"].values == df["input_id"].values
         df.to_parquet(path, index=False)
         return
 
@@ -552,9 +605,9 @@ def write_all_pairs(path: Path, names: list[str], M: dict, comp: np.ndarray,
             for g in S.CHEAP_GROUPS:
                 cols[g] = groups[g][s:e].ravel().astype(np.float32)
             df = pd.DataFrame(cols)
-            df.insert(0, "orig_id", np.tile(names_arr, e - s))
-            df.insert(0, "inst_id", np.repeat(names_arr[s:e], N))
-            df["matched"] = df["inst_id"].values == df["orig_id"].values
+            df.insert(0, "input_id", np.tile(names_arr, e - s))
+            df.insert(0, "output_id", np.repeat(names_arr[s:e], N))
+            df["matched"] = df["output_id"].values == df["input_id"].values
             table = pa.Table.from_pandas(df, preserve_index=False)
             if writer is None:
                 writer = pq.ParquetWriter(path, table.schema)
@@ -637,6 +690,11 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
     dec = flags["decision"].value_counts()
     lines = [
         "# YT500 instrumental — input-vs-output ABC similarity", "",
+        "**Sides:** `input` = the conditioning score "
+        "(`DATASET/yt500_instrumental/tracks/<name>/score.abc`, staged as "
+        "`<name>.input.abc`); `output` = the SheetSage2 transcript of the "
+        "generated audio (published as `<name>.output.abc`). No deliverable is "
+        "named just `score`.", "",
         f"Generated {stats.get('_generated_at')} from commit `{stats.get('_commit')}`.",
         "",
         "## Cohort", "",
@@ -692,13 +750,22 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
 
 
 def cmd_build_pairs(args) -> int:
-    pairs, missing, parse_errors = build_pairs(
-        Path(args.inputs), Path(args.transcripts), Path(args.inventory))
+    work_root = Path(args.work) if args.work else Path(args.input_dir).parent
+    pairs, missing, parse_errors, hash_violations = build_pairs(
+        Path(args.input_dir), Path(args.transcripts), Path(args.inventory),
+        output_dir=Path(args.output_dir) if args.output_dir else work_root / "output",
+        work_root=work_root)
     out = Path(args.out)
     write_json(out, {"generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                     "count": len(pairs), "pairs": pairs})
+                     "count": len(pairs), "hash_violations": hash_violations,
+                     "pairs": pairs})
     print(f"pairs: {len(pairs)} total, {sum(r['status']=='ok' for r in pairs)} ok, "
-          f"{len(missing)} missing-output, {len(parse_errors)} parse-error -> {out}")
+          f"{len(missing)} missing-output, {len(parse_errors)} parse-error, "
+          f"{len(hash_violations)} hash-collisions -> {out}")
+    if hash_violations:
+        print(f"ABORT: input_sha256 == output_sha256 for {len(hash_violations)} rows: "
+              f"{hash_violations[:5]}", file=sys.stderr)
+        return 2
     return 0
 
 
@@ -726,7 +793,8 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     st = sub.add_parser("self-test", help="identity + parity + runtime")
-    st.add_argument("--inputs", required=True, help="directory of .abc files")
+    st.add_argument("--inputs", "--input-dir", dest="inputs", required=True,
+                    help="directory of .abc files (<name>.input.abc)")
     st.add_argument("--out", required=True)
     st.add_argument("--parity-pairs", type=int, default=200)
     st.add_argument("--seed", type=int, default=20261111)
@@ -735,18 +803,21 @@ def main(argv=None) -> int:
     st.set_defaults(func=cmd_self_test)
 
     bp = sub.add_parser("build-pairs", help="assemble/validate pairs.json")
-    bp.add_argument("--inputs", required=True)
+    bp.add_argument("--input-dir", "--inputs", dest="input_dir", required=True)
     bp.add_argument("--transcripts", required=True)
     bp.add_argument("--inventory", required=True)
     bp.add_argument("--out", required=True)
+    bp.add_argument("--output-dir", default=None)
+    bp.add_argument("--work", default=None)
     bp.set_defaults(func=cmd_build_pairs)
 
     rn = sub.add_parser("run", help="full similarity run")
-    rn.add_argument("--inputs", required=True)
+    rn.add_argument("--input-dir", "--inputs", dest="input_dir", required=True)
     rn.add_argument("--transcripts", required=True)
     rn.add_argument("--inventory", required=True)
     rn.add_argument("--out", required=True)
     rn.add_argument("--work", default=None, help="where pairs/cohort/failures go")
+    rn.add_argument("--output-dir", default=None)
     rn.add_argument("--audit", type=int, default=30)
     rn.add_argument("--permutations", type=int, default=10000)
     rn.add_argument("--blocks", type=int, default=256)

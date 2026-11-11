@@ -44,7 +44,7 @@ def load_corpus_index(path: Path) -> dict[str, dict]:
     return {t["name"]: t for t in tracks if isinstance(t, dict) and t.get("name")}
 
 
-def build_inventory(tracks_path: Path, inputs_dir: Path,
+def build_inventory(tracks_path: Path, input_dir: Path,
                     corpus_index: Path, allow_mismatch: bool = False) -> dict:
     rows = read_jsonl(tracks_path)
     index = load_corpus_index(corpus_index)
@@ -68,7 +68,10 @@ def build_inventory(tracks_path: Path, inputs_dir: Path,
     tracks, mismatches = [], []
     for r in rows:
         name = r["name"]
-        abc = inputs_dir / f"{name}.abc"
+        abc = input_dir / f"{name}.input.abc"
+        legacy = input_dir / f"{name}.abc"
+        if not abc.is_file() and legacy.is_file():
+            abc = legacy
         sha = sha256_file(abc) if abc.is_file() else None
         idx = index.get(name, {})
         expected = idx.get("instrumental_abc_sha256")
@@ -82,7 +85,9 @@ def build_inventory(tracks_path: Path, inputs_dir: Path,
         arts = r.get("artifacts") or {}
         tracks.append({
             "name": name,
+            "role": "input",
             "sha256": sha,
+            "input_sha256": sha,
             "expected_sha256": expected,
             "hash_match": match,
             "nominal_s": r.get("nominal_s"),
@@ -95,6 +100,7 @@ def build_inventory(tracks_path: Path, inputs_dir: Path,
             "has_score": bool(arts.get("score")),
             "has_audio": bool(arts.get("audio")),
             "input_abc": str(abc) if abc.is_file() else None,
+            "input_uri": f"{DATASET}/tracks/{name}/score.abc",
         })
 
     inv = {
@@ -150,18 +156,18 @@ def copy_file(src: Path, dest: Path) -> None:
     os.replace(tmp, dest)
 
 
-def stage(inv: dict, audio_dir: Path, inputs_dir: Path, workers: int,
+def stage(inv: dict, audio_dir: Path, input_dir: Path, workers: int,
           verify_sizes: bool = True) -> dict:
     tracks = inv["tracks"]
     sizes = remote_audio_sizes() if verify_sizes else {}
     audio_dir.mkdir(parents=True, exist_ok=True)
-    inputs_dir.mkdir(parents=True, exist_ok=True)
+    input_dir.mkdir(parents=True, exist_ok=True)
     errors = []
 
     def one(t: dict) -> tuple[str, str]:
         name = t["name"]
         mp3 = audio_dir / f"{name}.mp3"
-        abc = inputs_dir / f"{name}.abc"
+        abc = input_dir / f"{name}.input.abc"
         if not abc.is_file():
             src = t.get("input_abc")
             if src and Path(src).is_file():
@@ -192,7 +198,7 @@ def stage(inv: dict, audio_dir: Path, inputs_dir: Path, workers: int,
                       flush=True)
     report = {"staged": len(tracks) - len(errors), "copied": copied,
               "errors": errors, "audio_dir": str(audio_dir),
-              "inputs_dir": str(inputs_dir)}
+              "input_dir": str(input_dir)}
     print(json.dumps(report, indent=2))
     return report
 
@@ -200,20 +206,25 @@ def stage(inv: dict, audio_dir: Path, inputs_dir: Path, workers: int,
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--tracks", default=str(REPO / "work/yt500_abc/tracks.jsonl"))
-    ap.add_argument("--inputs", default=str(REPO / "work/yt500_abc/inputs"),
-                    help="local input-score directory")
+    ap.add_argument("--inputs", "--input-dir-local", dest="inputs",
+                    default=str(REPO / "work/yt500_abc/input"),
+                    help="local input-score directory (<name>.input.abc)")
     ap.add_argument("--corpus-index", default=str(CORPUS_INDEX))
     ap.add_argument("--inventory", default=str(REPO / "work/yt500_abc/inventory.json"))
     ap.add_argument("--inventory-only", action="store_true")
+    ap.add_argument("--force", action="store_true",
+                    help="rebuild inventory even if the JSON already exists")
     ap.add_argument("--allow-mismatch", action="store_true")
     ap.add_argument("--audio-dir", default="/content/yt500/audio")
-    ap.add_argument("--inputs-dir", default="/content/yt500/inputs")
+    ap.add_argument("--input-dir", "--inputs-dir", dest="input_dir",
+                    default="/content/yt500/input",
+                    help="staged input dir (<name>.input.abc)")
     ap.add_argument("--workers", type=int, default=24)
     ap.add_argument("--skip-size-check", action="store_true")
     args = ap.parse_args(argv)
 
     inv_path = Path(args.inventory)
-    if inv_path.is_file() and args.inventory_only:
+    if inv_path.is_file() and args.inventory_only and not args.force:
         inv = json.loads(inv_path.read_text(encoding="utf-8"))
     else:
         inv = build_inventory(Path(args.tracks), Path(args.inputs),
@@ -227,7 +238,7 @@ def main(argv=None) -> int:
     if inv.get("mismatches") and not args.allow_mismatch:
         print("stage: refusing to continue with hash mismatches", file=sys.stderr)
         return 2
-    report = stage(inv, Path(args.audio_dir), Path(args.inputs_dir),
+    report = stage(inv, Path(args.audio_dir), Path(args.input_dir),
                    args.workers, verify_sizes=not args.skip_size_check)
     return 0 if not report["errors"] else 1
 
