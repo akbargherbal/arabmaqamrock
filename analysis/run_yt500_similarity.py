@@ -760,6 +760,8 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
         "generated audio (published as `<name>.output.abc`). No deliverable is "
         "named just `score`.", "",
         f"Generated {stats.get('_generated_at')} from commit `{stats.get('_commit')}`.",
+        "Transcription: `m-a-p/SheetSage2` revision "
+        "`b83c3d79a6d98bcffaf8f9ed112c90aa887887bc`, `--full` (melody + chords).",
         "",
         "## Cohort", "",
         f"- cohort: **{stats.get('_cohort_size')}** / {stats.get('_total_pairs', stats.get('_cohort_size', 0))} tracks",
