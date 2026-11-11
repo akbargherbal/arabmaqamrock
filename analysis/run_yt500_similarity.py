@@ -751,6 +751,25 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
         "| code | tracks |", "|---|---:|",
     ]
     lines += [f"| {k} | {v} |" for k, v in reasons.items()]
+    lines += ["", "### Reason-code examples", ""]
+    total = max(len(flags), 1)
+    for code in reasons.index:
+        if code == "-":
+            continue
+        sub = flags[flags["codes"].str.contains(code, regex=False, na=False)]
+        examples = ", ".join(f"`{n}`" for n in sub["name"].head(3))
+        lines.append(f"- **{code}** ({len(sub)}, {len(sub)/total:.1%}): {examples or '—'}")
+    clean = int((flags["codes"] == "-").sum())
+    if clean:
+        lines.append(f"- **clean** ({clean}, {clean/total:.1%}): no reason code")
+    missing = stats.get("_missing", []) or []
+    parse_err = stats.get("_parse_errors", []) or []
+    if missing:
+        lines.append(f"- missing-output examples: " +
+                     ", ".join(f"`{m['name']}`" for m in missing[:3]))
+    if parse_err:
+        lines.append(f"- parse-error examples: " +
+                     ", ".join(f"`{m['name']}`" for m in parse_err[:3]))
     lines += ["", "## Worst 20 matched tracks", "",
               "| name | composite | rank | lift | codes |",
               "|---|---:|---:|---:|---|"]
