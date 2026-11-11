@@ -73,7 +73,10 @@ def load_notation_module():
     pkg.mkdir()
     (pkg / "__init__.py").write_text("")
     for f in src.parent.glob("*.py"):
-        (pkg / f.name).symlink_to(f)
+        dest = pkg / f.name
+        if dest.exists() or dest.is_symlink():
+            continue  # __init__.py already materialised above
+        dest.symlink_to(f)
     sys.path.insert(0, str(pkg_root))
     return importlib.import_module("ss2pkg.notation_sheetsage2"), src.parent.name
 
