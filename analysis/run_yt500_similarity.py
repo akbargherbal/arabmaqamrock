@@ -186,6 +186,7 @@ def build_pairs(input_dir: Path, transcripts_dir: Path,
             "input_sha256": sha256_file(ip) if ip else None,
             "output_sha256": None,
             "audio_sha256": None,
+            "recovered": False,
             "nominal_s": rec.get("nominal_s"),
             "wav_s": rec.get("wav_s"),
             "tier": rec.get("tier"),
@@ -215,6 +216,7 @@ def build_pairs(input_dir: Path, transcripts_dir: Path,
                     meta = {}
                     row["error"] = f"meta.json unreadable: {exc}"
                 row["audio_sha256"] = meta.get("source_wav_sha256")
+                row["recovered"] = bool(meta.get("recovered"))
                 if meta.get("status") not in (None, "ok"):
                     row["status"] = "missing-output"
                     row["error"] = (meta.get("error")
@@ -499,6 +501,7 @@ def cmd_run(args) -> int:
     matched["input_sha256"] = [r.get("input_sha256") for r in cohort]
     matched["output_sha256"] = [r.get("output_sha256") for r in cohort]
     matched["audio_sha256"] = [r.get("audio_sha256") for r in cohort]
+    matched["recovered"] = [bool(r.get("recovered")) for r in cohort]
     matched["tier"] = [r.get("tier") for r in cohort]
     matched["country"] = [r.get("country") for r in cohort]
     matched["duration_quartile"] = [r.get("duration_quartile") for r in cohort]
@@ -766,6 +769,7 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
         "## Cohort", "",
         f"- cohort: **{stats.get('_cohort_size')}** / {stats.get('_total_pairs', stats.get('_cohort_size', 0))} tracks",
         f"- missing output: **{len(stats.get('_missing', []))}**, parse errors: **{len(stats.get('_parse_errors', []))}**",
+        f"- recovered from exporter bugs (`meta.recovered`): **{int(matched.get('recovered', pd.Series(dtype=bool)).sum())}**",
         f"- all-pairs rows: **{stats.get('_all_pairs_rows'):,}**",
         f"- feature+matrix time: {stats.get('_matrix_seconds', 0):.1f} s; escalation {stats.get('_escalation_seconds', 0):.1f} s; "
         f"scalar/matrix parity max {stats.get('_parity_max', 0):.2e}",

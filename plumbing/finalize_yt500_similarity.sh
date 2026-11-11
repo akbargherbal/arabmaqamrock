@@ -35,6 +35,9 @@ if [ "$verified" -lt "$TARGET" ]; then
   exit 1
 fi
 
+RETRY_PY=".venv-sheetsage2/bin/python"
+[ -x "$RETRY_PY" ] || RETRY_PY="python3"
+"$RETRY_PY" plumbing/recover_yt500_abc.py --transcripts "$OUT" || true
 python3 plumbing/yt500_transcribe_sync.py push || true
 python3 plumbing/yt500_transcribe_sync.py verify || true
 ./transcribe.sh /content/yt500/audio --out-dir "$OUT" --verify \
