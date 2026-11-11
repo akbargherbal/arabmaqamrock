@@ -171,6 +171,15 @@ oracle is an audit oracle, not the production path.
 
 ### 5.3 Cheap-path prototype and parity test
 
+**Colab note.** `local_workspace/` and `scores/yt500_instrumental/` are
+gitignored, so a fresh VM does not have them. Either materialize the 489-score
+corpus (`python3 plumbing/yt500_generation_corpus.py --fetch`) or run checks
+(a), (b), (d) on the 460 dataset input scores from §5.1 — those are the
+production inputs anyway. Skip (c) on the VM and run the deep-parity check on
+the 3 Phase-1 probe pairs instead; the 11-pair table exists only on the dev
+machine. `outputs/YT500/generation/index.json` (tracked) supplies the
+`instrumental_abc_sha256` values for §5.1 without fetching the corpus.
+
 Build `analysis/abc_scale.py` (features + vectorized matrices + banded DTW)
 and validate three ways:
 
