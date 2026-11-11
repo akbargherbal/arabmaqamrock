@@ -661,16 +661,55 @@ def attach(args) -> int:
 # --------------------------------------------------------------------------- #
 # verify
 # --------------------------------------------------------------------------- #
-def _remote_count(uri: str) -> int | None:
+def _remote_objects(prefix_uri: str, suffix: str) -> int | None:
+    """Count objects under ``prefix_uri`` whose name ends with ``suffix``.
+
+    One paginated JSON-API listing: ``gcloud storage ls`` stats every object
+    (minutes for 460 folders), the API lists 1000 per request.
+    """
+    if not prefix_uri.startswith("gs://"):
+        return None
+    bucket, _, prefix = prefix_uri[len("gs://"):].partition("/")
+    try:
+        token = subprocess.run(
+            ["gcloud", "auth", "print-access-token"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+        token = ""
+    if token:
+        import urllib.parse
+        import urllib.request
+
+        count = 0
+        page = None
+        while True:
+            query = {"prefix": prefix, "fields": "items(name),nextPageToken",
+                     "maxResults": "1000"}
+            if page:
+                query["pageToken"] = page
+            url = (f"https://storage.googleapis.com/storage/v1/b/{bucket}/o?"
+                   + urllib.parse.urlencode(query))
+            request = urllib.request.Request(
+                url, headers={"Authorization": f"Bearer {token}"})
+            try:
+                with urllib.request.urlopen(request, timeout=60) as response:
+                    payload = json.load(response)
+            except Exception:  # noqa: BLE001 - fall back to gcloud below
+                break
+            count += sum(1 for obj in payload.get("items", [])
+                         if str(obj.get("name", "")).endswith(suffix))
+            page = payload.get("nextPageToken")
+            if not page:
+                return count
+    # fallback: slow but works without a token
     try:
         out = subprocess.run(
-            ["gcloud", "storage", "ls", uri],
+            ["gcloud", "storage", "ls", f"{prefix_uri.rstrip('/')}/*{suffix}"],
             check=True, capture_output=True, text=True,
         ).stdout
-    except FileNotFoundError:
+    except (FileNotFoundError, subprocess.CalledProcessError):
         return None
-    except subprocess.CalledProcessError:
-        return -1
     return len([line for line in out.splitlines() if line.strip()])
 
 
@@ -750,15 +789,13 @@ def verify(args) -> int:
 
     remote = None
     if args.remote:
-        remote = _remote_count(f"{DATASET_URI}/tracks/*/caption.json")
+        remote = _remote_objects(f"{DATASET_URI}/tracks/", "/caption.json")
         if remote is None:
             print("verify: gcloud not available, skipped --remote", file=sys.stderr)
-        elif remote < 0:
-            errors.append("verify: gcloud storage ls failed for --remote")
         elif remote != len(rows):
             errors.append(f"remote has {remote} caption.json, expected {len(rows)}")
-        remote_txt = _remote_count(f"{DATASET_URI}/tracks/*/caption.txt")
-        if remote_txt is not None and remote_txt >= 0 and remote_txt != len(rows):
+        remote_txt = _remote_objects(f"{DATASET_URI}/tracks/", "/caption.txt")
+        if remote_txt is not None and remote_txt != len(rows):
             errors.append(f"remote has {remote_txt} caption.txt, expected {len(rows)}")
 
     if errors:
@@ -766,7 +803,7 @@ def verify(args) -> int:
         for problem in errors[:40]:
             print(f"  - {problem}", file=sys.stderr)
         return 1
-    suffix = f", remote={remote}" if remote is not None and remote >= 0 else ""
+    suffix = f", remote={remote}" if remote is not None else ""
     print(f"verify: OK — {len(rows)} tracks, {have} captions{suffix}")
     return 0
 
