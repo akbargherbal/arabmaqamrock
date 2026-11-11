@@ -386,6 +386,23 @@ def _stratified_audit(comp: np.ndarray, n_audit: int) -> list[int]:
     return sorted(set(picked))
 
 
+def _production_parity(feats_in: list[dict], feats_out: list[dict],
+                       M: dict[str, np.ndarray], seed: int,
+                       n_pairs: int = 50) -> float:
+    """Scalar/matrix parity on real input/output rows (production guard)."""
+    n = len(feats_in)
+    rng = np.random.default_rng(seed)
+    pairs = {(i, i) for i in range(n)}
+    while len(pairs) < min(n_pairs, n * n):
+        pairs.add((int(rng.integers(n)), int(rng.integers(n))))
+    worst = 0.0
+    for i, j in pairs:
+        sc = S.cheap_scalar(feats_in[j], feats_out[i])
+        for m in S.CHEAP_METRICS:
+            worst = max(worst, abs(float(sc[m]) - float(M[m][i, j])))
+    return worst
+
+
 def cmd_run(args) -> int:
     t_start = time.monotonic()
     out = Path(args.out)
@@ -446,7 +463,11 @@ def cmd_run(args) -> int:
     comp = S.composite_matrix(M)
     groups = S.group_matrices(M)
     matrix_seconds = time.monotonic() - t0
-    print(f"features+matrix {matrix_seconds:.1f}s", flush=True)
+    parity_max = _production_parity(feats_in, feats_out, M, args.seed)
+    if parity_max > 1e-6:
+        print(f"run: ABORT — scalar/matrix parity {parity_max:.3e} > 1e-6", file=sys.stderr)
+        return 3
+    print(f"features+matrix {matrix_seconds:.1f}s  parity={parity_max:.2e}", flush=True)
 
     # --- calibration ------------------------------------------------------- #
     base = C.baseline_matrix(M)
@@ -553,6 +574,7 @@ def cmd_run(args) -> int:
     stats["_missing"] = missing
     stats["_parse_errors"] = parse_fail
     stats["_matrix_seconds"] = matrix_seconds
+    stats["_parity_max"] = parity_max
     stats["_escalation_seconds"] = escalation_seconds
     stats["_all_pairs_rows"] = all_pairs_rows
     stats["_commit"] = git_sha()
@@ -709,7 +731,8 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
         f"- cohort: **{stats.get('_cohort_size')}** / {stats.get('_total_pairs', stats.get('_cohort_size', 0))} tracks",
         f"- missing output: **{len(stats.get('_missing', []))}**, parse errors: **{len(stats.get('_parse_errors', []))}**",
         f"- all-pairs rows: **{stats.get('_all_pairs_rows'):,}**",
-        f"- feature+matrix time: {stats.get('_matrix_seconds', 0):.1f} s; escalation {stats.get('_escalation_seconds', 0):.1f} s",
+        f"- feature+matrix time: {stats.get('_matrix_seconds', 0):.1f} s; escalation {stats.get('_escalation_seconds', 0):.1f} s; "
+        f"scalar/matrix parity max {stats.get('_parity_max', 0):.2e}",
         "",
         "## Headline numbers", "",
         f"- median composite: **{comp.median():.3f}** (IQR {C.iqr(comp):.3f})",

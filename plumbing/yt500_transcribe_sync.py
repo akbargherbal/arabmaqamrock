@@ -201,7 +201,7 @@ def cmd_pull(args) -> int:
         shutil.rmtree(flat)
     flat.mkdir(parents=True)
 
-    r = gsutil(["cp", f"{prefix}/*.output.abc", f"{prefix}/*.output.meta.json",
+    r = gsutil(["-m", "cp", f"{prefix}/*.output.abc", f"{prefix}/*.output.meta.json",
                 str(flat)], check=False)
     if r.returncode != 0:
         # gsutil returns non-zero when a wildcard has no matches; that is not
