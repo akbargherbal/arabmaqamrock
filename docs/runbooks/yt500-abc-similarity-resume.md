@@ -49,8 +49,10 @@ setsid nohup bash -c 'exec ./transcribe.sh /content/yt500/audio \
   --time-budget 7200 > logs/yt500_abc/transcribe.log 2>&1' < /dev/null &
 echo $! > logs/yt500_abc/transcribe.pid; disown
 
-# 6. Verified push loop every 5 minutes (archives + flat role-labelled mirror)
-setsid nohup bash -c 'while true; do python3 plumbing/yt500_transcribe_sync.py push; sleep 300; done \
+# 6. Recovery + verified push loop every 5 minutes
+#    (repairs deterministic no-abc exporter edge cases with the model's own
+#    exporter; then archives + role-labelled flat mirror + dataset docs)
+setsid nohup bash -c 'while true; do .venv-sheetsage2/bin/python plumbing/recover_yt500_abc.py --transcripts /content/yt500/transcripts; python3 plumbing/yt500_transcribe_sync.py push; python3 plumbing/publish_yt500_bundle.py dataset; sleep 300; done \
   > logs/yt500_abc/push.log 2>&1' < /dev/null &
 echo $! > logs/yt500_abc/push.pid; disown
 ```
