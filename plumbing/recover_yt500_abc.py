@@ -231,6 +231,9 @@ def main(argv=None) -> int:
         meta = read_json(tdir / "meta.json")
         if meta is None or metadata_ok(tdir, meta):
             continue
+        if meta.get("status") not in ("no-abc", "invalid-abc"):
+            # Do not salvage timeouts/failed runs: their exports may be partial.
+            continue
         done += 1
         if args.limit and done > args.limit:
             break
