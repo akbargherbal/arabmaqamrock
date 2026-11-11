@@ -54,7 +54,10 @@ while true; do
   before=$n
   echo "$(date -u +%FT%TZ) supervisor: starting session (before=$before)"
   ./transcribe.sh "$AUDIO" --out-dir "$OUT" --full --device auto --threads 4 \
-    --time-budget "$BUDGET" >> "$LOG" 2>&1
+    --time-budget "$BUDGET" >> "$LOG" 2>&1 &
+  child=$!
+  echo "$child" > logs/yt500_abc/transcribe.pid
+  wait "$child"
   rc=$?
   after=$(count_ok)
   echo "$(date -u +%FT%TZ) supervisor: session exit=$rc before=$before after=$after"
