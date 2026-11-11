@@ -162,10 +162,20 @@ def build_pairs(input_dir: Path, transcripts_dir: Path,
     output_dir.mkdir(parents=True, exist_ok=True)
 
     pairs, missing, parse_errors, hash_violations = [], [], [], []
+    meta_by_name = {}
+    if Path(transcripts_dir).is_dir():
+        for d in Path(transcripts_dir).iterdir():
+            if d.is_dir() and (d / "meta.json").is_file():
+                try:
+                    meta_by_name[d.name] = json.loads(
+                        (d / "meta.json").read_text(encoding="utf-8"))
+                except Exception:  # noqa: BLE001
+                    pass
     for name in names:
         rec = inv_by.get(name, {})
         ip = inputs.get(name)
         tp = transcripts.get(name)
+        prior = meta_by_name.get(name)
         row = {
             "name": name,
             "role": "matched_pair",
@@ -187,7 +197,10 @@ def build_pairs(input_dir: Path, transcripts_dir: Path,
             row["error"] = "input <name>.input.abc missing"
         elif tp is None:
             row["status"] = "missing-output"
-            row["error"] = "no transcript score.abc"
+            prior_status = (prior or {}).get("status")
+            row["error"] = ((prior or {}).get("error")
+                            or (f"transcribe status={prior_status!r}"
+                                if prior_status else "no transcript output"))
         else:
             text = read_text(tp[0])
             out_sha = sha256_file(tp[0])
@@ -203,8 +216,9 @@ def build_pairs(input_dir: Path, transcripts_dir: Path,
                     row["error"] = f"meta.json unreadable: {exc}"
                 row["audio_sha256"] = meta.get("source_wav_sha256")
                 if meta.get("status") not in (None, "ok"):
-                    row["status"] = "parse-error"
-                    row["error"] = f"transcript meta status={meta.get('status')!r}"
+                    row["status"] = "missing-output"
+                    row["error"] = (meta.get("error")
+                                    or f"transcript meta status={meta.get('status')!r}")
                 elif meta.get("abc_sha256") and meta["abc_sha256"] != out_sha:
                     row["status"] = "parse-error"
                     row["error"] = "score.abc does not match meta.abc_sha256"
