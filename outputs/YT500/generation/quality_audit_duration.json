@@ -1,9 +1,38 @@
 {
-  "audited_utc": "2026-11-10T20:10:00Z",
-  "takes_audited": 457,
+  "audited_utc": "2026-11-11T13:54:48Z",
+  "takes_audited": 489,
   "gate": "abs(wav_s-nominal_s)/nominal_s <= 0.15",
-  "failing": 27,
+  "failing": 29,
+  "buckets": {
+    "pass": 460,
+    "short_severe": 7,
+    "short": 15,
+    "long": 7
+  },
+  "pass_rate_pct": 94.1,
+  "complete": true,
+  "note": "Full-corpus audit after the 489th take; wav_s from take sidecars, spot-checked with ffprobe. truncated is inferred (delta<-15%), not read from the marker writer.",
   "tracks": [
+    {
+      "name": "yt500-0165-4ehTSqSPvgk",
+      "rank": 165,
+      "video_id": "4ehTSqSPvgk",
+      "title": "Ben Idayya",
+      "artist": "Majid Al Mohandis",
+      "nominal_s": 339.403,
+      "source_s": 340.172,
+      "wav_s": 14.399,
+      "delta_pct": -95.8,
+      "bucket": "short_severe",
+      "cap": 9986,
+      "seed": 1690371890,
+      "run": "20261110-200631_yt500inst",
+      "engine": "batch",
+      "wav_bytes": 2764588,
+      "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-200631_yt500inst/yt500-0165-4ehTSqSPvgk_1690371890.mp3",
+      "score_sha256": "7ebf8ce0b7ed614b21b072b46c69dd7fa42c4e1ed2524e705e007b245b1bdda7",
+      "truncated_inferred": true
+    },
     {
       "name": "yt500-0034-kyxGsD-eP1I",
       "rank": 34,
@@ -21,7 +50,8 @@
       "engine": "batch",
       "wav_bytes": 16304428,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-183143_yt500inst/yt500-0034-kyxGsD-eP1I_1314355762.mp3",
-      "score_sha256": "d7e83d0aeb3f22905828554b3793482931912e2d4e72bb946baf1981bf9942b2"
+      "score_sha256": "d7e83d0aeb3f22905828554b3793482931912e2d4e72bb946baf1981bf9942b2",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0623-pbWDY8LbVVk",
@@ -40,7 +70,8 @@
       "engine": "batch",
       "wav_bytes": 18746668,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0623-pbWDY8LbVVk_558678698.mp3",
-      "score_sha256": "6bd28d95b18232dc077d0a721d3e38ecc389ad92dd77f8cdab7af7a77a1dd645"
+      "score_sha256": "6bd28d95b18232dc077d0a721d3e38ecc389ad92dd77f8cdab7af7a77a1dd645",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0642-iMAe5sh1u7k",
@@ -59,7 +90,8 @@
       "engine": "batch",
       "wav_bytes": 17840428,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0642-iMAe5sh1u7k_1932839153.mp3",
-      "score_sha256": "2fbbc3929979adf0265311cce45702537ed30937987e54b78a81861edc9e694d"
+      "score_sha256": "2fbbc3929979adf0265311cce45702537ed30937987e54b78a81861edc9e694d",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0103-58APpZMC2Yw",
@@ -78,7 +110,8 @@
       "engine": "batch",
       "wav_bytes": 37086508,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0103-58APpZMC2Yw_2555150370.mp3",
-      "score_sha256": "96d12a6075afc6c32d98cef7f854564d5d0551dd9db1a78ea172852c51ac411c"
+      "score_sha256": "96d12a6075afc6c32d98cef7f854564d5d0551dd9db1a78ea172852c51ac411c",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0118-hIPoRdfbsYs",
@@ -97,7 +130,8 @@
       "engine": "batch",
       "wav_bytes": 46394668,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0118-hIPoRdfbsYs_2700908498.mp3",
-      "score_sha256": "4fe006c34d5ef0fa64d2a895c8e8a69976dce490bafff9c2627824e68310597c"
+      "score_sha256": "4fe006c34d5ef0fa64d2a895c8e8a69976dce490bafff9c2627824e68310597c",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0290-tf2PD_IxjmM",
@@ -116,7 +150,8 @@
       "engine": "batch",
       "wav_bytes": 39966508,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0290-tf2PD_IxjmM_970013721.mp3",
-      "score_sha256": "c3ae890a27657cce281193d0dc5ebaa903da24c6fce2ae103ccf4fce1adcf760"
+      "score_sha256": "c3ae890a27657cce281193d0dc5ebaa903da24c6fce2ae103ccf4fce1adcf760",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0259-UeL9kJ4uGyY",
@@ -135,7 +170,8 @@
       "engine": "batch",
       "wav_bytes": 57592108,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0259-UeL9kJ4uGyY_3096277166.mp3",
-      "score_sha256": "165fc6fbe4ea0fbb6b29f66877d84fa95a6e6aacda49a69a23688174056afade"
+      "score_sha256": "165fc6fbe4ea0fbb6b29f66877d84fa95a6e6aacda49a69a23688174056afade",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0452-FqltwFT25fM",
@@ -154,7 +190,8 @@
       "engine": "batch",
       "wav_bytes": 34552108,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0452-FqltwFT25fM_3098657591.mp3",
-      "score_sha256": "eec8ea907ee5af2bafbace4f8ce84cfd8b27f03f1c19eb0c8b73f0e1129be5ef"
+      "score_sha256": "eec8ea907ee5af2bafbace4f8ce84cfd8b27f03f1c19eb0c8b73f0e1129be5ef",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0040-j9eZtAjA1oE",
@@ -173,7 +210,8 @@
       "engine": "batch",
       "wav_bytes": 57599788,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0040-j9eZtAjA1oE_1779747039.mp3",
-      "score_sha256": "e4a25d8ea22abed3dc13c2abb6887704579356b4d4e3ce0451a57ff21be016d4"
+      "score_sha256": "e4a25d8ea22abed3dc13c2abb6887704579356b4d4e3ce0451a57ff21be016d4",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0685-MVLg42W7b18",
@@ -192,7 +230,8 @@
       "engine": "batch",
       "wav_bytes": 42946348,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0685-MVLg42W7b18_1208020853.mp3",
-      "score_sha256": "32e7fd6b232ec99c8234d5492ffd7b0fe0f3f1460cea29d9d7361a6987b84963"
+      "score_sha256": "32e7fd6b232ec99c8234d5492ffd7b0fe0f3f1460cea29d9d7361a6987b84963",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0261-byK0dlhokOA",
@@ -211,7 +250,8 @@
       "engine": "batch",
       "wav_bytes": 40888108,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-183143_yt500inst/yt500-0261-byK0dlhokOA_3722330835.mp3",
-      "score_sha256": "67d97ff27e0fafb77b0249969ee238eddd1a37aad45202605d9ff00db570e005"
+      "score_sha256": "67d97ff27e0fafb77b0249969ee238eddd1a37aad45202605d9ff00db570e005",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0330-zQ9Bq4yU9k8",
@@ -230,7 +270,8 @@
       "engine": "batch",
       "wav_bytes": 37739308,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0330-zQ9Bq4yU9k8_1493452708.mp3",
-      "score_sha256": "1740ede7007973b70bc600feb397db8c246c60d85cdfbe170a46a484d23132af"
+      "score_sha256": "1740ede7007973b70bc600feb397db8c246c60d85cdfbe170a46a484d23132af",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0130-r99RZ4ViteM",
@@ -249,7 +290,8 @@
       "engine": "batch",
       "wav_bytes": 44405548,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-183143_yt500inst/yt500-0130-r99RZ4ViteM_3951800241.mp3",
-      "score_sha256": "10493ad382c03c892be3f05ab2518d7a9f73f19f3f82a00143095a571112ed94"
+      "score_sha256": "10493ad382c03c892be3f05ab2518d7a9f73f19f3f82a00143095a571112ed94",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0295-AE9BTVpyuuQ",
@@ -268,7 +310,8 @@
       "engine": "batch",
       "wav_bytes": 38753068,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0295-AE9BTVpyuuQ_741512351.mp3",
-      "score_sha256": "cb9df51c5e28dbb231a67e98e4dac6b81e6e6e3571e195109b3e8ecb6ccc9ec8"
+      "score_sha256": "cb9df51c5e28dbb231a67e98e4dac6b81e6e6e3571e195109b3e8ecb6ccc9ec8",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0433-Atx7biRfhzU",
@@ -287,7 +330,8 @@
       "engine": "batch",
       "wav_bytes": 47938348,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0433-Atx7biRfhzU_3335575890.mp3",
-      "score_sha256": "820d1d3c5c8771ac5491935d34187877f6d45617b6639bec3ec010628451e544"
+      "score_sha256": "820d1d3c5c8771ac5491935d34187877f6d45617b6639bec3ec010628451e544",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0279-wYk-JyifeRE",
@@ -306,7 +350,8 @@
       "engine": "batch",
       "wav_bytes": 43030828,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0279-wYk-JyifeRE_1565258927.mp3",
-      "score_sha256": "dd40819d75935f8ea025a276d12862ffac20a0ecc8f7a626a805a6c682b0dee4"
+      "score_sha256": "dd40819d75935f8ea025a276d12862ffac20a0ecc8f7a626a805a6c682b0dee4",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0355-3Uei9m0RpJQ",
@@ -325,7 +370,8 @@
       "engine": "batch",
       "wav_bytes": 43583788,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0355-3Uei9m0RpJQ_4230957805.mp3",
-      "score_sha256": "39a022f55a2df5eca9a9be0db3be5963c062241251a8554d0a29ec8d7c120e26"
+      "score_sha256": "39a022f55a2df5eca9a9be0db3be5963c062241251a8554d0a29ec8d7c120e26",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0390-faLLKMdiEHs",
@@ -344,7 +390,8 @@
       "engine": "batch",
       "wav_bytes": 50465068,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0390-faLLKMdiEHs_4196336553.mp3",
-      "score_sha256": "e240dddb34dab64d8f55d7cf413ed9901f839c781d1735cfc7aff927d10a5c01"
+      "score_sha256": "e240dddb34dab64d8f55d7cf413ed9901f839c781d1735cfc7aff927d10a5c01",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0640-VnYiVwJhG0Q",
@@ -363,7 +410,8 @@
       "engine": "batch",
       "wav_bytes": 47001388,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0640-VnYiVwJhG0Q_2424802295.mp3",
-      "score_sha256": "417c20a7ca36cc6f0a8282c8424f92979267bc01129e01030f314cd203b72229"
+      "score_sha256": "417c20a7ca36cc6f0a8282c8424f92979267bc01129e01030f314cd203b72229",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0657-l5ldxD5llBU",
@@ -382,7 +430,8 @@
       "engine": "batch",
       "wav_bytes": 52746028,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0657-l5ldxD5llBU_4045737294.mp3",
-      "score_sha256": "5a53b53d5aad77a655bf56da2ae58cb170097d7e83a7a17a0147ab87a7f72545"
+      "score_sha256": "5a53b53d5aad77a655bf56da2ae58cb170097d7e83a7a17a0147ab87a7f72545",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0202-pAFV9RT-yrA",
@@ -401,7 +450,8 @@
       "engine": "batch",
       "wav_bytes": 34429228,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0202-pAFV9RT-yrA_3979204925.mp3",
-      "score_sha256": "f43ea43e8b62f824141ba7902e52fec6189ea86b4f3c404dc55556f1d184ada5"
+      "score_sha256": "f43ea43e8b62f824141ba7902e52fec6189ea86b4f3c404dc55556f1d184ada5",
+      "truncated_inferred": true
     },
     {
       "name": "yt500-0021-7Rx6wDS286s",
@@ -420,7 +470,8 @@
       "engine": "batch",
       "wav_bytes": 87428908,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0021-7Rx6wDS286s_2579198127.mp3",
-      "score_sha256": "396083e36bed0cbe0b5b99abe149246337da9ef59968f83027f4e68fdfa3feaa"
+      "score_sha256": "396083e36bed0cbe0b5b99abe149246337da9ef59968f83027f4e68fdfa3feaa",
+      "truncated_inferred": false
     },
     {
       "name": "yt500-0652-ItMVUZ3RGhM",
@@ -439,7 +490,28 @@
       "engine": "batch",
       "wav_bytes": 84264748,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0652-ItMVUZ3RGhM_655827854.mp3",
-      "score_sha256": "499cfd27f3911eab2e77f4c0471ae7bc4cd2ae86b8eb45ccc9696d9fefc84595"
+      "score_sha256": "499cfd27f3911eab2e77f4c0471ae7bc4cd2ae86b8eb45ccc9696d9fefc84595",
+      "truncated_inferred": false
+    },
+    {
+      "name": "yt500-0302-uTTsZSjIMxI",
+      "rank": 302,
+      "video_id": "uTTsZSjIMxI",
+      "title": "Khalow",
+      "artist": "Majid Al Mohandis",
+      "nominal_s": 369.75,
+      "source_s": 365.854,
+      "wav_s": 429.759,
+      "delta_pct": 16.2,
+      "bucket": "long",
+      "cap": 10744,
+      "seed": 1791543491,
+      "run": "20261110-200631_yt500inst",
+      "engine": "batch",
+      "wav_bytes": 82513708,
+      "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-200631_yt500inst/yt500-0302-uTTsZSjIMxI_1791543491.mp3",
+      "score_sha256": "6e1664c7691def999ea5ef076217cbef0815a034f179767059bcd630c6dfaa37",
+      "truncated_inferred": false
     },
     {
       "name": "yt500-0611-2Jr_2H652Vc",
@@ -458,7 +530,8 @@
       "engine": "batch",
       "wav_bytes": 80278828,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0611-2Jr_2H652Vc_2612196988.mp3",
-      "score_sha256": "202038b12a04ce01a4a6b52b5a91e0274ec123a30c7f143df8290618b58855b5"
+      "score_sha256": "202038b12a04ce01a4a6b52b5a91e0274ec123a30c7f143df8290618b58855b5",
+      "truncated_inferred": false
     },
     {
       "name": "yt500-0018-dWahuREerq0",
@@ -477,7 +550,8 @@
       "engine": "batch",
       "wav_bytes": 75801388,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0018-dWahuREerq0_2963975505.mp3",
-      "score_sha256": "9d9115aaf7b3f1ac4908dd02829c9c6192698bde107beb20b1fe2c0aae2cc2ff"
+      "score_sha256": "9d9115aaf7b3f1ac4908dd02829c9c6192698bde107beb20b1fe2c0aae2cc2ff",
+      "truncated_inferred": false
     },
     {
       "name": "yt500-0308-bNuW5JWv-Bg",
@@ -496,7 +570,8 @@
       "engine": "batch",
       "wav_bytes": 74749228,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-183143_yt500inst/yt500-0308-bNuW5JWv-Bg_1658642730.mp3",
-      "score_sha256": "b8394e4d4426cf9837b8e083253edc91aaf05a32c1e70fc7a214d34d9d7fad73"
+      "score_sha256": "b8394e4d4426cf9837b8e083253edc91aaf05a32c1e70fc7a214d34d9d7fad73",
+      "truncated_inferred": false
     },
     {
       "name": "yt500-0111-Rh9M8EBs6bw",
@@ -515,7 +590,8 @@
       "engine": "batch",
       "wav_bytes": 74104108,
       "mp3": "gs://akbar-december-2024-backup/arabmaqamrock/runs/20261110-095521_yt500inst/yt500-0111-Rh9M8EBs6bw_2947375897.mp3",
-      "score_sha256": "cace5534addcdbdf27f4dcc7a7c15a5406f8238ef6500723db3afb8357ee4912"
+      "score_sha256": "cace5534addcdbdf27f4dcc7a7c15a5406f8238ef6500723db3afb8357ee4912",
+      "truncated_inferred": false
     }
   ]
 }
