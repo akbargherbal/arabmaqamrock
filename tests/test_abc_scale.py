@@ -85,6 +85,15 @@ def test_scalar_matrix_parity():
                 assert abs(float(sc[m]) - float(M[m][i, j])) <= 1e-6, (m, i, j)
 
 
+def test_deep_features_match_oracle():
+    """Our feature dict must be a drop-in for oracle.compare_features."""
+    so, si = oracle.parse_abc(ABC_A), oracle.parse_abc(ABC_B)
+    ours = oracle.compare_features(S.score_features(so), S.score_features(si))
+    ref = oracle.compare_features(oracle.features(so), oracle.features(si))
+    for m in oracle.METRICS:
+        assert ours[m] == pytest.approx(ref[m], abs=1e-9), m
+
+
 def test_chordless_identity_and_parity():
     f = S.features_from_text(ABC_CHORDLESS)
     sc = S.cheap_scalar(f, f)
