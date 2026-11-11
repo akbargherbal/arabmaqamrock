@@ -31,7 +31,8 @@ PY
 while true; do
   n=$(count_ok)
   echo "$(date -u +%FT%TZ) watcher: verified=$n target=$TARGET"
-  if [ "$n" -ge "$TARGET" ]; then
+  if [ "$n" -ge "$TARGET" ] \
+     && ! pgrep -f "transcribe.py ${OUT%/transcripts}/audio" >/dev/null 2>&1; then
     break
   fi
   if ! pgrep -f "supervise_yt500_transcription.sh" >/dev/null 2>&1 \
