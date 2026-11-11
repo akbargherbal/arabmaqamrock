@@ -510,6 +510,14 @@ def cmd_run(args) -> int:
     values["composite_adj"] = np.diag(comp_adj)
     stats = C.cohort_stats(values)
     perm = C.paired_permutation(matched["lift_vs_mismatched"].values, args.permutations)
+    matched["composite_z"] = C.robust_z(matched["composite"].values,
+                                        stats["composite"]["median"],
+                                        stats["composite"]["robust_scale"])
+    for g in S.CHEAP_GROUPS:
+        key = f"grp_{g}"
+        matched[f"z_{key}"] = C.robust_z(matched[key].values,
+                                         stats[key]["median"],
+                                         stats[key]["robust_scale"])
 
     strata = {}
     for label, col in (("tier", "tier"), ("country", "country"),
