@@ -171,21 +171,19 @@ def cmd_analysis(args) -> int:
     sim = Path(args.similarity)
     work = Path(args.work)
     prefix = args.prefix.rstrip("/")
-    entries: list[tuple[Path, str]] = []
     sums: list[str] = []
 
-    for p in sorted(input_dir.glob("*.input.abc")):
-        entries.append((p, f"{prefix}/input/{p.name}"))
+    input_files = sorted(input_dir.glob("*.input.abc"))
+    for p in input_files:
         sums.append(f"{sha256_file(p)}  input/{p.name}")
-    for p in sorted(sim.rglob("*")):
-        if p.is_file() and p.name != "SHA256SUMS":
-            rel = p.relative_to(sim).as_posix()
-            entries.append((p, f"{prefix}/similarity/{rel}"))
-            sums.append(f"{sha256_file(p)}  similarity/{rel}")
+    sim_files = [p for p in sorted(sim.rglob("*")) if p.is_file()
+                 and p.name != "SHA256SUMS"]
+    for p in sim_files:
+        rel = p.relative_to(sim).as_posix()
+        sums.append(f"{sha256_file(p)}  similarity/{rel}")
     for fname in ("pairs.json", "cohort.json", "failures.json"):
         p = work / fname
         if p.is_file():
-            entries.append((p, f"{prefix}/{fname}"))
             sums.append(f"{sha256_file(p)}  {fname}")
 
     sums_text = "\n".join(sums) + "\n"
@@ -202,13 +200,10 @@ Inputs are read-only copies of `{INPUT_DATASET}/tracks/<name>/score.abc`.
 Outputs are `{DATASET_PREFIX}/<name>.output.abc`.
 Verify with `sha256sum -c SHA256SUMS`.
 """)
-    entries.append((staging / "README.md", f"{prefix}/README.md"))
     sums.append(f"{sha256_file(staging / 'README.md')}  README.md")
     write(staging / "SHA256SUMS", "\n".join(sums) + "\n")
-    entries.append((staging / "SHA256SUMS", f"{prefix}/SHA256SUMS"))
 
     # Bulk uploads keep basenames unique: <name>.input.abc and similarity/*.
-    input_files = sorted(input_dir.glob("*.input.abc"))
     if input_files:
         r = subprocess.run(["gsutil", "-q", "-m", "cp",
                             *[str(p) for p in input_files],
@@ -216,8 +211,6 @@ Verify with `sha256sum -c SHA256SUMS`.
         if r.returncode != 0:
             print(r.stderr[:500], file=sys.stderr)
             return 1
-    sim_files = [p for p in sorted(sim.rglob("*")) if p.is_file()
-                 and p.name != "SHA256SUMS"]
     if sim_files:
         r = subprocess.run(["gsutil", "-q", "-m", "cp",
                             *[str(p) for p in sim_files],
@@ -225,14 +218,21 @@ Verify with `sha256sum -c SHA256SUMS`.
         if r.returncode != 0:
             print(r.stderr[:500], file=sys.stderr)
             return 1
-    upload_many(entries)
+    docs = [(staging / "README.md", f"{prefix}/README.md"),
+            (staging / "SHA256SUMS", f"{prefix}/SHA256SUMS")]
+    for fname in ("pairs.json", "cohort.json", "failures.json"):
+        p = work / fname
+        if p.is_file():
+            docs.append((p, f"{prefix}/{fname}"))
+    upload_many(docs)
+    objects = len(input_files) + len(sim_files) + len(docs)
     print(f"uploaded {len(input_files)} inputs, {len(sim_files)} similarity files, "
-          f"{len(entries)} docs", flush=True)
+          f"{len(docs)} docs", flush=True)
     write(staging / "_SUCCESS", json.dumps({
         "utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-        "commit": args.commit or "unknown", "objects": len(entries)}) + "\n")
+        "commit": args.commit or "unknown", "objects": objects}) + "\n")
     gsutil(["cp", str(staging / "_SUCCESS"), f"{prefix}/_SUCCESS"])
-    print(json.dumps({"analysis": prefix, "objects": len(entries)}))
+    print(json.dumps({"analysis": prefix, "objects": objects}))
     return 0
 
 
