@@ -263,6 +263,9 @@ def test_failed_rewrite_needs_flag_and_is_flagged(tmp_path, tiny_indexes):
     record = json.loads((root / "tracks" / NAMES[0][0] / "caption.json").read_text())
     assert record["unpolished"] is True
     assert record["rewrite"]["status"] == "failed"
+    manifest = json.loads((root / "manifest.json").read_text())
+    assert manifest["captions"]["unpolished"] == [NAMES[0][0]]
+    assert manifest["counts"]["captions_unpolished"] == 1
     assert _verify(root) == 1
     assert _verify(root, "--allow-unpolished") == 0
 

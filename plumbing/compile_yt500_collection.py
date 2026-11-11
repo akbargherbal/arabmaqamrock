@@ -408,6 +408,7 @@ def make_manifest(rows: list[dict], recipe: dict, style_sha: str,
     }
     if captions is not None:
         counts["captions"] = captions["count"]
+        counts["captions_unpolished"] = len(captions.get("unpolished") or [])
         layout["per_track"] = ("tracks/<name>/{audio.mp3,lyrics.txt,style.txt,"
                                "score.abc,track.json,caption.txt,caption.json}")
         layout["captions"] = "captions.jsonl (one row per track)"
@@ -974,6 +975,10 @@ def attach(args) -> int:
         "pipeline_version": version,
         "attached_at": previous.get("attached_at") or utcnow(),
     }
+    unpolished = sorted(record["name"] for _, record, _ in prepared
+                        if record.get("unpolished"))
+    if unpolished:
+        captions_block["unpolished"] = unpolished
     if missing:
         captions_block["missing"] = missing
     manifest = make_manifest(rows, recipe, style_sha, generated_at,
