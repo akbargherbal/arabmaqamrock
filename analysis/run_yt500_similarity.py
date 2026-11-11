@@ -528,7 +528,18 @@ def cmd_run(args) -> int:
     stats["_strata"] = strata
 
     # --- flags (pre-escalation) ------------------------------------------- #
-    flags = C.flag_cohort(matched, stats, missing=missing, parse_errors=parse_fail)
+    thresholds = {
+        "truncated": args.min_duration,
+        "sparse": args.min_notes,
+        "key_drift": args.min_key,
+        "tempo_drift": args.min_tempo,
+        "outlier_z": args.outlier_z,
+        "max_rank": args.max_rank,
+        "min_lift": args.min_lift,
+        "regen_deep": args.regen_deep,
+    }
+    flags = C.flag_cohort(matched, stats, thresholds=thresholds,
+                          missing=missing, parse_errors=parse_fail)
     escalate_names = set(
         flags.loc[(flags["codes"].str.contains("truncated|sparse|no-chords|key-drift|"
                                                "tempo-drift|cohort-outlier"))
@@ -564,7 +575,8 @@ def cmd_run(args) -> int:
     escalation_seconds = time.monotonic() - t0
 
     # final decisions now that deep composites exist
-    flags = C.flag_cohort(matched, stats, missing=missing, parse_errors=parse_fail)
+    flags = C.flag_cohort(matched, stats, thresholds=thresholds,
+                          missing=missing, parse_errors=parse_fail)
 
     # --- audit ------------------------------------------------------------- #
     t0 = time.monotonic()
@@ -895,6 +907,14 @@ def main(argv=None) -> int:
     rn.add_argument("--permutations", type=int, default=10000)
     rn.add_argument("--blocks", type=int, default=256)
     rn.add_argument("--seed", type=int, default=20261111)
+    rn.add_argument("--min-duration", type=float, default=0.80)
+    rn.add_argument("--min-notes", type=float, default=0.60)
+    rn.add_argument("--min-key", type=float, default=0.50)
+    rn.add_argument("--min-tempo", type=float, default=0.50)
+    rn.add_argument("--outlier-z", type=float, default=-3.0)
+    rn.add_argument("--max-rank", type=int, default=100)
+    rn.add_argument("--min-lift", type=float, default=0.10)
+    rn.add_argument("--regen-deep", type=float, default=0.65)
     rn.set_defaults(func=cmd_run)
 
     rp = sub.add_parser("report", help="re-render summary.md")
