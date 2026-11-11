@@ -131,14 +131,19 @@ def cmd_push(args) -> int:
     print(f"archive: {report.summary()}", flush=True)
 
     dirs = sorted(p for p in root.iterdir() if p.is_dir() and not p.name.startswith((".", "_")))
-    pushed, unchanged, bad = 0, 0, []
+    pushed, unchanged, bad, in_progress = 0, 0, [], 0
     publish_dir = Path(args.publish_dir)
     jobs = []
     for tdir in dirs:
         name = tdir.name
         ok, why, abc_sha = verified_pair(tdir)
         if not ok:
-            bad.append({"name": name, "reason": why})
+            # A directory without meta.json is simply in progress; only a
+            # finished-with-failure directory belongs in the failure report.
+            if (tdir / "meta.json").is_file():
+                bad.append({"name": name, "reason": why})
+            else:
+                in_progress += 1
             continue
         meta = enrich_meta(tdir, name, inv)
         meta_path = publish_dir / f"{name}.output.meta.json"
@@ -195,8 +200,10 @@ def cmd_push(args) -> int:
     out = Path(args.report) if args.report else root / "push_report.json"
     report_obj = {"utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                   "session": session,
-                  "verified_dirs": len(dirs) - len(bad), "objects_written": pushed,
-                  "unchanged_tracks": unchanged, "invalid": bad}
+                  "verified_dirs": len(dirs) - len(bad) - in_progress,
+                  "objects_written": pushed,
+                  "unchanged_tracks": unchanged, "in_progress": in_progress,
+                  "invalid": bad}
     write_json_atomic(out, report_obj)
     print(json.dumps({k: v for k, v in report_obj.items() if k != "invalid"}))
     if bad:
