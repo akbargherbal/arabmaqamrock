@@ -584,8 +584,16 @@ gs://akbar-december-2024-backup/DATASET/yt500_instrumental_transcripts/
   archives/<name>.output-transcript.tar.gz      # complete transcript dir
   archives/_archive_index.json                  # sha256 + fingerprint per track
   manifest.jsonl                                # name, role, hashes, model, mode
-  SHA256SUMS, README.md, DATASET_CARD.md, _SUCCESS
+  _STATE.json                                   # target/ok/failed/accounted/complete
+  SHA256SUMS, README.md, DATASET_CARD.md
+  _SUCCESS                                      # ONLY when accounted >= target
+  _PARTIAL.json                                 # otherwise (with counts)
 ```
+
+Completion markers are not progress logs: publish `_SUCCESS` only when the
+cohort is accounted for (`ok + failures >= 460`); while a run is in flight
+write `_STATE.json` and `_PARTIAL.json`, and delete any stale `_SUCCESS`. A
+watcher must never finalize the analysis below the cohort gate.
 
 The dataset card opens with the disambiguation, verbatim:
 
