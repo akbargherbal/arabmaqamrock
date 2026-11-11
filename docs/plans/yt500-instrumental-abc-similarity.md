@@ -18,10 +18,10 @@ statistics, in minutes not hours.
   (measured: 24 tracks in 1225 s on a Colab GPU, `device=cuda`, `dtype=fp32`)
   = **~6.5 GPU-hours**, 3 sessions.
 - **Transcription is ~1000× more expensive than storage.** Persist the **full**
-  transcript directory for every track (`<name>.tar.gz` + a flat
-  `score.abc`/`meta.json` mirror), not just the ABC: measured 1.58 MB/track raw
-  → ~0.73 GB / ~50–80 MB gzipped for all 460. No later task may ever need a
-  re-transcription.
+  transcript directory for every track (archive + a flat
+  `<name>.output.abc` / `<name>.output.meta.json` mirror), not just the ABC:
+  measured 1.58 MB/track raw → ~0.73 GB / ~50–80 MB gzipped for all 460. No
+  later task may ever need a re-transcription.
 - **The old comparison scales badly by construction, not by nature.** It
   compares all N² pairs with 17 metrics, two of which are full-sequence DTW.
   At N=460 that is 211,600 pairs × 2 DTWs ≈ 1.7 h single-core.
@@ -45,8 +45,9 @@ statistics, in minutes not hours.
 
 | Term | Meaning here |
 |---|---|
-| **input score** | `<name>/score.abc` from the dataset: two voices, `V:Vocal` = chord symbols + rests, `V:Ins` = monophonic melody, `\n% section` comments, `L:1/32`. |
-| **output score** | `score.abc` produced by `transcribe.py --full` on `<name>/audio.mp3`. Two voices, chords retained. |
+| **input score** | `DATASET/yt500_instrumental/tracks/<name>/score.abc`: the score the model was conditioned on. Two voices, `V:Vocal` = chord symbols + rests, `V:Ins` = monophonic melody, `\n% section` comments, `L:1/32`. Read-only. |
+| **output score** | the SheetSage2 transcript of `tracks/<name>/audio.mp3`, produced by `transcribe.py --full`. Two voices, chords retained. |
+| **naming contract** | the only file ever called `score.abc` is the **input** inside the read-only dataset. Everywhere we stage or publish, use `<name>.input.abc` (input) and `<name>.output.abc` (output); output sidecars are `<name>.output.meta.json`; archives are `<name>.output-transcript.tar.gz`. Never publish a bare `score.abc` on the output side. |
 | **track** | one dataset folder, `yt500-NNNN-<video_id>`; N = 460. |
 | **cheap metrics** | 14 metrics computable from per-score feature vectors (no pairwise sequence alignment). |
 | **deep metrics** | 4 metrics from the oracle that need alignment/sequences: `chord_timeline_dtw`, `melody_chroma_dtw`, `interval_4gram_f1`, `rhythm_4gram_f1`. |
@@ -115,15 +116,17 @@ is unchanged.
 ## 4. Architecture
 
 ```
-DATASET/yt500_instrumental/tracks/<name>/{audio.mp3, score.abc}
+DATASET/yt500_instrumental/tracks/<name>/{audio.mp3, score.abc}   # INPUT (read-only)
         |
         | (Phase 2, GPU, ~6.5 h)
         v
-ANALYSIS/yt500_instrumental_abc/transcripts/<name>/{score.abc, meta.json}
+DATASET/yt500_instrumental_transcripts/                           # OUTPUT (durable)
+  <name>.output.abc + <name>.output.meta.json
+  archives/<name>.output-transcript.tar.gz
         |
-        | (Phase 3, local)
+        | (Phase 3, local; staged as input/<name>.input.abc, output/<name>.output.abc)
         v
-pairs manifest (460 rows: name, input_abc, output_abc, status)
+pairs manifest (460 rows: name, input_abc, output_abc, input_sha256, output_sha256)
         |
         | (Phase 4, local, < 2 min)
         v
@@ -150,14 +153,18 @@ verbatim from the zip and never edited.
 
 ### 5.1 Inventory and hash verification
 
-1. Download `tracks.jsonl` + all `score.abc` (≈1.5 MB) to
-   `work/yt500_abc/inputs/<name>.abc`.
-2. Assert 460 rows, unique names, every row has `score.abc` and `audio.mp3`.
-3. Verify `sha256(score.abc)` against, in order:
+1. Download `tracks.jsonl` + all 460 `score.abc` (≈1.5 MB). Write each one
+   **renamed by role** to `work/yt500_abc/input/<name>.input.abc`, so no path in
+   our tree ever has the ambiguous basename `score.abc`.
+2. Assert 460 rows, unique names, every row has `score.abc` and `audio.mp3` in
+   the read-only dataset.
+3. Verify `sha256(<name>.input.abc)` against, in order:
    - `tracks.jsonl` → `score.abc_sha256`,
-   - `work/yt500_gen/corpus/index.json` → `instrumental_abc_sha256`.
-4. Write `work/yt500_abc/inventory.json`: name, sha256, `nominal_s`, `wav_s`,
-   `delta_pct`, sections count, tier, country, duration quartile.
+   - `work/yt500_gen/corpus/index.json` (or the tracked
+     `outputs/YT500/generation/index.json`) → `instrumental_abc_sha256`.
+4. Write `work/yt500_abc/inventory.json`: name, `role: "input"`, sha256,
+   `input_sha256`, `nominal_s`, `wav_s`, `delta_pct`, sections count, tier,
+   country, duration quartile.
 
 **Gate:** 460/460 hashes match (or every mismatch explained and logged).
 
@@ -248,7 +255,8 @@ Pick the shortest, median and longest track by `nominal_s` from
 ```
 
 Check per track:
-- `score.abc` exists and passes `abc_is_valid`;
+- the transcript (`transcripts/<name>/score.abc` in the working tree, published
+  as `<name>.output.abc`) exists and passes `abc_is_valid`;
 - contains `V: Vocal` and `V: Ins`;
 - chord-symbol count > 0 (important: harmony dimension);
 - `parse_abc` succeeds, notes > 0, `total_sec` within ±20% of `wav_s`;
@@ -273,17 +281,17 @@ Stage by track name:
 
 ```bash
 # on Colab
-mkdir -p /content/yt500/{audio,inputs,transcripts}
+mkdir -p /content/yt500/{audio,input,transcripts}
 python3 plumbing/stage_yt500_transcription.py \
   --inventory work/yt500_abc/inventory.json \
   --audio-dir /content/yt500/audio \
-  --inputs-dir /content/yt500/inputs
+  --input-dir /content/yt500/input
 ```
 
 The stager copies `gs://…/tracks/<name>/audio.mp3` to
-`/content/yt500/audio/<name>.mp3` (parallel, ~3 GB) and `score.abc` to
-`/content/yt500/inputs/<name>.abc`. Stable names and byte-identical MP3s are
-required: `transcribe.py` skips a track only when
+`/content/yt500/audio/<name>.mp3` (parallel, ~3 GB) and the dataset's
+`score.abc` to `/content/yt500/input/<name>.input.abc`. Stable names and
+byte-identical MP3s are required: `transcribe.py` skips a track only when
 `meta.json.source_wav_sha256` matches the staged file. **Never re-encode,
 re-tag or tar an MP3 in place.**
 
@@ -330,18 +338,25 @@ thin wrapper:
      `sha256(score.abc) == meta.abc_sha256`, into a deterministic
      `transcripts/<name>.tar.gz` and `_archive_index.json` (sha256, file count,
      source fingerprint);
-  2. upload the archive + index to
-     `gs://…/DATASET/yt500_instrumental_output/archives/<name>.tar.gz`;
-  3. upload the flat mirror `tracks/<name>/{score.abc,meta.json}` so the ABCs
-     are usable without untarring;
+  2. upload the archive + index as
+     `…/archives/<name>.output-transcript.tar.gz` (remote name carries the
+     role; the local tool name stays `<name>.tar.gz`);
+  3. upload the flat mirror as
+     `…/<name>.output.abc` and `…/<name>.output.meta.json`, where the meta is
+     the transcribe `meta.json` plus `role: "output_transcript"`,
+     `input_sha256`, `input_uri`, `audio_sha256`, `audio_uri`. The ABCs are
+     usable without untarring and cannot be mistaken for the input;
   4. per session, upload `_driver.log`, `_timings.csv`,
      `transcribe_manifest.json` to `sessions/<utc>/`.
   Remote objects are **never deleted or overwritten**; a matching sha256 is
   skipped, a missing/corrupt one is re-uploaded. `push` is idempotent.
+  Note: inside the archive the ABC keeps transcribe.py's filename `score.abc`;
+  that is the only remaining legacy name and the archive filename, its
+  `output.meta.json` and the dataset card all mark it as the output side.
 - `pull` (session start): download the flat mirror into
-  `transcripts/<name>/` (and optionally extract archives). Because
-  `score.abc` and `meta.json` are a verified pair, `transcribe.py` reports
-  `skipped`, not `skipped-unverified`.
+  `transcripts/<name>/score.abc` + `transcripts/<name>/meta.json` (the layout
+  `transcribe.py` needs, and optionally extract archives). Because the pair is
+  verified, `transcribe.py` reports `skipped`, not `skipped-unverified`.
 - `--verify`: after each session, run `transcript_archive.py --verify` and
   `./transcribe.sh … --verify`, and upload both reports.
 
@@ -360,9 +375,11 @@ Disk on the VM: 460 archives ≈ 50–80 MB, negligible next to the 3 GB of audi
 
 ### 7.5 End-of-phase checks
 
-- ≥ 95% of 460 tracks have a verified `score.abc` (≥ 437).
-- The union of local `transcripts/` and GCS `transcripts/` is identical
-  (name set and sha256).
+- ≥ 95% of 460 tracks have a verified **output transcript** (≥ 437); in the
+  working tree it is `transcripts/<name>/score.abc`, in the published bundle it
+  is `<name>.output.abc` / `<name>.output-transcript.tar.gz`.
+- The local transcript set and the published dataset prefix agree one-to-one
+  (name set plus sha256, compared through the `.output.meta.json` fields).
 - `inventory.transcribed/` count + `failures.json` == 460.
 
 ---
@@ -371,14 +388,20 @@ Disk on the VM: 460 archives ≈ 50–80 MB, negligible next to the 3 GB of audi
 
 ```bash
 python3 analysis/run_yt500_similarity.py build-pairs \
-  --inputs work/yt500_abc/inputs \
+  --input-dir work/yt500_abc/input \
   --transcripts work/yt500_abc/transcripts \
   --inventory work/yt500_abc/inventory.json \
   --out work/yt500_abc/pairs.json
 ```
 
-`pairs.json` rows: `{name, input_abc, output_abc, status, input_sha256,
-output_sha256}`. Validation before metrics:
+`build-pairs` copies each verified transcript to
+`work/yt500_abc/output/<name>.output.abc` (it refuses to proceed if the
+transcribe `meta.abc_sha256` does not match). `pairs.json` rows:
+`{name, role: "matched_pair", input_abc: "input/<name>.input.abc",
+output_abc: "output/<name>.output.abc", status, input_sha256, output_sha256,
+audio_sha256}`. **Invariant:** `input_sha256 != output_sha256` for every row
+(they can never be byte-identical); if a row violates it, abort — it means the
+sides were swapped or one file was copied twice. Validation before metrics:
 
 - every `output_abc` passes `abc_is_valid` and `parse_abc` yields notes > 0;
 - parse failures are collected, not crashed on (`parse_abc` returns an empty
@@ -525,9 +548,13 @@ trusting corpus-wide numbers. The audit table is a deliverable either way.
 ```
 work/yt500_abc/
   inventory.json, pairs.json, cohort.json, failures.json
+  input/<name>.input.abc                 # conditioning score (role: input)
+  output/<name>.output.abc               # SheetSage2 transcript (role: output)
+  transcripts/<name>/score.abc           # transcribe.py working tree (unpublished)
   similarity/
-    matched_pairs_scores.csv    460 rows: groups, 14 cheap metrics, composite,
-                                composite_adj, rank, lift, z-scores, flags
+    matched_pairs_scores.csv    460 rows: input_sha256, output_sha256, groups,
+                                14 cheap metrics, composite, composite_adj,
+                                rank, lift, z-scores, flags
     all_pairs.parquet           211,600 rows x 14 cheap metrics (plus row/col ids)
     baseline_mismatched_mean.csv
     cohort_stats.json           median/MAD, percentiles, strata, p-value, dz
@@ -539,26 +566,39 @@ work/yt500_abc/
     distributions.png           composite + group histograms, rank histogram
 ```
 
+Every CSV and the summary carry the side labels explicitly: `input` =
+conditioning score, `output` = transcript of generated audio. No deliverable
+column or path is called just `score`. The `matched_pairs_scores.csv` also
+carries `input_sha256`/`output_sha256` so any row can be re-derived from the
+durable bundle without ambiguity.
+
 ### 10.2 GCS bundle (two prefixes, different lifetimes)
 
 **Durable transcript dataset** — the expensive output; reusable independently
-of this study:
+of this study. Everything is named by role:
 
 ```
-gs://akbar-december-2024-backup/DATASET/yt500_instrumental_output/
-  tracks/<name>/{score.abc, meta.json}          # flat mirror, no untar needed
-  archives/<name>.tar.gz                        # complete transcript dir
+gs://akbar-december-2024-backup/DATASET/yt500_instrumental_transcripts/
+  <name>.output.abc                             # flat mirror, no untar needed
+  <name>.output.meta.json                       # role=output + input/audio hashes
+  archives/<name>.output-transcript.tar.gz      # complete transcript dir
   archives/_archive_index.json                  # sha256 + fingerprint per track
-  abc/<name>.abc                                # convenience flat ABC grain
-  manifest.jsonl                                # per-track status, hashes, model
+  manifest.jsonl                                # name, role, hashes, model, mode
   SHA256SUMS, README.md, DATASET_CARD.md, _SUCCESS
 ```
+
+The dataset card opens with the disambiguation, verbatim:
+
+> **This is the OUTPUT side.** Every `*.output.abc` here is a SheetSage2
+> transcript of the generated instrumental audio. The **INPUT** scores are the
+> conditioner: `gs://…/DATASET/yt500_instrumental/tracks/<name>/score.abc`.
+> Match them by `<name>`; `output.meta.json` records `input_sha256`.
 
 **Analysis products** — cheap to regenerate:
 
 ```
 gs://akbar-december-2024-backup/ANALYSIS/yt500_instrumental_abc/
-  inputs/<name>.abc
+  input/<name>.input.abc                        # copy of the conditioning scores
   similarity/…                                  # as in §10.1
   sessions/<utc>/{_driver.log,_timings.csv,transcribe_manifest.json}
   SHA256SUMS, README.md
@@ -635,18 +675,18 @@ python3 plumbing/stage_yt500_transcription.py --inventory-only \
   --out work/yt500_abc/inventory.json
 
 python3 analysis/run_yt500_similarity.py self-test \
-  --corpus scores/yt500_instrumental \
-  --pairs-local local_workspace/20261108-191143_fadhl_shaker_instrumental_16_/scores \
-  --transcripts ~/fadhl_selected_scores \
+  --input-dir work/yt500_abc/input \
+  --transcripts work/yt500_abc/transcripts \
   --out work/yt500_abc/self_test
-# ^ --pairs-local / --transcripts exist on the dev machine only.
-#   On Colab: self-test on work/yt500_abc/inputs and the Phase-1 probe pairs.
+# dev-only deep-parity extra flags: --corpus scores/yt500_instrumental
+#   --pairs-local local_workspace/…/scores --transcripts-fadhl ~/fadhl_selected_scores
+# On Colab: self-test on work/yt500_abc/input and the Phase-1 probe pairs.
 
 # ---- Phase 2 (Colab) ----
 ./plumbing/setup_transcribe.sh --cuda
 python3 plumbing/stage_yt500_transcription.py \
   --inventory work/yt500_abc/inventory.json \
-  --audio-dir /content/yt500/audio --inputs-dir /content/yt500/inputs
+  --audio-dir /content/yt500/audio --input-dir /content/yt500/input
 
 python3 plumbing/yt500_transcribe_sync.py pull   # resume
 nohup bash -c 'while sleep 300; do python3 plumbing/yt500_transcribe_sync.py push; done' &
@@ -659,7 +699,7 @@ python3 plumbing/yt500_transcribe_sync.py push
 
 # ---- Phase 3-5 (local) ----
 python3 analysis/run_yt500_similarity.py run \
-  --inputs work/yt500_abc/inputs \
+  --input-dir work/yt500_abc/input \
   --transcripts work/yt500_abc/transcripts \
   --inventory work/yt500_abc/inventory.json \
   --out work/yt500_abc/similarity \
@@ -691,10 +731,13 @@ Nothing in `transcribe.py`, `generate.py` or the dataset needs to change.
    the 11 local pairs; 489² ≤ 120 s.
 2. **Phase 1:** 3/3 parse; median ≤ 120 s/track; chords in ≥ 2/3.
 3. **Phase 2:** ≥ 95% of 460 verified; local == GCS transcript set; every
-   finished track has a verified `<name>.tar.gz` + flat `score.abc`/`meta.json`
-   mirror in the dataset prefix and `transcript_archive.py --verify` reports
-   0 bad; every failure has an error string and a retry attempt.
-4. **Phase 3:** cohort size + failure list == 460; no silent parse drops.
+   finished track has a verified `<name>.output-transcript.tar.gz` plus a flat
+   `<name>.output.abc` / `<name>.output.meta.json` in the dataset prefix, and
+   `transcript_archive.py --verify` reports 0 bad; every failure has an error
+   string and a retry attempt.
+4. **Phase 3:** cohort size + failure list == 460; no silent parse drops;
+   `input_sha256 != output_sha256` on every row; no published path or report
+   column is named just `score`.
 5. **Phase 4:** matched table covers the whole cohort; every flag has a reason
    code; all-pairs row count == N_ok²; audit ρ ≥ 0.85.
 6. **Phase 5:** `summary.md` states the corpus verdict with effect size and
@@ -711,10 +754,11 @@ Nothing in `transcribe.py`, `generate.py` or the dataset needs to change.
 |---|---|---|
 | 1 | Comparison scope | **all 460** (cheap matrix makes sampling pointless). A stratified 120-track sample would cut GPU time to ~1.7 h if a corpus verdict is enough. |
 | 2 | Transcription mode | **`--full`** (chords needed for harmony), as in the proven Fadhl run. |
-| 3 | GCS prefixes | dataset `DATASET/yt500_instrumental_output/`, analysis `ANALYSIS/yt500_instrumental_abc/` |
-| 4 | Backup scope | **full transcript dir per track** (tar.gz archive + flat ABC/meta mirror + per-session logs); never delete or overwrite remote. |
+| 3 | GCS prefixes | transcripts `DATASET/yt500_instrumental_transcripts/`, analysis `ANALYSIS/yt500_instrumental_abc/`. Input stays `DATASET/yt500_instrumental/`. |
+| 4 | Backup scope | **full transcript dir per track** (`<name>.output-transcript.tar.gz` + `<name>.output.abc`/`.output.meta.json` + per-session logs); never delete or overwrite remote. |
 | 5 | Audit size | 30, widen to 60 if ρ < 0.85. |
 | 6 | Decision thresholds | CLI flags; defaults from cohort percentiles (§9.4), not the 10-track constants. |
+| 7 | Side naming | input = `*.input.abc` (only the read-only dataset keeps `score.abc`); output = `*.output.abc`; assert `input_sha256 != output_sha256`. |
 
 ---
 
