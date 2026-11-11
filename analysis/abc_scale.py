@@ -114,6 +114,12 @@ def score_features(score) -> dict:
         "silence_ratio": silence_ratio,
         "dur_hist": dur_hist,
         "phases": phases,
+        # oracle-compatible aliases: deep compare_features() can consume this
+        # dict directly (audit/escalation only)
+        "chord_time": chord_time,
+        "iv_grams": oracle.ngrams(
+            [int(np.clip(i, -12, 12)) for i in ivals], 4),
+        "rhythm_grams": oracle.ngrams(rhythm_tok, 4),
         # audit-only set features
         "interval_4grams": oracle.ngrams(
             [int(np.clip(i, -12, 12)) for i in ivals], 4),

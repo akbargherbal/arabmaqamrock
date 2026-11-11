@@ -137,7 +137,14 @@ def _resolve(root: Path, value: str | None) -> Path:
     if not value:
         raise ValueError("missing path")
     p = Path(value)
-    return p if p.is_absolute() else Path(root) / p
+    if p.is_absolute():
+        return p
+    candidate = Path(root) / p
+    if candidate.exists():
+        return candidate
+    if p.exists():
+        return p
+    return candidate
 
 
 def build_pairs(input_dir: Path, transcripts_dir: Path,
@@ -472,7 +479,8 @@ def cmd_run(args) -> int:
     strata = {}
     for label, col in (("tier", "tier"), ("country", "country"),
                        ("duration_quartile", "duration_quartile")):
-        strata[label] = C.stratum_medians(matched, "composite", {label: matched[col]})
+        strata[label] = C.stratum_medians(
+            matched, "composite", {label: matched[col]}).get(label, {})
     stats["_permutation"] = perm
     stats["_strata"] = strata
 
