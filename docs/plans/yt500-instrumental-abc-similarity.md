@@ -61,7 +61,7 @@ statistics, in minutes not hours.
 | Metadata | `tracks.jsonl` / `catalog.jsonl`: name, rank, title, artist, country, tier, `nominal_s`, `wav_s`, `delta_pct`, sections, score hash, generation run/seed |
 | Corpus cross-check | `work/yt500_gen/corpus/index.json` holds `instrumental_abc_sha256` per track (489-track frozen corpus) |
 | Existing proof of concept | `local_workspace/fadhl_shaker_selected_scores.zip`: 23/24 tracks transcribed from **MP3** with `--full`; output has `V:Vocal` + chords + `V:Ins`; ~40–75 s/track |
-| Local 11-pair test set | input scores in `local_workspace/20261108-191143_fadhl_shaker_instrumental_16_/scores/`, matching transcripts in the zip (see §5.3) |
+| Local 11-pair test set (dev machine only) | input scores in `local_workspace/20261108-191143_fadhl_shaker_instrumental_16_/scores/`, matching transcripts in the zip (see §5.3) |
 
 The input score is itself a transcription of the original song, and the output
 score is a transcription of generated audio. Both carry transcriber noise, so
@@ -156,15 +156,21 @@ verbatim from the zip and never edited.
 
 **Gate:** 460/460 hashes match (or every mismatch explained and logged).
 
-### 5.2 Vendor the oracle
+### 5.2 Vendor the oracle (committed — do not fetch at run time)
 
-Extract from `local_workspace/abc_similarity.zip`:
+The oracle is committed at:
 
 ```
 analysis/vendor/abc_similarity.py     # verbatim; parse_abc + compare_features
 analysis/vendor/regen_filter.py       # verbatim; threshold reference only
 analysis/vendor/README.md             # provenance, sha256, "do not edit"
 ```
+
+Its source of truth was `local_workspace/abc_similarity.zip`, but
+`local_workspace/` is **gitignored** and is not present on a fresh Colab VM.
+Never reference `local_workspace/` from code, tests or run instructions, and
+never try to fetch the oracle from GitHub: it was never tracked there. The
+committed copies are the only oracle.
 
 `parse_abc` is the valuable, battle-tested component. Everything else in the
 oracle is an audit oracle, not the production path.
@@ -588,6 +594,8 @@ python3 analysis/run_yt500_similarity.py self-test \
   --pairs-local local_workspace/20261108-191143_fadhl_shaker_instrumental_16_/scores \
   --transcripts ~/fadhl_selected_scores \
   --out work/yt500_abc/self_test
+# ^ --pairs-local / --transcripts exist on the dev machine only.
+#   On Colab: self-test on work/yt500_abc/inputs and the Phase-1 probe pairs.
 
 # ---- Phase 2 (Colab) ----
 ./plumbing/setup_transcribe.sh --cuda
