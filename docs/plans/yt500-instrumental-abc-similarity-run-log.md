@@ -101,6 +101,7 @@ Deliverables and the final numbers are in
 | 20:23 | 109 | 109 | 38 | 26.0 | 0 (STABLE) |
 | 20:50 | 162 | 157 | 91 | 27.1 | 1 `no-abc` (`yt500-0208`, recovery attempted, not recoverable) |
 | 21:13 | 212 | 210 | 141 | 26.4 | 2 `no-abc` (`yt500-0208`, `yt500-0277`) |
+| 21:38 | 264 | 262 | 193 | 26.1 | 3 `no-abc` (`…0208`, `…0277`, `…0329`) |
 
 The `yt500-0181` and `yt500-0214` `no-abc` exporter cases were auto-recovered
 (`drop.tail-note`); recovery runs every 120 s and is idempotent.
