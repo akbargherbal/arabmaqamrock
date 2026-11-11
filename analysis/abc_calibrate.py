@@ -246,7 +246,7 @@ def flag_cohort(frame: pd.DataFrame, stats: dict, thresholds: dict | None = None
 
     out = pd.DataFrame(rows)
     if len(out) and "composite" in out:
-        out = out.sort_values("composite", ascending=True, na_position="first")
+        out = out.sort_values("composite", ascending=True, na_position="last")
     return out.reset_index(drop=True)
 
 

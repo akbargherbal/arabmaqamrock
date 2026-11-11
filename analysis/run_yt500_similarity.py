@@ -787,7 +787,8 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
     lines += ["", "## Worst 20 matched tracks", "",
               "| name | composite | rank | lift | codes |",
               "|---|---:|---:|---:|---|"]
-    for _, r in flags.head(20).iterrows():
+    worst = flags[flags["status"] == "ok"].head(20) if len(flags) else flags
+    for _, r in worst.iterrows():
         lines.append(f"| {r['name']} | {r.get('composite', float('nan')):.3f} | "
                      f"{r.get('retrieval_rank', 0)} | {r.get('lift_vs_mismatched', 0):.3f} | "
                      f"{r['codes']} |")
