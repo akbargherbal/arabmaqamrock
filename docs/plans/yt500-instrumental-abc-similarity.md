@@ -17,6 +17,11 @@ statistics, in minutes not hours.
 - **The bottleneck is transcription, not comparison.** 460 tracks × ~51 s/track
   (measured: 24 tracks in 1225 s on a Colab GPU, `device=cuda`, `dtype=fp32`)
   = **~6.5 GPU-hours**, 3 sessions.
+- **Transcription is ~1000× more expensive than storage.** Persist the **full**
+  transcript directory for every track (`<name>.tar.gz` + a flat
+  `score.abc`/`meta.json` mirror), not just the ABC: measured 1.58 MB/track raw
+  → ~0.73 GB / ~50–80 MB gzipped for all 460. No later task may ever need a
+  re-transcription.
 - **The old comparison scales badly by construction, not by nature.** It
   compares all N² pairs with 17 metrics, two of which are full-sequence DTW.
   At N=460 that is 211,600 pairs × 2 DTWs ≈ 1.7 h single-core.
@@ -304,25 +309,43 @@ Rules that matter:
 Expected: 460 × ~51 s ≈ **6.5 h**, so three 2.5-hour sessions (or two longer
 ones). Model load is once per session.
 
-### 7.3 Backup and resume contract
+### 7.3 Backup and resume contract (persist everything)
 
-A Colab VM can die at any moment, and a half-written track directory must never
-be mistaken for a finished one. `plumbing/yt500_transcribe_sync.py`:
+Transcription is the expensive artifact (~6.5 GPU-hours); storage is not.
+The measured size of the proven 24-track transcript set is **38 MB raw
+(1.58 MB/track)** and **2.6 MB zipped**; all 460 tracks are therefore
+**~0.73 GB raw / ~50–80 MB gzipped**. Keep the **entire** transcript directory
+for every finished track — ABC, MIDI, labs, `events.json`, `tokens.json`,
+`notation/`, `beat/chord/key/structure.lab` — not just `score.abc`. A future
+consumer (new metrics, melody analysis, training data, a different comparison)
+must never force a re-transcription.
 
-- `push` (every 5 min, and once before stopping): for each
-  `transcripts/<name>/`, upload **only if**
-  `meta.json.status == "ok"`, `meta.abc_sha256` exists and
-  `sha256(score.abc) == meta.abc_sha256`. Upload `score.abc` + `meta.json` to
-  `gs://…/ANALYSIS/yt500_instrumental_abc/transcripts/<name>/`.
-  Optional `--archive` also tars the side artifacts (MIDI/lab/events) for a
-  name list — use it only for flagged tracks (space/time; events.json alone is
-  ~0.5 MB/track).
-- `pull` (session start): `gsutil -m rsync -r` the same prefix into the local
-  `transcripts/` tree. Because `score.abc` and `meta.json` are a verified
-  pair, `transcribe.py` reports `skipped`, not `skipped-unverified`.
-- `--verify`: after each session, run
-  `./transcribe.sh /content/yt500/audio --out-dir /content/yt500/transcripts --verify`
-  and upload the report.
+Use the existing, already-tested `plumbing/transcript_archive.py` rather than
+reimplementing the archive contract. `plumbing/yt500_transcribe_sync.py` is a
+thin wrapper:
+
+- `push` (every 5 min, and once before stopping):
+  1. call `archive_transcripts(transcripts_dir)` — it archives **only** dirs
+     whose `meta.json` says `status == "ok"` and whose
+     `sha256(score.abc) == meta.abc_sha256`, into a deterministic
+     `transcripts/<name>.tar.gz` and `_archive_index.json` (sha256, file count,
+     source fingerprint);
+  2. upload the archive + index to
+     `gs://…/DATASET/yt500_instrumental_output/archives/<name>.tar.gz`;
+  3. upload the flat mirror `tracks/<name>/{score.abc,meta.json}` so the ABCs
+     are usable without untarring;
+  4. per session, upload `_driver.log`, `_timings.csv`,
+     `transcribe_manifest.json` to `sessions/<utc>/`.
+  Remote objects are **never deleted or overwritten**; a matching sha256 is
+  skipped, a missing/corrupt one is re-uploaded. `push` is idempotent.
+- `pull` (session start): download the flat mirror into
+  `transcripts/<name>/` (and optionally extract archives). Because
+  `score.abc` and `meta.json` are a verified pair, `transcribe.py` reports
+  `skipped`, not `skipped-unverified`.
+- `--verify`: after each session, run `transcript_archive.py --verify` and
+  `./transcribe.sh … --verify`, and upload both reports.
+
+Disk on the VM: 460 archives ≈ 50–80 MB, negligible next to the 3 GB of audio.
 
 ### 7.4 Failures
 
@@ -516,17 +539,35 @@ work/yt500_abc/
     distributions.png           composite + group histograms, rank histogram
 ```
 
-### 10.2 GCS bundle
+### 10.2 GCS bundle (two prefixes, different lifetimes)
+
+**Durable transcript dataset** — the expensive output; reusable independently
+of this study:
+
+```
+gs://akbar-december-2024-backup/DATASET/yt500_instrumental_output/
+  tracks/<name>/{score.abc, meta.json}          # flat mirror, no untar needed
+  archives/<name>.tar.gz                        # complete transcript dir
+  archives/_archive_index.json                  # sha256 + fingerprint per track
+  abc/<name>.abc                                # convenience flat ABC grain
+  manifest.jsonl                                # per-track status, hashes, model
+  SHA256SUMS, README.md, DATASET_CARD.md, _SUCCESS
+```
+
+**Analysis products** — cheap to regenerate:
 
 ```
 gs://akbar-december-2024-backup/ANALYSIS/yt500_instrumental_abc/
-  transcripts/<name>/{score.abc, meta.json}      # 460, verified pairs
-  inputs/<name>.abc                              # frozen input scores
-  similarity/…                                   # as above
+  inputs/<name>.abc
+  similarity/…                                  # as in §10.1
+  sessions/<utc>/{_driver.log,_timings.csv,transcribe_manifest.json}
   SHA256SUMS, README.md
 ```
 
-`--gcs-prefix` is configurable; the dataset itself is never modified.
+Both prefixes are configurable (`--dataset-prefix`, `--analysis-prefix`); the
+source dataset is never modified. The output bundle is documented as its own
+reusable dataset (ABC + full side artifacts + provenance), so no later task has
+to pay the transcription cost again.
 
 ### 10.3 Decision-facing outputs
 
@@ -559,8 +600,10 @@ Peak RAM *est.* < 300 MB at N=460. Growth path: at N=5,000 keep the features
 and retrieval matmul, block the pair matrix (256 rows), and switch the chance
 baseline to a fixed decoy set; the deep path stays sample-based.
 
-Storage: input scores 1.5 MB; output `score.abc`+`meta.json` ≈ 1–2 MB total;
-optional side-artifact archives ≈ 1 GB only if requested.
+Storage: input scores ~1.5 MB; **full output transcripts measured at 1.58 MB/track
+raw → ~0.73 GB for 460, ~50–80 MB gzipped**. Persist all of it. One
+re-transcription (~6.5 GPU-hours) costs orders of magnitude more than the
+storage, so storage is never the constraint to optimize.
 
 ---
 
@@ -570,7 +613,9 @@ optional side-artifact archives ≈ 1 GB only if requested.
 |---|---|---|
 | MP3 staging names collide | all stems `audio` | flatten to `<name>.mp3` (§7.1) |
 | `--limit` used for chunks | resume never advances | use `--time-budget` + hash skip (§7.2) |
-| Torn transcript uploaded | `skipped-unverified` forever | push only `status=ok` + hash-verified pairs (§7.3) |
+| Torn transcript uploaded | `skipped-unverified` forever | archive only `status=ok` + hash-verified dirs (`transcript_archive.is_complete`) (§7.3) |
+| Artifacts dropped to save space | a later task forces a full re-transcription | persist the complete dir as `<name>.tar.gz` + flat ABC/meta mirror (§7.3) |
+| Remote archive overwritten/lost | provenance gap, silent data loss | `push` never deletes or clobbers; sha256 match = skip (§7.3) |
 | MP3 re-encoded during staging | source hash changes, mass re-run | copy bytes; never transcode (§7.1) |
 | SheetSage2 `no-abc` | no output for a track | retry, then MP3→WAV, then `missing-output` (§7.4) |
 | No chord symbols in output | harmony group = 0 | `no-chords` flag; deep escalation decides (§9.4) |
@@ -633,7 +678,7 @@ python3 analysis/run_yt500_similarity.py run \
 | `analysis/abc_calibrate.py` | baseline, adj, rank, lift, cohort stats, permutation, flags |
 | `analysis/run_yt500_similarity.py` | CLI: `self-test`, `build-pairs`, `run`, `report` |
 | `plumbing/stage_yt500_transcription.py` | inventory + flatten audio + input scores |
-| `plumbing/yt500_transcribe_sync.py` | verified `push`/`pull`/`verify` for transcripts |
+| `plumbing/yt500_transcribe_sync.py` | thin wrapper over `transcript_archive.py`: `push` full archives + flat mirror + session logs, `pull`, `verify` |
 | `tests/test_abc_scale.py` | identity, scalar↔matrix parity, invariance, truncation, runtime |
 
 Nothing in `transcribe.py`, `generate.py` or the dataset needs to change.
@@ -646,7 +691,9 @@ Nothing in `transcribe.py`, `generate.py` or the dataset needs to change.
    the 11 local pairs; 489² ≤ 120 s.
 2. **Phase 1:** 3/3 parse; median ≤ 120 s/track; chords in ≥ 2/3.
 3. **Phase 2:** ≥ 95% of 460 verified; local == GCS transcript set; every
-   failure has an error string and a retry attempt.
+   finished track has a verified `<name>.tar.gz` + flat `score.abc`/`meta.json`
+   mirror in the dataset prefix and `transcript_archive.py --verify` reports
+   0 bad; every failure has an error string and a retry attempt.
 4. **Phase 3:** cohort size + failure list == 460; no silent parse drops.
 5. **Phase 4:** matched table covers the whole cohort; every flag has a reason
    code; all-pairs row count == N_ok²; audit ρ ≥ 0.85.
@@ -664,8 +711,8 @@ Nothing in `transcribe.py`, `generate.py` or the dataset needs to change.
 |---|---|---|
 | 1 | Comparison scope | **all 460** (cheap matrix makes sampling pointless). A stratified 120-track sample would cut GPU time to ~1.7 h if a corpus verdict is enough. |
 | 2 | Transcription mode | **`--full`** (chords needed for harmony), as in the proven Fadhl run. |
-| 3 | GCS prefix | `ANALYSIS/yt500_instrumental_abc/` |
-| 4 | Backup scope | `score.abc` + `meta.json` only; archive side artifacts for flagged tracks only. |
+| 3 | GCS prefixes | dataset `DATASET/yt500_instrumental_output/`, analysis `ANALYSIS/yt500_instrumental_abc/` |
+| 4 | Backup scope | **full transcript dir per track** (tar.gz archive + flat ABC/meta mirror + per-session logs); never delete or overwrite remote. |
 | 5 | Audit size | 30, widen to 60 if ρ < 0.85. |
 | 6 | Decision thresholds | CLI flags; defaults from cohort percentiles (§9.4), not the 10-track constants. |
 
