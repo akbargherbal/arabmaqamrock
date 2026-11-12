@@ -80,6 +80,7 @@ Artifacts:
 - [x] shortlist JSON (22 qualify / 2 borderline / 0 reject)
 - [x] publish analysis bundle; SHA256SUMS 39/39 OK
 - [x] commit and push (code commit `d9c437c`; shortlist + this log follow)
+- [x] build and publish the 22-track shortlist dataset (SHA256SUMS 145/145 OK)
 
 ## Final
 
@@ -93,3 +94,30 @@ Artifacts:
 - Provenance: all 24 published transcriptions reproduced byte-for-byte from
   audio (`similarity/reproducibility.json`); no re-transcription was needed for
   the comparison, but the full check was run anyway.
+
+## Shortlist dataset — 2026-11-12T09:05Z
+
+Built `gs://akbar-december-2024-backup/DATASET/fadhl_shaker_instrumental_18_shortlist`
+with the **22 qualifying tracks**, shaped like `DATASET/yt500_instrumental`:
+
+```
+tracks/fs18-<source_name>/
+  audio.mp3        server-side copy from the source run
+  score.abc        input / generation conditioner
+  transcript.abc   output / SheetSage2 --full transcript
+  lyrics.txt       section-tag plan derived from score.abc
+  style.txt        canonical style prompt
+  track.json       ids, hashes, similarity, provenance
+catalog.{jsonl,csv,md}, tracks.{jsonl,parquet}, playlist.m3u
+manifest.json, shortlist.json, recipe/, README.md, DATASET_CARD.md
+SHA256SUMS, .build.json, _SUCCESS
+```
+
+- **22 tracks**, 142,160,094 audio bytes; 22/22 audio, score and transcript.
+- **Captions deferred**: no caption files or `captions.jsonl`; the source
+  captions remain at `DATASET/fadhl_shaker_instrumental_18/captions/`.
+- Source dataset untouched; only the new prefix was written.
+- Verification: `sha256sum -c` **145/145 OK**, `_PARTIAL.json` absent,
+  `_SUCCESS` present.
+- Builder: `plumbing/build_fadhl18_shortlist_dataset.py`
+  (`--mode build|publish|verify|all`).
