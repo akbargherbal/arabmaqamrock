@@ -36,6 +36,35 @@ cohort is a separate, later phase.
 - No audio download is needed for this comparison. The MP3s remain referenced
   by GCS URI + SHA-256.
 
+### 2.1 Provenance check — are the "outputs" real transcriptions? (2026-11-12)
+
+Yes. This was checked, not assumed:
+
+1. **Not copies.** All 24 `abc_transcription` SHA-256s match `tracks.jsonl`
+   and none match the corresponding reference ABC. Note-token Jaccard between
+   input and output is **0.23–0.86 (median 0.64)**, so the note content is
+   substantially different.
+2. **Reproduced from audio alone.** The shortest, median and longest tracks
+   were re-transcribed from their MP3s with a fresh
+   `m-a-p/SheetSage2` revision `b83c3d79…` run (`--full`, CUDA, bf16).
+   All three fresh outputs were **byte-identical** to the published
+   `abc_transcription` files (e.g. `fustan_alhelwa` SHA-256
+   `178a386a…`, 2,873 B).
+3. **Not a filename lookup.** Renaming the MP3 to
+   `renamed_control_0001.mp3` still produced the same byte-identical ABC.
+4. **Audio-dependent.** Pitch-shifting the same MP3 up two semitones changed
+   the output (new SHA-256, key changed `Cm → G#m`, 3,103 B vs 2,873 B),
+   proving the model is reading the audio rather than copying a score.
+5. **Why the headers look similar.** The model emits the same canonical
+   `X:/T:/M:/L:/Q:`, `V: Vocal`/`V: Ins` and `% section` scaffold that the
+   reference score uses. That is a model/format convention, not evidence of a
+   copy; the note-level content differs.
+
+Conclusion: the published `abc_transcription/` files are genuine SheetSage2
+outputs and are safe to use as the output side. No re-transcription is needed
+for the shortlist; the fresh runs above are already a stronger spot-check than
+the optional Phase 5 sample.
+
 ## 3. What "qualifies" means
 
 Use the YT500 decision rules for comparability, plus an absolute floor because
@@ -245,12 +274,13 @@ verify with `sha256sum -c` after download.
 
 ### Phase 5 — optional confidence checks (not required)
 
+Already done on 2026-11-12 (see §2.1): 3 tracks spanning shortest/median/longest
+plus a renamed-file control reproduced the published ABCs byte-for-byte, and a
+pitch-shifted control changed the output. No further transcription is needed
+unless a new model revision is used.
+
 - Spot-check 3 tracks: cheap composite vs deep composite delta, note counts,
   duration ratio, key/tempo similarity.
-- Optional GPU re-transcription of 3 tracks (~25 s each) to confirm the
-  published `abc_transcription` matches a fresh SheetSage2 run. This is a
-  sanity check only; the published transcriptions are already the comparison
-  target.
 
 ## 7. Final gates
 
@@ -284,9 +314,10 @@ verify with `sha256sum -c` after download.
    YT500 observed KEEP floor and hard-reject floor. If the operator prefers a
    different acceptance bar, change it in Phase 3 only; the raw scores are
    unchanged.
-3. **Transcription trust** — the plan trusts the dataset's published
-   `abc_transcription` files and verifies their hashes; it does not re-run the
-   model unless Phase 5 is requested.
+3. **Transcription trust** — the dataset's published `abc_transcription` files
+   were independently reproduced byte-for-byte on 3 tracks plus a rename
+   control (§2.1); hashes are still verified for all 24, but the model need not
+   be re-run for this shortlist.
 4. **Merge naming** — `fs18-` prefix is a proposal; confirm before the first
    merged manifest is written.
 5. **`vocal_sparse`** — ignored for this decision; it is expected for
