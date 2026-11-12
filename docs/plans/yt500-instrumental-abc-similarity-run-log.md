@@ -114,3 +114,33 @@ The `yt500-0181` and `yt500-0214` `no-abc` exporter cases were auto-recovered
 (`drop.tail-note`); recovery runs every 120 s and is idempotent.
 
 
+## Resume — 2026-11-12 06:22Z (fresh Colab L4 VM)
+
+Starting state re-verified before launching (not assumed):
+
+- Branch `feat/yt500-abc-similarity` at `142eeb4`.
+- Remote flat `.output.abc` **317**, remote archives **317**, `_SUCCESS`
+  absent, `_STATE`/`_PARTIAL` `ok=317 failed=0 accounted=317 target=460
+  complete=false`.
+- Inventory rebuilt: **460/460** input sha256 match.
+- `pull` recovered **317** verified; `verify` **317/317**, exit 0.
+- Audio re-staged byte-exact **460/460** (2.9 GB), inputs 460/460.
+- CUDA env rebuilt: torch **2.8.0+cu126**, CUDA available (NVIDIA L4).
+
+**Publisher defect fixed before launch.** `analysis/run_yt500_similarity.py`
+writes `failures.json` as `{"missing": [...], "parse_errors": [...]}` but
+`publish_yt500_bundle.py` only read `payload["failures"]`, so `failed` was
+always 0: at 455 ok it computed `accounted=455 < 460`, wrote `_PARTIAL`, and
+never wrote `_SUCCESS`. `failure_names()` now normalizes bare lists,
+`{"failures": [...]}`, and the analysis `missing`/`parse_errors` shapes
+(deduped by name), so the finalizer can close the cohort at `ok+failed == 460`.
+
+Launched 06:22Z: supervisor `TARGET=460 TIME_BUDGET=7200`, recovery→push→publish
+loop every 120 s, watcher `TARGET=437`.
+
+### Progress checkpoints (resume 2)
+
+| UTC | verified | remote | new | median s | failures |
+|---|---:|---:|---:|---:|---|
+| 06:46 | 356 | 351 | 39 | 28.6 | 6 `no-abc` (5 known + `…0471`, `AbcRebuildError`); `…0503` recovered `drop.tail-note` |
+| 07:01 | 388 | 386 | 71 | 27.1 | 7 `no-abc` (adds `…0471`, `…0579`) |

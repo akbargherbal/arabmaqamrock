@@ -59,6 +59,32 @@ def upload_many(pairs: list[tuple[Path, str]]) -> int:
     return len(pairs)
 
 
+def failure_names(payload) -> list[str]:
+    """Normalize the several failures.json shapes to unique track names.
+
+    ``analysis/run_yt500_similarity.py`` writes
+    ``{"missing": [...], "parse_errors": [...], ...}``, while the recovery
+    helpers write ``{"failures": [...]}`` and older callers pass a bare list.
+    Both ``{"name": ...}`` rows and plain strings are accepted.
+    """
+    if isinstance(payload, list):
+        rows = payload
+    elif isinstance(payload, dict):
+        if "failures" in payload:
+            rows = payload.get("failures") or []
+        else:
+            rows = list(payload.get("missing") or []) \
+                + list(payload.get("parse_errors") or [])
+    else:
+        rows = []
+    names: list[str] = []
+    for row in rows:
+        name = row.get("name") if isinstance(row, dict) else row
+        if name and name not in names:
+            names.append(str(name))
+    return names
+
+
 def verified_names(transcripts: Path) -> list[str]:
     sys.path.insert(0, str(REPO / "plumbing"))
     import transcript_archive as TA
@@ -112,8 +138,7 @@ def cmd_dataset(args) -> int:
     sums_text = "\n".join(s for s, _ in sums) + "\n"
     failures = []
     if args.failures and Path(args.failures).is_file():
-        payload = read_json(Path(args.failures))
-        failures = payload if isinstance(payload, list) else payload.get("failures", [])
+        failures = failure_names(read_json(Path(args.failures)))
     target = int(args.target)
     accounted = len(manifest) + len(failures)
     complete = accounted >= target
