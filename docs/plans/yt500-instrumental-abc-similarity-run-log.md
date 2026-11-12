@@ -188,3 +188,18 @@ archives_ok 452, **archives_bad 0**. Analysis bundle SHA256SUMS **473/473 OK**.
   prefix.
 - Final state is reproducible from this branch + GCS; no `/content` state is
   required.
+
+### Shortlist — KEEP/REVIEW only (2026-11-12T07:50Z)
+
+- File: `docs/plans/yt500-abc-shortlist-keep-review.json` (tracked) and
+  `ANALYSIS/yt500_instrumental_abc/similarity/shortlist_keep_review.json`
+  (identical, hashed in the analysis bundle).
+- **446 tracks shortlisted: KEEP 379 + REVIEW 67.** Excluded by design:
+  **6 REGENERATE** (`…0149`, `…0247`, `…0311`, `…0378`, `…0439`, `…0449`)
+  and **8 no-output** (`no-abc`) tracks.
+- Each row keeps `decision`, `composite`, `composite_z`, `retrieval_rank`,
+  `lift_vs_mismatched`, reason `codes`, `deep_composite`, `recovered`,
+  `tier`/`country`/`duration_quartile`, the four group scores, and
+  input/output/audio SHA256s. Top-level counts, rules, thresholds, source
+  hashes, and the excluded lists are included for audit.
+- Analysis bundle SHA256SUMS re-verified **474/474 OK** after adding it.
