@@ -241,15 +241,15 @@ def cmd_analysis(args) -> int:
     sums_text = "\n".join(sums) + "\n"
     staging = Path(args.staging)
     write(staging / "SHA256SUMS", sums_text)
-    write(staging / "README.md", f"""# YT500 input-vs-output ABC similarity — analysis bundle
+    write(staging / "README.md", f"""# {args.label} — analysis bundle
 
 - `input/<name>.input.abc` — conditioning scores (role: input)
 - `similarity/` — matched table, all-pairs parquet, cohort stats, flags,
   escalation, audit, summary.md, distributions.png
 - `pairs.json`, `cohort.json`, `failures.json`
 
-Inputs are read-only copies of `{INPUT_DATASET}/tracks/<name>/score.abc`.
-Outputs are `{DATASET_PREFIX}/<name>.output.abc`.
+{args.input_description}
+{args.output_description}
 Verify with `sha256sum -c SHA256SUMS`.
 """)
     sums.append(f"{sha256_file(staging / 'README.md')}  README.md")
@@ -309,6 +309,11 @@ def main(argv=None) -> int:
     a.add_argument("--prefix", default=ANALYSIS_PREFIX)
     a.add_argument("--staging", default=str(REPO / "work/yt500_abc/publish_bundle/analysis"))
     a.add_argument("--commit", default=None)
+    a.add_argument("--label", default="YT500 input-vs-output ABC similarity")
+    a.add_argument("--input-description",
+                   default=f"Inputs are read-only copies of `{INPUT_DATASET}/tracks/<name>/score.abc`.")
+    a.add_argument("--output-description",
+                   default=f"Outputs are `{DATASET_PREFIX}/<name>.output.abc`.")
     a.set_defaults(func=cmd_analysis)
     args = ap.parse_args(argv)
     return args.func(args)

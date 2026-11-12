@@ -616,6 +616,12 @@ def cmd_run(args) -> int:
     stats["_all_pairs_rows"] = all_pairs_rows
     stats["_commit"] = git_sha()
     stats["_generated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    if getattr(args, "label", None):
+        stats["_label"] = args.label
+    if getattr(args, "sides", None):
+        stats["_sides"] = args.sides
+    if getattr(args, "reproduce", None):
+        stats["_reproduce"] = args.reproduce
     write_json(out / "cohort_stats.json", stats)
 
     # cohort.json / failures.json next to pairs
@@ -756,12 +762,13 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
     reasons = flags["codes"].str.split(";").explode().value_counts()
     dec = flags["decision"].value_counts()
     lines = [
-        "# YT500 instrumental — input-vs-output ABC similarity", "",
-        "**Sides:** `input` = the conditioning score "
-        "(`DATASET/yt500_instrumental/tracks/<name>/score.abc`, staged as "
-        "`<name>.input.abc`); `output` = the SheetSage2 transcript of the "
-        "generated audio (published as `<name>.output.abc`). No deliverable is "
-        "named just `score`.", "",
+        f"# {stats.get('_label', 'YT500 instrumental — input-vs-output ABC similarity')}", "",
+        stats.get("_sides",
+                  "**Sides:** `input` = the conditioning score "
+                  "(`DATASET/yt500_instrumental/tracks/<name>/score.abc`, staged as "
+                  "`<name>.input.abc`); `output` = the SheetSage2 transcript of the "
+                  "generated audio (published as `<name>.output.abc`). No deliverable is "
+                  "named just `score`."), "",
         f"Generated {stats.get('_generated_at')} from commit `{stats.get('_commit')}`.",
         "Transcription: `m-a-p/SheetSage2` revision "
         "`b83c3d79a6d98bcffaf8f9ed112c90aa887887bc`, `--full` (melody + chords).",
@@ -839,10 +846,11 @@ def render_summary(out: Path, matched: pd.DataFrame, flags: pd.DataFrame,
         "",
         "## Reproduce", "",
         "```bash",
-        "python3 analysis/run_yt500_similarity.py run \\",
-        "  --inputs work/yt500_abc/inputs --transcripts work/yt500_abc/transcripts \\",
-        "  --inventory work/yt500_abc/inventory.json --out work/yt500_abc/similarity \\",
-        "  --audit 30 --permutations 10000",
+        stats.get("_reproduce",
+                  "python3 analysis/run_yt500_similarity.py run \\\n"
+                  "  --inputs work/yt500_abc/inputs --transcripts work/yt500_abc/transcripts \\\n"
+                  "  --inventory work/yt500_abc/inventory.json --out work/yt500_abc/similarity \\\n"
+                  "  --audit 30 --permutations 10000"),
         "```",
         "",
     ]
@@ -930,6 +938,12 @@ def main(argv=None) -> int:
     rn.add_argument("--max-rank", type=int, default=100)
     rn.add_argument("--min-lift", type=float, default=0.10)
     rn.add_argument("--regen-deep", type=float, default=0.65)
+    rn.add_argument("--label", default=None,
+                    help="report title; defaults to the YT500 title")
+    rn.add_argument("--sides", default=None,
+                    help="report 'Sides' paragraph; defaults to the YT500 wording")
+    rn.add_argument("--reproduce", default=None,
+                    help="command shown in the report's Reproduce block")
     rn.set_defaults(func=cmd_run)
 
     rp = sub.add_parser("report", help="re-render summary.md")

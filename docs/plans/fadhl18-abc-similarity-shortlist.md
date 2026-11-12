@@ -49,7 +49,9 @@ Yes. This was checked, not assumed:
    `m-a-p/SheetSage2` revision `b83c3d79…` run (`--full`, CUDA, bf16).
    All three fresh outputs were **byte-identical** to the published
    `abc_transcription` files (e.g. `fustan_alhelwa` SHA-256
-   `178a386a…`, 2,873 B).
+   `178a386a…`, 2,873 B). A full-cohort follow-up re-transcribed **all 24
+   tracks**: **24/24 byte-identical**, 0 failures, 671 s total
+   (`work/fadhl18/similarity/reproducibility.json`).
 3. **Not a filename lookup.** Renaming the MP3 to
    `renamed_control_0001.mp3` still produced the same byte-identical ABC.
 4. **Audio-dependent.** Pitch-shifting the same MP3 up two semitones changed

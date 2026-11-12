@@ -1,0 +1,268 @@
+{
+  "title": "Fadl Shaker Instrumental 18 \u2014 transcription reproducibility check",
+  "generated_at": "2026-11-12T08:49:38Z",
+  "dataset": "gs://akbar-december-2024-backup/DATASET/fadhl_shaker_instrumental_18",
+  "method": "Fresh m-a-p/SheetSage2 --full run on the source MP3s, same revision b83c3d79a6d98bcffaf8f9ed112c90aa887887bc, CUDA bf16, threads=4, compared byte-for-byte with the published abc_transcription files.",
+  "controls": {
+    "rename": {
+      "description": "same fustan_alhelwa MP3 copied to renamed_control_0001.mp3",
+      "byte_identical_to_published": true
+    },
+    "pitch_shift": {
+      "description": "fustan_alhelwa MP3 shifted +2 semitones",
+      "output_changed": true,
+      "published_sha256": "178a386a424bf61e9f52fafb95e56c52283343438a30631fad912e17951b2021",
+      "shifted_sha256": "afa7cc54d6fb0e93adc96dff177476931639bb8b305ef695851d8a342068d485",
+      "published_key": "Cm",
+      "shifted_key": "G#m"
+    }
+  },
+  "counts": {
+    "tracks": 24,
+    "compared": 24,
+    "byte_identical": 24,
+    "manifest_match": 24
+  },
+  "tracks": [
+    {
+      "name": "al_dawr_ala_meen_1678957498",
+      "published_sha256": "b9e59ee58e8123680122d13d5445feea10a84faa2781f47d836e7547c66b13d3",
+      "fresh_sha256": "b9e59ee58e8123680122d13d5445feea10a84faa2781f47d836e7547c66b13d3",
+      "byte_identical": true,
+      "published_bytes": 3453,
+      "fresh_bytes": 3453,
+      "manifest_sha256": "b9e59ee58e8123680122d13d5445feea10a84faa2781f47d836e7547c66b13d3",
+      "manifest_match": true
+    },
+    {
+      "name": "al_hal_1486538140",
+      "published_sha256": "9ac153d1a5190bf38774c89af2132dca07f151bbbdf4e271df1b067062bbd54d",
+      "fresh_sha256": "9ac153d1a5190bf38774c89af2132dca07f151bbbdf4e271df1b067062bbd54d",
+      "byte_identical": true,
+      "published_bytes": 4507,
+      "fresh_bytes": 4507,
+      "manifest_sha256": "9ac153d1a5190bf38774c89af2132dca07f151bbbdf4e271df1b067062bbd54d",
+      "manifest_match": true
+    },
+    {
+      "name": "al_qissa_wama_fiha_2510759693",
+      "published_sha256": "f8a8cd6495d83d914f7dcd1fee7f3ae828ba74c0d3bae3b88856a05d869d4d53",
+      "fresh_sha256": "f8a8cd6495d83d914f7dcd1fee7f3ae828ba74c0d3bae3b88856a05d869d4d53",
+      "byte_identical": true,
+      "published_bytes": 6333,
+      "fresh_bytes": 6333,
+      "manifest_sha256": "f8a8cd6495d83d914f7dcd1fee7f3ae828ba74c0d3bae3b88856a05d869d4d53",
+      "manifest_match": true
+    },
+    {
+      "name": "ana_min_akhiraha_3139827573",
+      "published_sha256": "7fcd1d90f5b3c689b2ddf55ca7dd6e4c1bb8dbcf7439db75fa1fe4002e81218e",
+      "fresh_sha256": "7fcd1d90f5b3c689b2ddf55ca7dd6e4c1bb8dbcf7439db75fa1fe4002e81218e",
+      "byte_identical": true,
+      "published_bytes": 3406,
+      "fresh_bytes": 3406,
+      "manifest_sha256": "7fcd1d90f5b3c689b2ddf55ca7dd6e4c1bb8dbcf7439db75fa1fe4002e81218e",
+      "manifest_match": true
+    },
+    {
+      "name": "awwal_ma_bashufak_2804689095",
+      "published_sha256": "7ad483fb86082dfc2acac9711afd17c4f8652514d5026c93f6b025bf9ef8e275",
+      "fresh_sha256": "7ad483fb86082dfc2acac9711afd17c4f8652514d5026c93f6b025bf9ef8e275",
+      "byte_identical": true,
+      "published_bytes": 4293,
+      "fresh_bytes": 4293,
+      "manifest_sha256": "7ad483fb86082dfc2acac9711afd17c4f8652514d5026c93f6b025bf9ef8e275",
+      "manifest_match": true
+    },
+    {
+      "name": "badeet_atib_1004225608",
+      "published_sha256": "dfa68bd7c17ace690b889d3544794ab551d5da95bd833f3294fa4c31ef804a95",
+      "fresh_sha256": "dfa68bd7c17ace690b889d3544794ab551d5da95bd833f3294fa4c31ef804a95",
+      "byte_identical": true,
+      "published_bytes": 3415,
+      "fresh_bytes": 3415,
+      "manifest_sha256": "dfa68bd7c17ace690b889d3544794ab551d5da95bd833f3294fa4c31ef804a95",
+      "manifest_match": true
+    },
+    {
+      "name": "bafakker_bil_sa3at_3691473400",
+      "published_sha256": "e0d85120aa0455ee59c45ac71a1731ab60a7c2a8d157b96bb5d70e9c3bb89823",
+      "fresh_sha256": "e0d85120aa0455ee59c45ac71a1731ab60a7c2a8d157b96bb5d70e9c3bb89823",
+      "byte_identical": true,
+      "published_bytes": 3922,
+      "fresh_bytes": 3922,
+      "manifest_sha256": "e0d85120aa0455ee59c45ac71a1731ab60a7c2a8d157b96bb5d70e9c3bb89823",
+      "manifest_match": true
+    },
+    {
+      "name": "feen_layalik_1545590519",
+      "published_sha256": "2f51f7ab3c25503ebc84639440cc64ac46c7ca65737fad35b5a3cc6b6618860f",
+      "fresh_sha256": "2f51f7ab3c25503ebc84639440cc64ac46c7ca65737fad35b5a3cc6b6618860f",
+      "byte_identical": true,
+      "published_bytes": 3866,
+      "fresh_bytes": 3866,
+      "manifest_sha256": "2f51f7ab3c25503ebc84639440cc64ac46c7ca65737fad35b5a3cc6b6618860f",
+      "manifest_match": true
+    },
+    {
+      "name": "fustan_alhelwa_2949782446",
+      "published_sha256": "178a386a424bf61e9f52fafb95e56c52283343438a30631fad912e17951b2021",
+      "fresh_sha256": "178a386a424bf61e9f52fafb95e56c52283343438a30631fad912e17951b2021",
+      "byte_identical": true,
+      "published_bytes": 2873,
+      "fresh_bytes": 2873,
+      "manifest_sha256": "178a386a424bf61e9f52fafb95e56c52283343438a30631fad912e17951b2021",
+      "manifest_match": true
+    },
+    {
+      "name": "ghayb_856076302",
+      "published_sha256": "0e6f9020fc2e628a4425b76e809feec33c54daf867b9fbb26da0e5c591d13de8",
+      "fresh_sha256": "0e6f9020fc2e628a4425b76e809feec33c54daf867b9fbb26da0e5c591d13de8",
+      "byte_identical": true,
+      "published_bytes": 3031,
+      "fresh_bytes": 3031,
+      "manifest_sha256": "0e6f9020fc2e628a4425b76e809feec33c54daf867b9fbb26da0e5c591d13de8",
+      "manifest_match": true
+    },
+    {
+      "name": "habeetak_4196876890",
+      "published_sha256": "69a4240e51073522f2dc161ef9f3b72839bdc5f81817c8016a2ec559300d13c5",
+      "fresh_sha256": "69a4240e51073522f2dc161ef9f3b72839bdc5f81817c8016a2ec559300d13c5",
+      "byte_identical": true,
+      "published_bytes": 4114,
+      "fresh_bytes": 4114,
+      "manifest_sha256": "69a4240e51073522f2dc161ef9f3b72839bdc5f81817c8016a2ec559300d13c5",
+      "manifest_match": true
+    },
+    {
+      "name": "hazak_ya_albi_3645837629",
+      "published_sha256": "1bc11667017446b9114b94af9a658ab41bb3106fcf195b392e7eaca25f7b081c",
+      "fresh_sha256": "1bc11667017446b9114b94af9a658ab41bb3106fcf195b392e7eaca25f7b081c",
+      "byte_identical": true,
+      "published_bytes": 6110,
+      "fresh_bytes": 6110,
+      "manifest_sha256": "1bc11667017446b9114b94af9a658ab41bb3106fcf195b392e7eaca25f7b081c",
+      "manifest_match": true
+    },
+    {
+      "name": "leh_aljarh_4175830000",
+      "published_sha256": "61a81a7dbb1e9ac9ad76ea30bf77043b64197eba374b25e4f7bff927f3a8182a",
+      "fresh_sha256": "61a81a7dbb1e9ac9ad76ea30bf77043b64197eba374b25e4f7bff927f3a8182a",
+      "byte_identical": true,
+      "published_bytes": 4378,
+      "fresh_bytes": 4378,
+      "manifest_sha256": "61a81a7dbb1e9ac9ad76ea30bf77043b64197eba374b25e4f7bff927f3a8182a",
+      "manifest_match": true
+    },
+    {
+      "name": "lelheen_3ayesh_562555061",
+      "published_sha256": "a2d45cc5c7c7c2553162c6e1da5fdf51c5417a9e91a478d3c08600dd314973b2",
+      "fresh_sha256": "a2d45cc5c7c7c2553162c6e1da5fdf51c5417a9e91a478d3c08600dd314973b2",
+      "byte_identical": true,
+      "published_bytes": 6041,
+      "fresh_bytes": 6041,
+      "manifest_sha256": "a2d45cc5c7c7c2553162c6e1da5fdf51c5417a9e91a478d3c08600dd314973b2",
+      "manifest_match": true
+    },
+    {
+      "name": "lissa_alhala_matasarish_4141123054",
+      "published_sha256": "2c22f81c9e52cfebb32737d8a40fc1730349d9f0744a232e0324dfa9e28b9dea",
+      "fresh_sha256": "2c22f81c9e52cfebb32737d8a40fc1730349d9f0744a232e0324dfa9e28b9dea",
+      "byte_identical": true,
+      "published_bytes": 3509,
+      "fresh_bytes": 3509,
+      "manifest_sha256": "2c22f81c9e52cfebb32737d8a40fc1730349d9f0744a232e0324dfa9e28b9dea",
+      "manifest_match": true
+    },
+    {
+      "name": "ma3_alsalama_2149548030",
+      "published_sha256": "cde3c76271cf73ecfb9aa397daa8f8648063fb92498a871a4980d92371c8ab16",
+      "fresh_sha256": "cde3c76271cf73ecfb9aa397daa8f8648063fb92498a871a4980d92371c8ab16",
+      "byte_identical": true,
+      "published_bytes": 3117,
+      "fresh_bytes": 3117,
+      "manifest_sha256": "cde3c76271cf73ecfb9aa397daa8f8648063fb92498a871a4980d92371c8ab16",
+      "manifest_match": true
+    },
+    {
+      "name": "ma_khalas_2325284485",
+      "published_sha256": "0b789f281a55d20eb4f344b0b0f7380eb85d3354f0e9f1fae2f0fec55a4b64e6",
+      "fresh_sha256": "0b789f281a55d20eb4f344b0b0f7380eb85d3354f0e9f1fae2f0fec55a4b64e6",
+      "byte_identical": true,
+      "published_bytes": 5904,
+      "fresh_bytes": 5904,
+      "manifest_sha256": "0b789f281a55d20eb4f344b0b0f7380eb85d3354f0e9f1fae2f0fec55a4b64e6",
+      "manifest_match": true
+    },
+    {
+      "name": "mata_habibi_mata_1124512995",
+      "published_sha256": "b9e8c95287c02833ae76b7350c5c553d38c53c47292e315dfdce3b0a64e38e62",
+      "fresh_sha256": "b9e8c95287c02833ae76b7350c5c553d38c53c47292e315dfdce3b0a64e38e62",
+      "byte_identical": true,
+      "published_bytes": 3650,
+      "fresh_bytes": 3650,
+      "manifest_sha256": "b9e8c95287c02833ae76b7350c5c553d38c53c47292e315dfdce3b0a64e38e62",
+      "manifest_match": true
+    },
+    {
+      "name": "min_kothr_hobbi_feek_4222279465",
+      "published_sha256": "6d1cd901f9abc313531549318fd2239f74e9dca6645eb37dcf33777042451a06",
+      "fresh_sha256": "6d1cd901f9abc313531549318fd2239f74e9dca6645eb37dcf33777042451a06",
+      "byte_identical": true,
+      "published_bytes": 3617,
+      "fresh_bytes": 3617,
+      "manifest_sha256": "6d1cd901f9abc313531549318fd2239f74e9dca6645eb37dcf33777042451a06",
+      "manifest_match": true
+    },
+    {
+      "name": "saharni_alshawq_363209276",
+      "published_sha256": "b27731f4f888726241a90f723ca976cc6ff77cb8f5396ddf7265e341cba2dd71",
+      "fresh_sha256": "b27731f4f888726241a90f723ca976cc6ff77cb8f5396ddf7265e341cba2dd71",
+      "byte_identical": true,
+      "published_bytes": 3469,
+      "fresh_bytes": 3469,
+      "manifest_sha256": "b27731f4f888726241a90f723ca976cc6ff77cb8f5396ddf7265e341cba2dd71",
+      "manifest_match": true
+    },
+    {
+      "name": "saneen_alshawq_558895102",
+      "published_sha256": "6b214918f458e34c24daf01347c78885843365ee034a74eba1b08195b7461239",
+      "fresh_sha256": "6b214918f458e34c24daf01347c78885843365ee034a74eba1b08195b7461239",
+      "byte_identical": true,
+      "published_bytes": 4706,
+      "fresh_bytes": 4706,
+      "manifest_sha256": "6b214918f458e34c24daf01347c78885843365ee034a74eba1b08195b7461239",
+      "manifest_match": true
+    },
+    {
+      "name": "waynak_habib_2204908989",
+      "published_sha256": "3b70c0b995778a99a0b2ba4dffdb6c64371ed2eb11fd577211965f53aae0bfe8",
+      "fresh_sha256": "3b70c0b995778a99a0b2ba4dffdb6c64371ed2eb11fd577211965f53aae0bfe8",
+      "byte_identical": true,
+      "published_bytes": 3312,
+      "fresh_bytes": 3312,
+      "manifest_sha256": "3b70c0b995778a99a0b2ba4dffdb6c64371ed2eb11fd577211965f53aae0bfe8",
+      "manifest_match": true
+    },
+    {
+      "name": "ya_hawa_alghaleen_582164616",
+      "published_sha256": "8c5a12a9e9e096e16f8b5111543ae3853df9d271fb41166edf79cf64627b9f16",
+      "fresh_sha256": "8c5a12a9e9e096e16f8b5111543ae3853df9d271fb41166edf79cf64627b9f16",
+      "byte_identical": true,
+      "published_bytes": 5983,
+      "fresh_bytes": 5983,
+      "manifest_sha256": "8c5a12a9e9e096e16f8b5111543ae3853df9d271fb41166edf79cf64627b9f16",
+      "manifest_match": true
+    },
+    {
+      "name": "ya_tkoon_habibi_2757273608",
+      "published_sha256": "ce44f2896e61efc2c969683ca85e38ccb3d97e13cc24aea13e37671928b9ec54",
+      "fresh_sha256": "ce44f2896e61efc2c969683ca85e38ccb3d97e13cc24aea13e37671928b9ec54",
+      "byte_identical": true,
+      "published_bytes": 6086,
+      "fresh_bytes": 6086,
+      "manifest_sha256": "ce44f2896e61efc2c969683ca85e38ccb3d97e13cc24aea13e37671928b9ec54",
+      "manifest_match": true
+    }
+  ]
+}
