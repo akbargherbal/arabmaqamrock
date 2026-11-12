@@ -144,3 +144,47 @@ loop every 120 s, watcher `TARGET=437`.
 |---|---:|---:|---:|---:|---|
 | 06:46 | 356 | 351 | 39 | 28.6 | 6 `no-abc` (5 known + `…0471`, `AbcRebuildError`); `…0503` recovered `drop.tail-note` |
 | 07:01 | 388 | 386 | 71 | 27.1 | 7 `no-abc` (adds `…0471`, `…0579`) |
+| 07:35 | 452 | 452 | 135 | 26.0 | 8 `no-abc`; pass 460/460, supervisor exited (`no progress`), watcher finalized |
+
+## Final — cohort closed 2026-11-12T07:43Z
+
+**Starting → final:** 317 verified / 0 failed → **452 published + 8 failed =
+460 accounted**, `complete: true`, `_SUCCESS` present, `_PARTIAL.json` gone.
+Remote flat `.output.abc` = meta = archives = manifest = **452**; SHA256SUMS
+**1356/1356 OK** (`sha256sum -c`). Local `verify`: total 460, verified 452,
+archives_ok 452, **archives_bad 0**. Analysis bundle SHA256SUMS **473/473 OK**.
+
+- Wall clock: launch 06:22Z → `_SUCCESS` 07:38Z (**76 min**); transcription
+  session 1 06:22–07:30 (67 min) attempted 143 tracks including the retries,
+  ≈**28 s/track**; median transcript time **26.0 s**.
+- Recovered from exporter bugs by the 120 s loop: **7** tracks
+  (`drop.tail-note` etc., including `…0181`, `…0214`, `…0503`).
+- **8 irrecoverable failures**, all `no-abc` (`SheetSage2 produced no .abc`):
+  `yt500-0208-G8CygooGxFE`, `yt500-0277-89bDyAU6Wfg`,
+  `yt500-0329-NlwSdL64lIc`, `yt500-0388-Gst0fsBDOUA`,
+  `yt500-0457-Q7c_ExWZDRw`, `yt500-0471-3ZljEHI4RCo`,
+  `yt500-0579-JEq8MHpjS2k`, `yt500-0635-rlxEW1UqPWY`.
+  (Beyond the 5 known: `…0471` fails ABC rebuild on a sub-beat interval;
+  `…0579` and `…0635` produced no ABC and recovery could not repair them.)
+
+### Analysis headline (cohort 452 / 460)
+
+| metric | value |
+|---|---:|
+| median composite | **0.921** (IQR 0.060) |
+| mean matched−chance d | **0.340** |
+| Cohen dz | **5.012** |
+| sign-flip p (10,000) | **9.999e-05** |
+| fraction d > 0 | **0.991** |
+| retrieval rank-1 | **94.0%** (425/452) |
+| deep-audit Spearman ρ | **0.925** (n=30) |
+| decisions | KEEP 379, REVIEW 75, REGENERATE 6 |
+
+- Code commit used for the analysis: **`460a31d`** (publisher
+  `failure_names()` fix included; analysis records this in
+  `cohort_stats.json` / bundle `_SUCCESS`).
+- Both bundles republished at 07:42Z with `--commit 460a31d`; the stale
+  `STABLE.json` (109-track gate, old VM PIDs) was removed from the analysis
+  prefix.
+- Final state is reproducible from this branch + GCS; no `/content` state is
+  required.
