@@ -72,6 +72,11 @@ def download(uri: str, path: Path) -> None:
     gsutil("cp", uri, str(path))
 
 
+def cat_json(uri: str) -> dict:
+    proc = gsutil("cat", uri)
+    return json.loads(proc.stdout)
+
+
 def sections_from_abc(text: str) -> list[str]:
     out = []
     for line in text.splitlines():
@@ -118,6 +123,7 @@ def build() -> None:
 
     audio_entries = []
     rows = []
+    caption_rows = []
     for t in sorted(tracks, key=lambda x: -x["composite"]):
         name = t["name"]
         stem = t["source_name"]
@@ -132,6 +138,60 @@ def build() -> None:
             raise SystemExit(f"input hash mismatch: {name}")
         if sha256_file(transcript) != t["output_sha256"]:
             raise SystemExit(f"output hash mismatch: {name}")
+
+        cap_src_uri = f"{SOURCE}/captions/{stem}.json"
+        cap_src = cat_json(cap_src_uri)
+        cap = cap_src.get("caption") or {}
+        if (cap_src.get("audio") or {}).get("sha256") != t["audio_sha256"]:
+            raise SystemExit(f"caption audio hash mismatch: {name}")
+        cap_text = (cap.get("text") or "").strip()
+        if not cap_text:
+            raise SystemExit(f"empty caption text: {name}")
+        (tdir / "caption.txt").write_text(cap_text + "\n", encoding="utf-8")
+        cap_sha = sha256_file(tdir / "caption.txt")
+        cap_obj = {
+            "schema": "yt500-caption/1",
+            "name": name,
+            "source_name": stem,
+            "take": {
+                "file": (cap_src.get("audio") or {}).get("file"),
+                "seed": cap_src.get("seed"),
+                "run": cap_src.get("run_id"),
+            },
+            "caption": cap_text,
+            "caption_sha256": cap_sha,
+            "caption_chars": len(cap_text),
+            "caption_raw": cap.get("caption_raw"),
+            "chunk_captions": cap.get("chunk_captions") or [],
+            "instruments": cap.get("instruments") or [],
+            "vocals": cap.get("vocals") or [],
+            "production": cap.get("production") or [],
+            "tags_experimental": bool(cap.get("tags_experimental")),
+            "rewrite": {
+                "status": cap.get("rewrite_status"),
+                "model": cap.get("rewrite_model"),
+                "prompt_version": 1,
+            },
+            "pipeline": {
+                "version": 3,
+                "stage": "polished",
+                "source_dataset": SOURCE,
+                "source_caption": cap_src_uri,
+            },
+            "audio": {
+                "duration_s": (cap_src.get("audio") or {}).get("duration_s"),
+                "bitrate_kbps": (cap_src.get("audio") or {}).get("bitrate_kbps"),
+                "chunk_count": cap.get("chunk_count"),
+                "silence_trimmed_s": cap.get("silence_trimmed_s"),
+            },
+            "abc_transcription": {
+                "model": (cap_src.get("abc_transcription") or {}).get("model"),
+                "model_revision": (cap_src.get("abc_transcription") or {}).get("model_revision"),
+                "seconds": (cap_src.get("abc_transcription") or {}).get("seconds"),
+                "status": (cap_src.get("abc_transcription") or {}).get("status"),
+            },
+        }
+        write_json(tdir / "caption.json", cap_obj)
 
         sections = sections_from_abc(score.read_text(encoding="utf-8",
                                                       errors="replace"))
@@ -184,13 +244,23 @@ def build() -> None:
                 "transcript": "transcript.abc",
                 "lyrics": "lyrics.txt",
                 "style": "style.txt",
+                "caption": "caption.json",
+                "caption_text": "caption.txt",
             },
             "roles": {
                 "score": "input (generation conditioner)",
                 "transcript": "output (SheetSage2 full)",
             },
-            "caption": None,
-            "caption_status": "deferred",
+            "caption": {
+                "file": "caption.json",
+                "text_file": "caption.txt",
+                "sha256": cap_sha,
+                "chars": len(cap_text),
+                "rewrite_status": cap.get("rewrite_status"),
+                "pipeline_version": 3,
+                "take": (cap_src.get("audio") or {}).get("file"),
+            },
+            "caption_status": "ok",
         }
         write_json(tdir / "track.json", track)
         audio_entries.append({
@@ -217,18 +287,51 @@ def build() -> None:
             "source_name": stem,
             "source_track_id": src.get("track_id"),
             "source_run_id": src.get("run_id"),
+            "caption": cap_text,
+            "caption_sha256": cap_sha,
+            "caption_chars": len(cap_text),
+            "caption_rewrite_status": cap.get("rewrite_status"),
+            "instruments": cap.get("instruments") or [],
+            "vocals": cap.get("vocals") or [],
+            "production": cap.get("production") or [],
             "artifacts": track["artifacts"],
+        })
+        caption_rows.append({
+            "name": name,
+            "source_name": stem,
+            "file": (cap_src.get("audio") or {}).get("file"),
+            "seed": cap_src.get("seed"),
+            "caption": cap_text,
+            "caption_sha256": cap_sha,
+            "caption_chars": len(cap_text),
+            "instruments": cap.get("instruments") or [],
+            "vocals": cap.get("vocals") or [],
+            "production": cap.get("production") or [],
+            "rewrite_status": cap.get("rewrite_status"),
+            "tags_experimental": bool(cap.get("tags_experimental")),
         })
 
     with (LOCAL / "tracks.jsonl").open("w", encoding="utf-8") as fh:
         for r in rows:
             fh.write(json.dumps(r, ensure_ascii=False) + "\n")
     shutil.copyfile(LOCAL / "tracks.jsonl", LOCAL / "catalog.jsonl")
+    with (LOCAL / "captions.jsonl").open("w", encoding="utf-8") as fh:
+        for r in caption_rows:
+            fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+    cap_sums = []
+    for r in rows:
+        for fn in ("caption.txt", "caption.json"):
+            p = LOCAL / "tracks" / r["name"] / fn
+            cap_sums.append(f"{sha256_file(p)}  tracks/{r['name']}/{fn}")
+    cap_sums.sort(key=lambda line: line.split("  ", 1)[1])
+    (LOCAL / "captions.sha256").write_text("\n".join(cap_sums) + "\n",
+                                           encoding="utf-8")
     pd.DataFrame(rows).to_parquet(LOCAL / "tracks.parquet", index=False)
     fields = ["name", "song", "artist", "duration_s", "composite",
               "deep_composite", "decision", "qualify", "codes",
               "retrieval_rank", "lift_vs_mismatched", "audio_sha256",
-              "score_sha256", "transcript_sha256", "source_name",
+              "score_sha256", "transcript_sha256", "caption_chars",
+              "caption_sha256", "caption_rewrite_status", "source_name",
               "source_track_id", "source_run_id"]
     with (LOCAL / "catalog.csv").open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=fields)
@@ -255,7 +358,7 @@ def build() -> None:
         "with_audio": len(audio_entries),
         "with_score": len(rows),
         "with_transcript": len(rows),
-        "captions": 0,
+        "captions": len(rows),
         "audio_bytes": sum((a.get("bytes") or 0) for a in audio_entries),
     }
     generated = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -286,21 +389,30 @@ tracks/<name>/
   transcript.abc  output: SheetSage2 --full transcript of audio.mp3
   lyrics.txt      section-tag plan derived from score.abc (% comments)
   style.txt       generation style prompt
+  caption.txt     polished prose caption for this take
+  caption.json    full caption record (chunks, tags, audio, rewrite)
   track.json      ids, hashes, similarity scores, provenance
 catalog.jsonl     one row per track
 catalog.csv       spreadsheet view
 catalog.md        human-readable table
 playlist.m3u      composite-descending order
 tracks.parquet    same rows as tracks.jsonl
+captions.jsonl    one caption row per track
+captions.sha256   sha256sum list for every caption artifact
 manifest.json     counts, selection, layout, file hashes
 shortlist.json    full shortlist decision record (incl. excluded tracks)
 recipe/           style + LoRA/defaults
 SHA256SUMS        sha256sum -c compatible
 ```
 
-**Captions are deferred.** No caption files or `captions.jsonl` are written.
-The source dataset already has captions at
-`{SOURCE}/captions/<source_name>.json`; they can be merged later.
+## Captions
+
+Every track has the polished prose caption from the source dataset, copied
+into `caption.txt` and normalised into `caption.json` (`schema:
+yt500-caption/1`). `captions.jsonl` inlines the caption, tags and SHA-256;
+`captions.sha256` covers every caption file. The source is
+`{SOURCE}/captions/<source_name>.json`. Captions are machine-generated and the
+tag lists are experimental — see `track.json.caption` for the pointer.
 
 ## Sides
 
@@ -317,16 +429,18 @@ tracks were byte-identical to the published transcriptions. See
     (LOCAL / "DATASET_CARD.md").write_text(card, encoding="utf-8")
     readme = f"""# Fadl Shaker Instrumental 18 — shortlist dataset
 
-{len(rows)} tracks, input score + generated audio + SheetSage2 transcript.
-Layout and disjoint sides are documented in `DATASET_CARD.md`; hashes are in
-`manifest.json` and `SHA256SUMS`. Captioning is deferred (see the card).
+{len(rows)} tracks, input score + generated audio + SheetSage2 transcript +
+polished caption. Layout and disjoint sides are documented in
+`DATASET_CARD.md`; hashes are in `manifest.json`, `SHA256SUMS` and
+`captions.sha256`.
 
 Source: `{SOURCE}`
 Analysis: `gs://akbar-december-2024-backup/ANALYSIS/fadhl_shaker_instrumental_18_abc`
 """
     (LOCAL / "README.md").write_text(readme, encoding="utf-8")
     (LOCAL / "_SUCCESS").write_text(
-        f"{generated}\ntracks={len(rows)}\ncaptions=0\nparquet=tracks.parquet\n",
+        f"{generated}\ntracks={len(rows)}\ncaptions={len(rows)}\n"
+        "parquet=tracks.parquet\n",
         encoding="utf-8")
 
     # manifest: every file except manifest.json and SHA256SUMS, plus audio.
@@ -359,8 +473,8 @@ Analysis: `gs://akbar-december-2024-backup/ANALYSIS/fadhl_shaker_instrumental_18
         },
         "counts": counts,
         "layout": {
-            "per_track": "tracks/<name>/{audio.mp3,score.abc,transcript.abc,lyrics.txt,style.txt,track.json}",
-            "captioning": "deferred; no caption artifacts",
+            "per_track": "tracks/<name>/{audio.mp3,score.abc,transcript.abc,lyrics.txt,style.txt,caption.txt,caption.json,track.json}",
+            "captions": "captions.jsonl inlines caption rows; captions.sha256 covers per-track caption files",
         },
         "roles": {
             "score.abc": "input / generation conditioner",
@@ -386,7 +500,7 @@ Analysis: `gs://akbar-december-2024-backup/ANALYSIS/fadhl_shaker_instrumental_18
         "source_dataset": SOURCE,
         "source_run_id": SOURCE_RUN,
         "shortlist": "docs/plans/fadhl18-abc-shortlist-keep-review.json",
-        "captions": 0,
+        "captions": len(rows),
     })
     print(json.dumps({"local": str(LOCAL), "counts": counts,
                       "files_hashed": len(sums)}, indent=2))
@@ -402,7 +516,8 @@ def publish() -> None:
            str(LOCAL / "tracks.jsonl"), str(LOCAL / "tracks.parquet"),
            str(LOCAL / "playlist.m3u"), str(LOCAL / "manifest.json"),
            str(LOCAL / "README.md"), str(LOCAL / "DATASET_CARD.md"),
-           str(LOCAL / "shortlist.json"), str(LOCAL / "SHA256SUMS"),
+           str(LOCAL / "shortlist.json"), str(LOCAL / "captions.jsonl"),
+           str(LOCAL / "captions.sha256"), str(LOCAL / "SHA256SUMS"),
            str(LOCAL / ".build.json"), DEST + "/")
     gsutil("rm", "-f", DEST + "/_SUCCESS", check=False)
 

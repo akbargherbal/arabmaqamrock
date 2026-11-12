@@ -95,7 +95,7 @@ Artifacts:
   audio (`similarity/reproducibility.json`); no re-transcription was needed for
   the comparison, but the full check was run anyway.
 
-## Shortlist dataset — 2026-11-12T09:05Z
+## Shortlist dataset — 2026-11-12T09:24Z
 
 Built `gs://akbar-december-2024-backup/DATASET/fadhl_shaker_instrumental_18_shortlist`
 with the **22 qualifying tracks**, shaped like `DATASET/yt500_instrumental`:
@@ -107,17 +107,22 @@ tracks/fs18-<source_name>/
   transcript.abc   output / SheetSage2 --full transcript
   lyrics.txt       section-tag plan derived from score.abc
   style.txt        canonical style prompt
-  track.json       ids, hashes, similarity, provenance
+  caption.txt      polished prose caption
+  caption.json     normalized caption record (chunks, tags, audio, rewrite)
+  track.json       ids, hashes, similarity, provenance, caption pointer
 catalog.{jsonl,csv,md}, tracks.{jsonl,parquet}, playlist.m3u
+captions.jsonl, captions.sha256
 manifest.json, shortlist.json, recipe/, README.md, DATASET_CARD.md
 SHA256SUMS, .build.json, _SUCCESS
 ```
 
 - **22 tracks**, 142,160,094 audio bytes; 22/22 audio, score and transcript.
-- **Captions deferred**: no caption files or `captions.jsonl`; the source
-  captions remain at `DATASET/fadhl_shaker_instrumental_18/captions/`.
+- **22/22 captions** copied from the source and normalized to the YT500
+  caption layout (`caption.txt` + `caption.json`, `captions.jsonl`,
+  `captions.sha256`). Source captions remain at
+  `DATASET/fadhl_shaker_instrumental_18/captions/`.
 - Source dataset untouched; only the new prefix was written.
-- Verification: `sha256sum -c` **145/145 OK**, `_PARTIAL.json` absent,
-  `_SUCCESS` present.
+- Verification: `sha256sum -c` **191/191 OK**, `captions.sha256` 44/44 OK,
+  `_PARTIAL.json` absent, `_SUCCESS` present with `captions=22`.
 - Builder: `plumbing/build_fadhl18_shortlist_dataset.py`
   (`--mode build|publish|verify|all`).
