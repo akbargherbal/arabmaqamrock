@@ -78,5 +78,18 @@ Artifacts:
 - [x] full 24/24 re-transcription comparison (all byte-identical)
 - [x] staging, inventory, pair build, analysis
 - [x] shortlist JSON (22 qualify / 2 borderline / 0 reject)
-- [ ] publish analysis bundle + SHA256SUMS verification
-- [ ] commit and push
+- [x] publish analysis bundle; SHA256SUMS 39/39 OK
+- [x] commit and push (code commit `d9c437c`; shortlist + this log follow)
+
+## Final
+
+- **22 / 24 qualify** (18 KEEP + 4 REVIEW); **2 borderline**, **0 reject**.
+- Qualifying composite range **0.884–0.983**, deep **0.843–0.947**.
+- Borderline: `lelheen_3ayesh_562555061` (0.832 / 0.781),
+  `ya_tkoon_habibi_2757273608` (0.825 / 0.764).
+- Analysis bundle `_SUCCESS` commit `d9c437c`, 40 objects, SHA256SUMS 39/39 OK.
+- Shortlist: `docs/plans/fadhl18-abc-shortlist-keep-review.json` and
+  `ANALYSIS/fadhl_shaker_instrumental_18_abc/similarity/shortlist_keep_review.json`.
+- Provenance: all 24 published transcriptions reproduced byte-for-byte from
+  audio (`similarity/reproducibility.json`); no re-transcription was needed for
+  the comparison, but the full check was run anyway.
