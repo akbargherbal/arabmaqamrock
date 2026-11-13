@@ -1,0 +1,62 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "repeat": 1
+  },
+  "loras": {
+    "v3": {
+      "ar": "loras/arabmaqamrock-v3-ar.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "a01": {
+      "ar": "loras/experiments/mix_v3/a0.1/v3instr_a0.1_ar.safetensors",
+      "nar": "loras/experiments/mix_v3/a0.1/v3instr_a0.1_nar.safetensors"
+    },
+    "a03": {
+      "ar": "loras/experiments/mix_v3/a0.3/v3instr_a0.3_ar.safetensors",
+      "nar": "loras/experiments/mix_v3/a0.3/v3instr_a0.3_nar.safetensors"
+    },
+    "a05": {
+      "ar": "loras/experiments/mix_v3/a0.5/v3instr_a0.5_ar.safetensors",
+      "nar": "loras/experiments/mix_v3/a0.5/v3instr_a0.5_nar.safetensors"
+    }
+  },
+  "songs": [
+    {
+      "style": "arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"contemplative, solemn, serene, philosophical\"",
+      "lyrics": "///***///\n[Intro | single clean guitar | close-mic'd, plate reverb, short decay]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\n\n[Verse 1 | calm contemplative vocals | muted rhythmic guitars and steady bass]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\nوَشَبِيهٌ صَوْتُ النَّعِيِّ إِذَا قِيسَ\nبِصَوْتِ الْبَشِيرِ فِي كُلِّ نَادِ...\nأَبَكَتْ تِلْكُمُ الْحَمَامَةُ أَمْ غَنَّتْ\nعَلَى فَرْعِ غُصْنِهَا الْمَيَّادِ...\nصَاحِ هَذِي قُبُورُنَا تَمْلَأُ الرُّحْبَ\nفَأَيْنَ الْقُبُورُ مِنْ عَهْدِ عَادِ...\n\n[Chorus | solemn soaring vocals | full orchestral build and guitar swell — Nahawand]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Verse 2]\nسِرْ إِنِ اسْطَعْتَ فِي الْهَوَاءِ رُوَيْدًا\nلَا اخْتِيَالًا عَلَى رُفَاتِ الْعِبَادِ...\nرُبَّ لَحْدٍ قَدْ صَارَ لَحْدًا مِرَارًا\nضَاحِكٍ مِنْ تَزَاحُمِ الْأَضْدَادِ...\nوَدَفِينٍ عَلَى بَقَايَا دَفِينٍ\nفِي طَوِيلِ الْأَزْمَانِ وَالْآبَادِ...\nفَاسْأَلِ الْفَرْقَدَيْنِ عَمَّنْ أَحَسَّا\nمِنْ قَبِيلٍ وَآنَسَا مِنْ بِلَادِ...\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...\n\n[Chorus]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Outro | deep male vocals | clean electric guitar]\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...",
+      "name": "abu01_v3",
+      "lora": "v3",
+      "seed": 3285212580,
+      "guidance_scale": 1.5,
+      "lora_nar_scale": 0.5
+    },
+    {
+      "style": "arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"contemplative, solemn, serene, philosophical\"",
+      "lyrics": "///***///\n[Intro | single clean guitar | close-mic'd, plate reverb, short decay]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\n\n[Verse 1 | calm contemplative vocals | muted rhythmic guitars and steady bass]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\nوَشَبِيهٌ صَوْتُ النَّعِيِّ إِذَا قِيسَ\nبِصَوْتِ الْبَشِيرِ فِي كُلِّ نَادِ...\nأَبَكَتْ تِلْكُمُ الْحَمَامَةُ أَمْ غَنَّتْ\nعَلَى فَرْعِ غُصْنِهَا الْمَيَّادِ...\nصَاحِ هَذِي قُبُورُنَا تَمْلَأُ الرُّحْبَ\nفَأَيْنَ الْقُبُورُ مِنْ عَهْدِ عَادِ...\n\n[Chorus | solemn soaring vocals | full orchestral build and guitar swell — Nahawand]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Verse 2]\nسِرْ إِنِ اسْطَعْتَ فِي الْهَوَاءِ رُوَيْدًا\nلَا اخْتِيَالًا عَلَى رُفَاتِ الْعِبَادِ...\nرُبَّ لَحْدٍ قَدْ صَارَ لَحْدًا مِرَارًا\nضَاحِكٍ مِنْ تَزَاحُمِ الْأَضْدَادِ...\nوَدَفِينٍ عَلَى بَقَايَا دَفِينٍ\nفِي طَوِيلِ الْأَزْمَانِ وَالْآبَادِ...\nفَاسْأَلِ الْفَرْقَدَيْنِ عَمَّنْ أَحَسَّا\nمِنْ قَبِيلٍ وَآنَسَا مِنْ بِلَادِ...\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...\n\n[Chorus]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Outro | deep male vocals | clean electric guitar]\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...",
+      "name": "abu01_a01",
+      "lora": "a01",
+      "seed": 3285212580,
+      "guidance_scale": 1.5,
+      "lora_nar_scale": 0.5
+    },
+    {
+      "style": "arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"contemplative, solemn, serene, philosophical\"",
+      "lyrics": "///***///\n[Intro | single clean guitar | close-mic'd, plate reverb, short decay]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\n\n[Verse 1 | calm contemplative vocals | muted rhythmic guitars and steady bass]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\nوَشَبِيهٌ صَوْتُ النَّعِيِّ إِذَا قِيسَ\nبِصَوْتِ الْبَشِيرِ فِي كُلِّ نَادِ...\nأَبَكَتْ تِلْكُمُ الْحَمَامَةُ أَمْ غَنَّتْ\nعَلَى فَرْعِ غُصْنِهَا الْمَيَّادِ...\nصَاحِ هَذِي قُبُورُنَا تَمْلَأُ الرُّحْبَ\nفَأَيْنَ الْقُبُورُ مِنْ عَهْدِ عَادِ...\n\n[Chorus | solemn soaring vocals | full orchestral build and guitar swell — Nahawand]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Verse 2]\nسِرْ إِنِ اسْطَعْتَ فِي الْهَوَاءِ رُوَيْدًا\nلَا اخْتِيَالًا عَلَى رُفَاتِ الْعِبَادِ...\nرُبَّ لَحْدٍ قَدْ صَارَ لَحْدًا مِرَارًا\nضَاحِكٍ مِنْ تَزَاحُمِ الْأَضْدَادِ...\nوَدَفِينٍ عَلَى بَقَايَا دَفِينٍ\nفِي طَوِيلِ الْأَزْمَانِ وَالْآبَادِ...\nفَاسْأَلِ الْفَرْقَدَيْنِ عَمَّنْ أَحَسَّا\nمِنْ قَبِيلٍ وَآنَسَا مِنْ بِلَادِ...\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...\n\n[Chorus]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Outro | deep male vocals | clean electric guitar]\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...",
+      "name": "abu01_a03",
+      "lora": "a03",
+      "seed": 3285212580,
+      "guidance_scale": 1.5,
+      "lora_nar_scale": 0.5
+    },
+    {
+      "style": "arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"contemplative, solemn, serene, philosophical\"",
+      "lyrics": "///***///\n[Intro | single clean guitar | close-mic'd, plate reverb, short decay]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\n\n[Verse 1 | calm contemplative vocals | muted rhythmic guitars and steady bass]\nغَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي\nنَوْحُ بَاكٍ وَلَا تَرَنُّمُ شَادِ...\nوَشَبِيهٌ صَوْتُ النَّعِيِّ إِذَا قِيسَ\nبِصَوْتِ الْبَشِيرِ فِي كُلِّ نَادِ...\nأَبَكَتْ تِلْكُمُ الْحَمَامَةُ أَمْ غَنَّتْ\nعَلَى فَرْعِ غُصْنِهَا الْمَيَّادِ...\nصَاحِ هَذِي قُبُورُنَا تَمْلَأُ الرُّحْبَ\nفَأَيْنَ الْقُبُورُ مِنْ عَهْدِ عَادِ...\n\n[Chorus | solemn soaring vocals | full orchestral build and guitar swell — Nahawand]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Verse 2]\nسِرْ إِنِ اسْطَعْتَ فِي الْهَوَاءِ رُوَيْدًا\nلَا اخْتِيَالًا عَلَى رُفَاتِ الْعِبَادِ...\nرُبَّ لَحْدٍ قَدْ صَارَ لَحْدًا مِرَارًا\nضَاحِكٍ مِنْ تَزَاحُمِ الْأَضْدَادِ...\nوَدَفِينٍ عَلَى بَقَايَا دَفِينٍ\nفِي طَوِيلِ الْأَزْمَانِ وَالْآبَادِ...\nفَاسْأَلِ الْفَرْقَدَيْنِ عَمَّنْ أَحَسَّا\nمِنْ قَبِيلٍ وَآنَسَا مِنْ بِلَادِ...\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...\n\n[Chorus]\nخَفِّفِ الْوَطْءَ مَا أَظُنُّ أَدِيمَ الْأَرْضِ\nإِلَّا مِنْ هَذِهِ الْأَجْسَادِ...\nوَقَبِيحٌ بِنَا وَإِنْ قَدُمَ الْعَهْدُ\nهَوَانُ الْآبَاءِ وَالْأَجْدَادِ...\n\n[Outro | deep male vocals | clean electric guitar]\nكَمْ أَقَامَا عَلَى زَوَالِ نَهَارٍ\nوَأَنَارَا لِمُدْلِجٍ فِي سَوَادِ...",
+      "name": "abu01_a05",
+      "lora": "a05",
+      "seed": 3285212580,
+      "guidance_scale": 1.5,
+      "lora_nar_scale": 0.5
+    }
+  ]
+}
