@@ -1,0 +1,24 @@
+{
+  "style_sha256": "bddaf3f9071ec2f15cbc28c19514361b0eaa73784a19670262e0fa90575fd8b5",
+  "source": "manifests/fadhl_shaker_instrumental_18.json defaults.style",
+  "defaults": {
+    "style": "Arabic instrumental fusion, oriental ensemble, cinematic Arabic orchestral feel, Arabic instrumental cover, studio band session, musicians tracked together in one room, real acoustic oud with plucked pick attack and finger slides, violin and cello sections supporting the oud, played by hand with bow noise and vibrato, full ensemble swelling together like a small orchestra, fretted bass guitar, acoustic drum kit with natural ghost notes, darbuka, riq, daf with skin and jingle detail, expressive ornamented melody passed between oud, violin and cello in call and response, plucked oud answering the bowed strings, microtonal inflections, human timing with slight push and pull, breathing dynamics, dramatic dynamic builds and releases, spacious studio room, medium natural reverb, warm analog tape saturation, close-miked with room mics for ensemble width, clean and clear recording, polished studio mix, no audience, no applause, no crowd noise, no stage ambience, not a concert recording",
+    "lyrics_from_score": true,
+    "cot": "full",
+    "lora": "instrumental_v9",
+    "lora_ar_scale": 0.85,
+    "lora_nar_scale": 1.0,
+    "trigger": false
+  },
+  "loras": {
+    "instrumental": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "instrumental_v9": {
+      "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+      "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+    }
+  },
+  "model": "Yue2-3B-GGUF"
+}
