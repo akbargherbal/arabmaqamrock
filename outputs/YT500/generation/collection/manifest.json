@@ -1,0 +1,105 @@
+{
+  "dataset": "YT500 Instrumental — quality-gated tracks",
+  "dataset_version": "v0.1",
+  "generated_at": "2026-11-11T16:19:45Z",
+  "source_runs_uri": "gs://akbar-december-2024-backup/arabmaqamrock/runs",
+  "source_runs": [
+    "20261110-083615_yt500inst",
+    "20261110-085847_yt500inst",
+    "20261110-092455_yt500inst",
+    "20261110-095521_yt500inst",
+    "20261110-183143_yt500inst",
+    "20261110-200631_yt500inst",
+    "20261110-205443_yt500inst"
+  ],
+  "gate": "abs(wav_s - nominal_s) / nominal_s <= 0.15",
+  "counts": {
+    "tracks": 460,
+    "pass": 460,
+    "accepted": 0,
+    "audio_bytes": 3019950108,
+    "unique_lyrics_plans": 142,
+    "unique_styles": 1
+  },
+  "recipe": {
+    "style_sha256": "bddaf3f9071ec2f15cbc28c19514361b0eaa73784a19670262e0fa90575fd8b5",
+    "source": "manifests/fadhl_shaker_instrumental_18.json defaults.style",
+    "defaults": {
+      "style": "Arabic instrumental fusion, oriental ensemble, cinematic Arabic orchestral feel, Arabic instrumental cover, studio band session, musicians tracked together in one room, real acoustic oud with plucked pick attack and finger slides, violin and cello sections supporting the oud, played by hand with bow noise and vibrato, full ensemble swelling together like a small orchestra, fretted bass guitar, acoustic drum kit with natural ghost notes, darbuka, riq, daf with skin and jingle detail, expressive ornamented melody passed between oud, violin and cello in call and response, plucked oud answering the bowed strings, microtonal inflections, human timing with slight push and pull, breathing dynamics, dramatic dynamic builds and releases, spacious studio room, medium natural reverb, warm analog tape saturation, close-miked with room mics for ensemble width, clean and clear recording, polished studio mix, no audience, no applause, no crowd noise, no stage ambience, not a concert recording",
+      "lyrics_from_score": true,
+      "cot": "full",
+      "lora": "instrumental_v9",
+      "lora_ar_scale": 0.85,
+      "lora_nar_scale": 1.0,
+      "trigger": false
+    },
+    "loras": {
+      "instrumental": {
+        "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+        "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+      },
+      "instrumental_v9": {
+        "ar": "loras/instrumental/ar_lora_inst_v3abc.bf16.safetensors",
+        "nar": "loras/nar/nar_lora_joint_v9.bf16.safetensors"
+      }
+    },
+    "model": "Yue2-3B-GGUF"
+  },
+  "style_sha256": "bddaf3f9071ec2f15cbc28c19514361b0eaa73784a19670262e0fa90575fd8b5",
+  "layout": {
+    "per_track": "tracks/<name>/{audio.mp3,lyrics.txt,style.txt,score.abc,track.json}",
+    "catalog": "catalog.jsonl (same rows as tracks.jsonl)"
+  },
+  "files": [
+    {
+      "path": "catalog.jsonl",
+      "sha256": "6e5b4eeaf77937bd5232336fa1fd15e6bc1a090b1b312aa002605ebe8e7e315b",
+      "bytes": 750363
+    },
+    {
+      "path": "catalog.csv",
+      "sha256": "f07de3882b6791bb087d6403aae4242540c7317c502857901d653c4e61b04829",
+      "bytes": 236141
+    },
+    {
+      "path": "catalog.md",
+      "sha256": "f9664c969928689cb519b0304fd80808ae97b13ea90b5fad4d2215c45d97ccdf",
+      "bytes": 53658
+    },
+    {
+      "path": "tracks.jsonl",
+      "sha256": "6e5b4eeaf77937bd5232336fa1fd15e6bc1a090b1b312aa002605ebe8e7e315b",
+      "bytes": 750363
+    },
+    {
+      "path": "tracks.parquet",
+      "sha256": "37014153a930cbd42e7d68179608288063b16e036e816cc195b6154a5ec0f26e",
+      "bytes": 160828
+    },
+    {
+      "path": "playlist.m3u",
+      "sha256": "38f8f3a3347c0289c34da7238efe4dd2fb0d722c08e9edfaae6867e534a8143b",
+      "bytes": 41452
+    },
+    {
+      "path": "README.md",
+      "sha256": "a23b30ee9047abc07d95b0bad8b55635fc9a0fb0620ed0b2121779f708d20a90",
+      "bytes": 2945
+    },
+    {
+      "path": "DATASET_CARD.md",
+      "sha256": "a23b30ee9047abc07d95b0bad8b55635fc9a0fb0620ed0b2121779f708d20a90",
+      "bytes": 2945
+    },
+    {
+      "path": "recipe/style.txt",
+      "sha256": "bddaf3f9071ec2f15cbc28c19514361b0eaa73784a19670262e0fa90575fd8b5",
+      "bytes": 992
+    },
+    {
+      "path": "recipe/recipe.json",
+      "sha256": "38aab3c8a592dec5a90221912be011e98e0fe180927b8f33c27282a97f8755ac",
+      "bytes": 1708
+    }
+  ]
+}

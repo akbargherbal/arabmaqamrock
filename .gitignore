@@ -21,4 +21,9 @@ __pycache__/
 /scores/yt500_src/
 /scores/yt500_instrumental/
 /work/yt500_gen/
+/work/yt500_abc/
 /outputs/YT500/generation/scores.tar.gz
+# compiled dataset: per-track derived artifacts are generated, the catalogue is committed
+/outputs/YT500/generation/collection/tracks/
+/outputs/YT500/generation/collection/.build.json
+/outputs/YT500/generation/collection/rejected.jsonl

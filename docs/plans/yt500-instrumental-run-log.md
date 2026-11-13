@@ -10,9 +10,9 @@ GCS run tree is the source of truth; nothing local must survive.
 |---|---|
 | Corpus | 489 ready (4 `no-abc` + 2 `inline-key` excluded); 158 songs >300 s, 40 >350 s, 6 >400 s |
 | Mode | **batch**, `--batch-chunk 50` (deviation from the 1.7× gate — approved) |
-| Bulk | launched 2026-11-10T08:58:38Z, supervisor PID 124626: `supervise_yt500_generation.py --mode batch --batch-chunk 50`; **interrupted at 09:37:15Z (SIGTERM, exit 143)** |
-| Last GCS state | **22 done / 467 pending**, 3 `*_yt500inst` session runs (12 pilot + 10 bulk) |
-| Completion | **not reached**; no `logs/yt500_supervisor_done.txt` was written |
+| Bulk | launched 2026-11-10T08:58:38Z, supervisor PID 124626: `supervise_yt500_generation.py --mode batch --batch-chunk 50`; interrupted at 09:37:15Z (SIGTERM, exit 143), relaunched and run to completion |
+| Last GCS state | **489 done / 0 pending / 0 mismatches**, 7 `*_yt500inst` session runs (493 marked takes, 491 MP3s, 489 unique songs); final session `20261110-205443_yt500inst` finished 20:58Z |
+| Completion | **reached**; full-corpus audit in [yt500-instrumental-quality-audit.md](yt500-instrumental-quality-audit.md) — 0 render failures, 29/489 duration-gate outliers (7 severe short) |
 | Backup | daemon every **2 min** (user request; PID 129551), plus `--once` after every chunk session; audio uploaded as MP3 192k |
 | Started at HEAD | `2e48cdb`; A100-SXM4-80GB, CC 8.0, UUID `GPU-d4da84f7-5872-e2ec-3273-257b7d7cdb43`; binary sha `78f478…d023` (`sm80-a100`) |
 | Pilot | 12/12 `ok`, no crash, durations −7.9%…+15.1% vs score; resume `done=12 pending=477`; batch **1.63×** normalized (3.46 vs 2.12 audio-s per wall-s) |
@@ -138,8 +138,8 @@ reverted:
 
 - Post-bulk: length audit + outlier re-render; 2-vs-4-worker concurrency
   benchmark to see whether the idle seams are worth ~2× on the next corpus.
-- Duration-gate outliers found mid-run (27/457, 6 severe short) are documented
-  with names, seeds, caps and GCS paths in
+- Duration-gate outliers: **29/489** (7 severe short, 15 short, 7 long) with
+  names, seeds, caps and GCS paths in
   [yt500-instrumental-quality-audit.md](yt500-instrumental-quality-audit.md);
   the machine-readable list is
   `outputs/YT500/generation/quality_audit_duration.json`.
