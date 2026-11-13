@@ -1,0 +1,47 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "repeat": 1,
+    "style": "arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"contemplative, solemn, serene, philosophical\"",
+    "lyrics": "///***///\n[Intro | single clean guitar | close-mic'd, plate reverb, short decay]\nغَدَا طَاوِيًا يُعَارِضُ الرِّيحَ هَافِيًا\nيَخُوتُ بِأَذْنَابِ الشِّعَابِ وَيُعْسِلُ...\n\n[Verse 1 | deep mournful vocals | muted guitar and low strings]\nغَدَا طَاوِيًا يُعَارِضُ الرِّيحَ هَافِيًا\nيَخُوتُ بِأَذْنَابِ الشِّعَابِ وَيُعْسِلُ...\nفَلَمَّا لَوَاهُ الْقُوتُ مِنْ حَيْثُ أَمَّهُ\nدَعَا فَأَجَابَتْهُ نَظَائِرُ نُحَّلُ...\nمُهَلَّلَةٌ شِيبُ الْوُجُوهِ كَأَنَّهَا\nقِدَاحٌ بِأَيْدِي يَاسِرٍ تَتَقَلْقَلُ...\nأَوِ الْخَشْرَمُ الْمَبْعُوثُ حَثْحَثَ دَبْرَهُ\nمَحَابِيضُ أَرْدَاهُنَّ سَامٍ مُعَسِّلُ...\nمُهَرَّتَةٌ فُوهٌ كَأَنَّ شُدُوقَهَا\nشُقُوقُ الْعِصِيِّ كَالِحَاتٌ وَبُسَّلُ...\n\n[Chorus | raw emotional vocals | guitars and strings rise — Hijaz]\nفَضَجَّ وَضَجَّتْ بِالْبَرَاحِ كَأَنَّهَا\nوَإِيَّاهُ نُوحٌ فَوْقَ عَلْيَاءَ ثُكَّلُ...\nوَأَغْضَى وَأَغْضَتْ وَاتَّسَى وَاتَّسَتْ بِهِ\nمَرَامِيلُ عَزَّاهَا وَعَزَّتْهُ مُرْمِلُ...\nشَكَا وَشَكَتْ ثُمَّ ارْعَوَى بَعْدُ وَارْعَوَتْ\nوَلَلصَّبْرُ إِنْ لَمْ يَنْفَعِ الشَّكْوُ أَجْمَلُ...\n\n[Verse 2]\nوَفَاءَ وَفَاءَتْ بَادِرَاتٍ وَكُلُّهَا\nعَلَى نَكَظٍ مِمَّا يُكَاتِمُ مُجْمِلُ...\n\n[Chorus]\nفَضَجَّ وَضَجَّتْ بِالْبَرَاحِ كَأَنَّهَا\nوَإِيَّاهُ نُوحٌ فَوْقَ عَلْيَاءَ ثُكَّلُ...\nوَأَغْضَى وَأَغْضَتْ وَاتَّسَى وَاتَّسَتْ بِهِ\nمَرَامِيلُ عَزَّاهَا وَعَزَّتْهُ مُرْمِلُ...\nشَكَا وَشَكَتْ ثُمَّ ارْعَوَى بَعْدُ وَارْعَوَتْ\nوَلَلصَّبْرُ إِنْ لَمْ يَنْفَعِ الشَّكْوُ أَجْمَلُ...\n\n[Outro | deep male vocals | clean electric guitar]\nوَفَاءَ وَفَاءَتْ بَادِرَاتٍ وَكُلُّهَا\nعَلَى نَكَظٍ مِمَّا يُكَاتِمُ مُجْمِلُ...\n[End]"
+  },
+  "loras": {
+    "v3": {
+      "ar": "loras/arabmaqamrock-v3-ar.safetensors",
+      "nar": "loras/arabmaqamrock-v3-nar.safetensors"
+    },
+    "a01": {
+      "ar": "loras/experiments/mix_v3/a0.1/v3instr_a0.1_ar.safetensors",
+      "nar": "loras/experiments/mix_v3/a0.1/v3instr_a0.1_nar.safetensors"
+    },
+    "a02": {
+      "ar": "loras/experiments/mix_v3/a0.2/v3instr_a0.2_ar.safetensors",
+      "nar": "loras/experiments/mix_v3/a0.2/v3instr_a0.2_nar.safetensors"
+    }
+  },
+  "songs": [
+
+
+    {
+      "name": "wolf_v3_c15",
+      "lora": "v3",
+      "seed": 699111933319,
+      "guidance_scale": 1.5
+    },
+
+    {
+      "name": "wolf_a02_c15_ar05",
+      "lora": "a02",
+      "seed": 699111933319,
+      "guidance_scale": 1.5,
+      "lora_ar_scale": 0.5
+    },
+
+    {
+      "name": "wolf_a01_c15",
+      "lora": "a01",
+      "seed": 699111933319,
+      "guidance_scale": 1.5
+    }
+  ]
+}
