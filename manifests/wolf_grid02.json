@@ -23,42 +23,42 @@
     {
       "name": "wolf_v3_c10",
       "lora": "v3",
-      "seed": 699111933319,
+      "seed": 69911193,
       "guidance_scale": 1.0
     },
 
     {
       "name": "wolf_v3_c15",
       "lora": "v3",
-      "seed": 699111933319,
+      "seed": 69911193,
       "guidance_scale": 1.5
     },
 
     {
       "name": "wolf_a02_c10",
       "lora": "a02",
-      "seed": 699111933319,
+      "seed": 69911193,
       "guidance_scale": 1.0
     },
 
     {
       "name": "wolf_a02_c15",
       "lora": "a02",
-      "seed": 699111933319,
+      "seed": 69911193,
       "guidance_scale": 1.5
     },
 
     {
       "name": "wolf_a01_c10",
       "lora": "a01",
-      "seed": 699111933319,
+      "seed": 69911193,
       "guidance_scale": 1.0
     },
 
     {
       "name": "wolf_a01_c15",
       "lora": "a01",
-      "seed": 699111933319,
+      "seed": 69911193,
       "guidance_scale": 1.5
     }
   ]
