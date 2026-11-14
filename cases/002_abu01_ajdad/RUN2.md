@@ -135,3 +135,25 @@ Ordered by the time they would have saved in this session:
 
 **One-line lesson:** *a repair workflow cannot start at repair time; it starts
 at generation.* Export the tokens, or the 30-minute budget is fiction.
+
+---
+
+## 7. Post-stop experiment: ABC conditioning (user request)
+
+After the stop, the take's **transcribed** score (`abc/score.abc`, SheetSage2,
+made from the finished mix) was fed back as `abc_file` with `cot=full`, same
+seed/parameters/LoRA, full render. This is a new conditioning route, not a
+reproduction of the original request (`cot=off`, `abc=none`).
+
+| render | tokens | duration | envelope r | median mel Δ |
+|---|---:|---:|---:|---:|
+| original (L4) | 5727 | 229.079 s | — | — |
+| T4 re-derive (no score) | 5937 | 229.079 s | 0.216 | 7.47 dB |
+| ABC-conditioned (T4) | **5728** | 229.119 s | **0.633** | **4.19 dB** |
+
+The score anchors the **duration** (5728 ≈ 5727, +40 ms), but not the
+performance: the stream differs from frame 0, and the target line at
+106.1–113.3 has r = 0.58 at zero lag. Gate still fails; not usable for a comp.
+
+Evidence: `gs://…/runs/20261114-185000_abc_repro/` (WAV, tokens, score,
+compare JSON, log, line clip). Original still untouched.
