@@ -477,6 +477,13 @@ If the loop does not match the card, stop and re-localize before any GPU batch.
 - `min = max = 775` tokens (**31.00 s**) — the line ends ~30.68, so this covers
   the phrase with margin. The comp ends at the candidate’s word end, not at 31.
 - Seeds `3285212580 + 0..3` first; **16 is a ceiling, not a target**.
+- **Sequential only; one `audiocpp_cli_prefix` process.** Two concurrent GPU
+  runs can OOM a T4. Generate one seed first, then the rest.
+- Do **not** run Demucs or the optional ABC before/during generation; run them
+  after the process exits (Demucs on CPU if RAM is tight).
+- Check the log before seeds 2–4: `max_tokens=775`, final tokens **775** (or
+  **103** new if reported separately), `truncated 0`. If it says 7250 or 5606,
+  stop — the bounds were not applied.
 - Same request as the take: `guidance_scale=1.5`, `cot=full`,
   `abc_file=cases/002_abu01_ajdad/abc/score.abc`, `num_inference_steps=8`,
   `context=24576`, `nar_noise=generated`, semantic sampler defaults, cap 7250,

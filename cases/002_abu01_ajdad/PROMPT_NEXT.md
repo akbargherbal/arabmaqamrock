@@ -176,6 +176,14 @@ PY
   ~30.68 s; this covers it with margin. The comp ends at the candidate's word
   end, not at 31 s.
 - Seeds: `3285212580 + 0..3` first. **16 is a ceiling, not a target.**
+- **Sequential only.** Use `--request-sequence` or a shell loop that waits for
+  each run; never `&`, never two `audiocpp_cli_prefix` processes, and never a
+  second model load while the first is alive. Two concurrent GPU runs can OOM a
+  T4. Generate **one seed first**; if it succeeds, run the other three
+  sequentially.
+- Before generation: `free -h`, `nvidia-smi`, `pgrep -af audiocpp_cli`; kill any
+  stale process. Do **not** install/run Demucs or SheetSage2 before generation;
+  run them after. If Demucs must run first, use `-d cpu` and let it exit.
 - Use the prefix-capable binary (`bin/audiocpp_cli_prefix`).
 
 **Request must match the take** (only the prefix + continuation bounds are
@@ -212,6 +220,16 @@ conditioning and produce a third performance.
 Before any coordinate math, check whether the output is the **full timeline**
 (0–31 s) or only the **tail after the prefix** (26.88–31 s). If tail-only,
 subtract **26.88 s** from every coordinate.
+
+**Memory check — read the log before launching seeds 2–4:**
+
+- `yue2.request ... max_tokens=775` (not 7250, not 5606);
+- final `semantic.tokens` = **775**; if the log reports new tokens separately,
+  `emitted_tokens` = **103** (775 − 672);
+- `truncated 0`.
+
+If the log says 7250 or 5606, stop: the cap/prefix bounds were not applied, and
+the run is much longer than intended.
 
 ## 3) Demucs + filter (~5–10 min)
 
@@ -311,11 +329,28 @@ abc_cfg15/   optional full-track transcription
 - any change to the comp points or the unit;
 - update `CHECKPOINT.md` §6B/§6C/§7 only if the result changes the plan.
 
+## Stop rules
+
+- **G0 fails** (count/duration/sha) → stop; do not re-derive.
+- **Generation crashes even with one seed and `max_tokens=775`** → diagnose:
+  host RAM OOM (`Killed`, exit 137, Colab “used all available RAM”) vs CUDA OOM
+  (`CUDA out of memory`). Try a **high-RAM T4** runtime once; if it repeats, try
+  `cot=off` (prefix only) once as a diagnostic. If it still crashes, stop — do
+  not grind.
+- **4 candidates fail the same way** → widen the window once (earlier start /
+  later end), then stop.
+- **Audible seam** → stop; the original CFG 1.5 take remains the deliverable.
+- **Two rounds** → stop.
+
 ## Do not violate
 
 - The original `repro_abc_cfg15.wav` is never modified; all work is on copies.
 - No token re-derivation and no full token gate; the tokens exist and are
   verified by count + duration + sha.
+- **No parallel GPU runs.** One `audiocpp_cli_prefix` process at a time; seeds
+  are sequential. Two concurrent runs can OOM a T4.
+- **No Demucs or ABC transcription during generation.** Do them after the
+  generation process exits; Demucs on CPU if RAM is tight.
 - No donor splice from the correct occurrence (41.13–42.55); it is a reference
   only.
 - No new ABC transcription as `abc_file`; the batch keeps
