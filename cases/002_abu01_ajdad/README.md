@@ -4,6 +4,9 @@
 intake, the alignment index, the defect card, the audition clips and the
 preparation/friction log.
 
+> **Current state:** [CHECKPOINT.md](CHECKPOINT.md) (2026-11-14). It is the
+> authoritative summary and it supersedes the 111.35 comp end below.
+
 > **Goal:** a real, user-perspective test of "fix one pronunciation error" —
 > first the preparation (this folder), then one GPU session on Colab.
 >
@@ -95,6 +98,7 @@ alignment "gap" between `هَوَانُ` and `الْآبَاءِ` is not acousti
 
 ## Read next
 
+- [CHECKPOINT.md](CHECKPOINT.md) — the next-session state, workflow and numbers.
 - [PREP.md](PREP.md) — preparation timeline, friction log, accelerators, Colab gates.
 - [intake/defect_card.md](intake/defect_card.md) — the one card to approve.
 - [intake/alignment.md](intake/alignment.md) — how the word was found and measured.
