@@ -9,6 +9,16 @@ workflow, not the fix.
 > `RUNBOOK.md`, `spec/repair_spec.draft.json` and `intake/defect_card.md`.
 > The latest measurement puts the vowel onset at **~110.30**, so the
 > recommended comp end is **110.35** (see §6).
+>
+> **Correction (2026-11-14, after re-measuring on the stem).** `110.35` is the
+> *lexical* word end (burst 110.242 + the 0.08–0.15 s seen in the two correct
+> `/d/`s), but it lands on the **peak of a real pitch ornament** (277→296→262→247 Hz,
+> 110.30–110.55) and on the loudest point of the region. **The comp end is not a
+> constant:** it follows the candidate's own final `/d/` (see [STEPS.md](STEPS.md)).
+> If a fixed number is needed: **110.30** (energy minimum, keeps the ornament) or a
+> flat point ≥110.55. Also: the gap before `هَوَانُ` is **1.2 s** (104.95–106.18),
+> not 400 ms; 106.20 is the attack edge. And a CTC presence filter cannot separate
+> `/d/` from `/g/` — that check is the ear's.
 
 ---
 
@@ -290,8 +300,8 @@ one render, several comp widths; filter before the ear.
   update to 110.35)
 - `cases/002_abu01_ajdad/scripts/plot_gaps.py` — generic gap chart
 - `cases/002_abu01_ajdad/review/gaps.png` — committed preview
-- ABC transcription: `local_workspace/abu01_a01_3285212580/` (full; byte-identical
-  to the previous zip)
+- ABC transcription: `cases/002_abu01_ajdad/abc/` (full; byte-identical to
+  `local_workspace/abu01_a01_3285212580/`)
 
 **One line to remember:** replace less, keep the take, and measure the end on
 the stem — not in the score, not in the mix.

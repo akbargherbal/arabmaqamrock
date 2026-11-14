@@ -1,0 +1,22 @@
+{
+  "tool": "arabmaqamrock-transcribe/1",
+  "created_utc": "2026-11-14T14:49:29Z",
+  "status": "ok",
+  "source_wav": "/content/20261113-044223_abu01_defaults/abu01_a01_3285212580.wav",
+  "source_wav_sha256": "30860a08d5ca53731e76766e529d6de7039fa3e6eb96548b18c002417923dad0",
+  "source_wav_bytes": 43983148,
+  "duration_s": 229.079,
+  "model": "m-a-p/SheetSage2",
+  "model_revision": "b83c3d79a6d98bcffaf8f9ed112c90aa887887bc",
+  "melody_only": false,
+  "device": "cpu",
+  "dtype": "fp32",
+  "threads": 4,
+  "python": "3.11.17",
+  "torch": "2.8.0+cpu",
+  "transformers": "4.45.2",
+  "seconds": 139.5,
+  "abc": "score.abc",
+  "abc_sha256": "8784150fc2252c3ad4bd3c5b9d058355f58fca73636dea7d895938ccf4856912",
+  "abc_bytes": 2338
+}

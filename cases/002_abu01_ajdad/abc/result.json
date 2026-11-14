@@ -1,0 +1,50 @@
+{
+  "audio": "abu01_a01_3285212580.wav",
+  "duration_seconds": 229.07866666666666,
+  "prompts": [
+    "timestamp",
+    "downbeat_meter",
+    "structure",
+    "key",
+    "chord_full",
+    "melody_full"
+  ],
+  "preset": "default",
+  "melody_only": false,
+  "dtype": "fp32",
+  "window_seconds": 300.0,
+  "overlap_seconds": 200.0,
+  "lookahead_seconds": 100.0,
+  "windows": [
+    {
+      "start": 0.0,
+      "end": 229.07866666666666,
+      "accept_start": 0.0,
+      "accept_end": 229.07866666666666,
+      "prefix_end": 0.0,
+      "generation_stop": null,
+      "window_index": 0,
+      "prefix_tokens": 0,
+      "tokens": 2390,
+      "events": 745,
+      "accepted_events": 745,
+      "elapsed_seconds": 137.89856158299995
+    }
+  ],
+  "elapsed_seconds": 139.46613345999992,
+  "warnings": [],
+  "peak_gpu_mib": 0,
+  "melody_notes": 663,
+  "vocal_notes": 531,
+  "instrumental_notes": 132,
+  "events": 745,
+  "abc_measures": 78,
+  "abc_error": null,
+  "diagnostics": [
+    "measure 0: inferred 1/4 from downbeat span; declared numerators were [4]",
+    "measure 47: inferred 1/4 from downbeat span; declared numerators were [4]",
+    "measure 61: inferred 3/4 from downbeat span; declared numerators were [4, 4, 4]",
+    "measure 77: padded final 3/4 span to declared 4/4 with trailing rest",
+    "measure 0: padded leading 1/4 span to 4/4 with preceding rest"
+  ]
+}

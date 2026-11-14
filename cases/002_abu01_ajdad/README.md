@@ -98,6 +98,8 @@ alignment "gap" between `هَوَانُ` and `الْآبَاءِ` is not acousti
 
 ## Read next
 
+- [STEPS.md](STEPS.md) — the one-page repair procedure (the agreed, plain-language version).
+- [abc/README.md](abc/README.md) — the ABC transcription: what it proves, and what it must not be used for.
 - [CHECKPOINT.md](CHECKPOINT.md) — the next-session state, workflow and numbers.
 - [PREP.md](PREP.md) — preparation timeline, friction log, accelerators, Colab gates.
 - [intake/defect_card.md](intake/defect_card.md) — the one card to approve.
