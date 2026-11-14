@@ -168,3 +168,9 @@ still a fail under the case's two-condition rule.
 
 Evidence: `gs://…/runs/20261114-185000_abc_repro/` (WAV, tokens, score,
 compare JSON, log, line clip). Original still untouched.
+
+**Follow-up, CFG 1.5 (user request).** Same score/seed/LoRA, `guidance_scale=1.5`:
+5606 tokens, 224.239 s (−4.84 s), envelope r **0.220**, median mel Δ **6.36 dB**,
+line r **0.086**. Moving CFG away from 1.0 made it *less* like the original, so
+CFG is not a reproduction lever. Evidence:
+`gs://…/runs/20261114-191700_abc_cfg15/`.
