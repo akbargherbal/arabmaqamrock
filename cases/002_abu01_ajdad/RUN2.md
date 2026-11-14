@@ -155,5 +155,16 @@ The score anchors the **duration** (5728 ≈ 5727, +40 ms), but not the
 performance: the stream differs from frame 0, and the target line at
 106.1–113.3 has r = 0.58 at zero lag. Gate still fails; not usable for a comp.
 
+**Ear and measurement agree on "close but not the same":** the user reported the
+defect gone, ~95 % similar overall, with a slight timbre difference audible when
+switching. On the stem, the ABC render's final `/d/` closure+burst is at
+**110.94 s** vs the original's **110.24 s** (+0.70 s), and the word-body f0
+sequence in 109.5–110.3 differs (original ~264→297→263→231→277 Hz; ABC
+~294→292→260→295→262 Hz). Local mel alignment drifts by up to ±0.5 s inside the
+line. A word-level comp would therefore cut inside the ABC word or inside the
+original's correct tail; a line-level comp would place a differently-timed
+vocal over the original instruments. Correct letter + different performance is
+still a fail under the case's two-condition rule.
+
 Evidence: `gs://…/runs/20261114-185000_abc_repro/` (WAV, tokens, score,
 compare JSON, log, line clip). Original still untouched.
