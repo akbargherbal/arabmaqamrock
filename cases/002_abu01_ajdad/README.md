@@ -1,11 +1,17 @@
 # Case 002 — `وَالْأَجْدَادِ` (Abu al-Ala', take `3285212580`, arm `a01`)
 
-**Status: PREP COMPLETE.** No audio edited, no GPU used. This folder holds the
-intake, the alignment index, the defect card, the audition clips and the
-preparation/friction log.
+**Status: IN PROGRESS (2026-11-14).** The original L4 take is **closed** as a
+repair target (no exported tokens; T4 re-derivation is a different performance).
+The active track is the **T4 CFG 1.5 ABC take** (`repro_abc_cfg15.wav`), which
+has exported tokens and one opening defect: `مِلَّتِي` in the first verse,
+pronounced without the initial م (the repeated verse is correct). This folder
+holds the intake, the alignment index, the defect card, the audition clips, the
+preparation/friction log, and RUN2.
 
 > **Current state:** [CHECKPOINT.md](CHECKPOINT.md) (2026-11-14). It is the
-> authoritative summary and it supersedes the 111.35 comp end below.
+> authoritative summary and it supersedes the 111.35 comp end below. It also
+> supersedes the original-take plan in this README: the next session repairs the
+> CFG 1.5 take, not the L4 original.
 
 > **Goal:** a real, user-perspective test of "fix one pronunciation error" —
 > first the preparation (this folder), then one GPU session on Colab.
