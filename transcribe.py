@@ -757,9 +757,10 @@ def parse_args(argv: list[str] | None = None) -> tuple[Config, list[Track]]:
                     help="torch CPU threads (default: min(4, CPU count))")
     g = ap.add_mutually_exclusive_group()
     g.add_argument("--melody-only", dest="melody_only", action="store_true",
-                   default=True, help="omit chord symbols (default)")
+                   help="omit chord symbols")
     g.add_argument("--full", dest="melody_only", action="store_false",
-                   help="full SheetSage2 transcription (melody + chords)")
+                   help="full SheetSage2 transcription (melody + chords) (default)")
+    g.set_defaults(melody_only=False)
     ap.add_argument("--recursive", action="store_true",
                     help="recurse into input directories")
     ap.add_argument("--exclude", default=None, metavar="REGEX",

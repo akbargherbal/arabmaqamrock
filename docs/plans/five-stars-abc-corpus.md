@@ -301,8 +301,8 @@ nohup ./transcribe.sh /content/data/audio \
 
 Notes:
 
-- `--melody-only` is already the default; it is passed explicitly so the intent
-  survives in the log.
+- `--melody-only` was the default when this plan was written; it is now
+  `--full`, so the flag is passed explicitly so the intent survives in the log.
 - The tool discovers 177 MP3s recursively and keys outputs by `clip_id`; stems
   are unique, so no collisions (verified with `--dry-run`).
 - Resumable: an existing `score.abc` is skipped only when `meta.json` records a

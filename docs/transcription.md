@@ -29,9 +29,9 @@ out/<run>/transcripts/<name>_<seed>/
 
 plus run-level `_driver.log`, `_timings.csv`, and `transcribe_manifest.json`.
 
-`--melody-only` (the default) keeps the Vocal and Ins melody staves and omits
-chord symbols from the ABC. It is **not** “lead vocal only”. Use `--full` for a
-full SheetSage2 transcription with chord symbols.
+By default (`--full`) the ABC keeps the Vocal and Ins melody staves **and**
+chord symbols. `--melody-only` omits the chord symbols. Neither mode is
+“lead vocal only”.
 
 ## Install
 

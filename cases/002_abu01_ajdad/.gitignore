@@ -1,0 +1,6 @@
+# audio is evidence, not source control
+review/*.wav
+work/
+*.wav
+*.mp3
+review/gaps.html

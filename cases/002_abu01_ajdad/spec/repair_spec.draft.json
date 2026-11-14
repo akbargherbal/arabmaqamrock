@@ -1,0 +1,133 @@
+{
+  "case": "002",
+  "take": "abu01_a01_3285212580",
+  "take_sha256": "30860a08d5ca53731e76766e529d6de7039fa3e6eb96548b18c002417923dad0",
+  "run": "20261113-044223_abu01_defaults",
+  "fps": 25,
+  "duration_s": 229.0787,
+  "total_frames": 5727,
+  "target": {
+    "word": "وَالْأَجْدَادِ",
+    "line": "هَوَانُ الْآبَاءِ وَالْأَجْدَادِ...",
+    "occurrence": "1 of 2",
+    "line_index": 13,
+    "word_index": 66,
+    "word_box_s": [
+      109.149,
+      111.329
+    ],
+    "note_after": "keep",
+    "acoustic_note": "the lexical word ends 111.33 but the voice holds ~247 Hz to 112.55; reverb to ~113.2. Before the word there is a 70 ms break in voicing at 108.85-108.92 (glottal closure, inside الْآبَاءِ); the word boundary itself (109.10) is voiced. The mix has no gaps at all."
+  },
+  "second_occurrence": {
+    "line_index": 27,
+    "word_index": 131,
+    "word_box_s": [
+      200.096,
+      201.916
+    ],
+    "tail_to_s": 202.8,
+    "status": "confirmed correct by ear (2026-11-14) - one edit only"
+  },
+  "reference": {
+    "word": "الْأَجْسَادِ",
+    "span_s": [
+      97.028,
+      98.808
+    ],
+    "why": "same take, same section, same rhyme, correct final د"
+  },
+  "units": {
+    "B_word_only": {
+      "comp_s": [
+        109.1,
+        111.35
+      ],
+      "frames": [
+        2728,
+        2784
+      ],
+      "replaces": "the wā + the word + ~20 ms of the sustain",
+      "joins": "at the word onset (voiced); the previous word stays original",
+      "fade_in_s": 0.04,
+      "fade_out_s": 0.04,
+      "use": "default"
+    },
+    "D_line": {
+      "comp_s": [
+        106.2,
+        111.35
+      ],
+      "frames": [
+        2655,
+        2784
+      ],
+      "replaces": "the whole line (هَوَانُ + الْآبَاءِ + وَالْأَجْدَادِ)",
+      "joins": "400 ms gap before هَوَانُ; start of the sustain after",
+      "fade_in_s": 0.04,
+      "fade_out_s": 0.04,
+      "use": "fallback if B's start join is audible; replaces two correct words but both joins are clean"
+    },
+    "A_fragment": {
+      "comp_s": [
+        108.88,
+        111.35
+      ],
+      "frames": [
+        2722,
+        2784
+      ],
+      "replaces": "hamza release + kasra + the word",
+      "joins": "glottal closure before; start of the sustain after",
+      "fade_in_s": 0.04,
+      "fade_out_s": 0.04,
+      "use": "last resort: the only silent start, but inside the previous word"
+    }
+  },
+  "generation": {
+    "start_s": 106.0,
+    "end_s": 113.0,
+    "prefix": 2650,
+    "max": 2825,
+    "why": "the prefix starts in the 400 ms gap before هَوَانُ, so one render covers B, D and A; the comp windows are narrower than the generation by design."
+  },
+  "seeds": {
+    "base": 3285212580,
+    "sweep": "base + 0..15",
+    "count": 16
+  },
+  "stems": {
+    "original": "htdemucs vocals of ORIGINAL.wav (44.1 kHz, resample to 48 kHz before comp)",
+    "candidate": "htdemucs vocals of each candidate, same model"
+  },
+  "checks": {
+    "outside_diff": 0,
+    "edge_step_db": "< 1",
+    "duration": "unchanged",
+    "tail": "A1: candidate tail f0 within 20 cents over 111.4-112.5; A2/B2: the original tail 111.40-112.55 is byte-identical",
+    "target_metric": "final /d/ present, not /g/ (ear; CTC is a presence filter only)",
+    "shift": "<= ±60 ms; no time-stretch",
+    "instrumental": "unchanged (vocal-stem comp)"
+  },
+  "gates": {
+    "ear": [
+      "heard = /g/ (confirmed)",
+      "occurrence 2 correct (confirmed)",
+      "tail correct, keep it (confirmed)",
+      "start strategy: B default; D or A as fallbacks (chart review/gaps.html)"
+    ],
+    "assets": [
+      "a01 LoRA AR/NAR hashes",
+      "prefix binary sha 4117a46a…",
+      "T4"
+    ],
+    "tokens": "re-derive 5727 frames + render min=max=5727 must equal 30860a08…"
+  },
+  "status": "one edit, ear gates closed except boundary approval; waiting on the token gate",
+  "notes": [
+    "Do not start from the mp3.",
+    "Do not cut inside 111.33-112.55 (the sustained vowel).",
+    "The word occurs twice; occurrence 2 is correct by ear. Edit occurrence 1 only.",
+    "If the token gate fails, stop: do not splice a word from a different performance."
+  ]
+}

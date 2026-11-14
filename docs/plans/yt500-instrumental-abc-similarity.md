@@ -311,7 +311,8 @@ re-tag or tar an MP3 in place.**
 
 Rules that matter:
 
-- **`--full`**, not the default melody-only: the comparison needs chord symbols.
+- **`--full`** (now the default) — the comparison needs chord symbols; pass it
+  explicitly for clarity.
 - **No `--limit`.** `--limit` truncates the *file list* before the skip check,
   so a resumed run would re-scan the same head of the list forever. Use
   `--time-budget` per session; the next session skips by hash and moves on.
