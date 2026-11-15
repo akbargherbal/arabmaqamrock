@@ -478,7 +478,9 @@ If the loop does not match the card, stop and re-localize before any GPU batch.
   the phrase with margin. The comp ends at the candidate’s word end, not at 31.
 - Seeds `3285212580 + 0..3` first; **16 is a ceiling, not a target**.
 - **Sequential only; one `audiocpp_cli_prefix` process.** Two concurrent GPU
-  runs can OOM a T4. Generate one seed first, then the rest.
+  runs can OOM a T4. Generate one seed first, then the rest. Before every seed,
+  `pgrep -af audiocpp_cli` must show at most one process; no `&`, `xargs -P`, or
+  two generation notebook cells.
 - Do **not** run Demucs or the optional ABC before/during generation; run them
   after the process exits (Demucs on CPU if RAM is tight).
 - Check the log before seeds 2–4: `max_tokens=775`, final tokens **775** (or

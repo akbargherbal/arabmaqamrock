@@ -177,13 +177,16 @@ PY
   end, not at 31 s.
 - Seeds: `3285212580 + 0..3` first. **16 is a ceiling, not a target.**
 - **Sequential only.** Use `--request-sequence` or a shell loop that waits for
-  each run; never `&`, never two `audiocpp_cli_prefix` processes, and never a
-  second model load while the first is alive. Two concurrent GPU runs can OOM a
-  T4. Generate **one seed first**; if it succeeds, run the other three
-  sequentially.
+  each run; never `&`, never `xargs -P`, never GNU parallel, never two
+  `audiocpp_cli_prefix` processes, and never a second model load while the first
+  is alive. Two concurrent GPU runs can OOM a T4. Generate **one seed first**;
+  if it succeeds, run the other three sequentially.
 - Before generation: `free -h`, `nvidia-smi`, `pgrep -af audiocpp_cli`; kill any
-  stale process. Do **not** install/run Demucs or SheetSage2 before generation;
-  run them after. If Demucs must run first, use `-d cpu` and let it exit.
+  stale process. **Before every seed**, `pgrep -af audiocpp_cli` must show at
+  most one process; if it shows more, `pkill -f audiocpp_cli`, wait, and restart
+  with a single seed. Do **not** run two generation notebook cells at once.
+- Do **not** install/run Demucs or SheetSage2 before generation; run them after.
+  If Demucs must run first, use `-d cpu` and let it exit.
 - Use the prefix-capable binary (`bin/audiocpp_cli_prefix`).
 
 **Request must match the take** (only the prefix + continuation bounds are
