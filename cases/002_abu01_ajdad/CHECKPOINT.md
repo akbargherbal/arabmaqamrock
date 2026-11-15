@@ -19,7 +19,7 @@ The deliverable is the workflow. The current case is the test, not the goal.
 | `abu01_a01_3285212580.wav` | **L4**, CFG 1.0, no ABC | **not exported** | **closed** — T4 re-derivation is a different performance |
 | `abu01_orig/abu01_a01_3285212580.wav` | **L4**, CFG **1.5**, no ABC | **not exported** | **not the active track** — the “orig” run is misnamed; 6095 tokens, no export |
 | `repro_abc.wav` | T4, CFG 1.0, ABC-conditioned | **5728**, exported | **fallback** — `وَالْأَجْدَادِ` correct, ~95 % similar, audible timbre shift; its `مِلَّتِي` was not checked |
-| `repro_abc_cfg15.wav` | T4, CFG **1.5**, ABC-conditioned | **5606**, exported | **active** — user prefers the music; one opening defect: `مِلَّتِي` (missing م), occurrence 1 of 2 |
+| `repro_abc_cfg15.wav` | T4, CFG **1.5**, ABC-conditioned | **5606**, exported | **active** — user prefers the music; opening defect `مِلَّتِي` (missing م) **repaired in RUN3**: `B_s2_3285212582.wav`, sha `ae9217c1…87a654` — م audible, no seam |
 
 ### What the three sessions established
 
@@ -323,7 +323,8 @@ performance; the gate failed before any batch. See
 | score | `cases/002_abu01_ajdad/abc/score.abc` (post-hoc transcription of the original; 190 ms grid at ♩=79) |
 | stems | **not yet generated** — run Demucs 4.1.0 `htdemucs` on this WAV |
 | user verdict | “CFG 1.5 is actually better in terms of music”; likes it; one mistake at the start; the mistake caused a negative first impression |
-| defect | **`مِلَّتِي`**, opening verse (lyrics line 1; aligner line 0: `غَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي`), **occurrence 1 of 2**; heard as **“لتي”** — the initial **م** is missing. Occurrence 2 (the repeated verse, lyrics line 3 / aligner line 2) is **correct**. |
+| defect | **`مِلَّتِي`**, opening verse (lyrics line 1; aligner line 0: `غَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي`), **occurrence 1 of 2**; heard as **“لتي”** — the initial **م** is missing. Occurrence 2 (the repeated verse, lyrics line 3 / aligner line 2) is **correct**. **Repaired 2026-11-15 — see [RUN3.md](RUN3.md).** |
+| repaired | `B_s2_3285212582.wav`, sha `ae9217c138a62026605eedc849ccc7a45ee569504e21e76444e14f51d187a654`; comp 27.46–28.98 s, vocal-only diff, candidate seed `3285212582`; original file untouched |
 
 **Fallback take — ABC CFG 1.0**
 
@@ -427,9 +428,21 @@ and long notes for any future defect.
 **Acceptance** is still the pair: the **م** is audible **and** the user cannot
 hear where the edit is. If only one holds, keep the CFG 1.5 take as it is.
 
+**Result (2026-11-15): both held.** B from seed `3285212582`, comp
+**27.46 – 28.98 s** (start moved 27.50 → 27.46 because the candidate's nasal
+onset begins ~50 ms earlier than the original word start). The user heard the
+**م** and answered *"No seam — accept 02"*. Full numbers in [RUN3.md](RUN3.md).
+
 ---
 
 ## 7. Next session — exact plan (T4)
+
+> **DONE 2026-11-15, 39 min wall / 26 min machine.** The plan below was followed;
+> the repair is delivered as `B_s2_3285212582.wav`. Two corrections for a rerun:
+> (1) run **all** seeds in **one** `--request-sequence` process — a second process
+> repays ~5 min of model load; (2) `truncated 1` is **expected** when
+> `min = max`, so check `min_tokens`/`max_tokens`/`semantic.tokens` instead.
+> See [RUN3.md](RUN3.md).
 
 ### 0) Preflight (~5 min)
 
