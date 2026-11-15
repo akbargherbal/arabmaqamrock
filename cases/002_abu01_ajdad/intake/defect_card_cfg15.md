@@ -14,9 +14,10 @@ One card for the active take. Gate A: this card must be right before any render.
 | **measured word** | ~27.52 – 28.90 s on the vocal stem |
 | **previous word** | `فِي`: /f/ onset 27.00, vowel 27.15–27.48 — correct, keep it in B |
 | **next word** | `وَاعْتِقَادِي` starts ~29.00 s — correct, do not touch |
-| **comp B (default)** | **27.50 – 28.95 s** (word onset; keeps `فِي`; end follows the candidate, ≤28.98) |
-| **comp D (fallback)** | **27.00 – 28.95 s** (starts at the /f/ onset; replaces `فِي` + `مِلَّتِي`) |
-| **comp A (last resort)** | 27.10 – 28.95 s (starts inside the `فِي` vowel) |
+| **comp B (planned)** | 27.50 – 28.95 s (word onset; keeps `فِي`; end follows the candidate, ≤28.98) |
+| **comp B (used)** | **27.46 – 28.98 s** — candidate s2's nasal onset begins ~27.45, so 27.50 would cut the م |
+| **comp D (fallback)** | 27.00 – 28.95 s (starts at the /f/ onset; replaces `فِي` + `مِلَّتِي`); RUN3 used 27.00 – 28.98, not chosen |
+| **comp A (last resort)** | 27.10 – 28.95 s (starts inside the `فِي` vowel; not used) |
 | **correct reference** | occurrence 2, ~41.13 – 42.55 s (box 41.423 – 42.244) — ear/spectrum only, no donor splice |
 | **must not change** | `فِي`; `وَاعْتِقَادِي`; the rest of the track; the instrumental; timing |
 
@@ -26,7 +27,9 @@ One card for the active take. Gate A: this card must be right before any render.
    **Confirmed by the user, 2026-11-15.**
 2. The missing sound is the initial **م** (“لتي”), not a different vowel.
    **Confirmed by the user.**
-3. After the repair, the **م** is audible and the join is inaudible. **Open.**
+3. After the repair, the **م** is audible and the join is inaudible.
+   **Closed — the user heard the م and answered “No seam — accept 02.”**
+   Final: `B_s2_3285212582.wav`, sha `ae9217c1…87a654`, comp 27.46–28.98 s.
 
 ## Evidence
 

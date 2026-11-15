@@ -179,8 +179,10 @@ PY
 - **Sequential only.** Use `--request-sequence` or a shell loop that waits for
   each run; never `&`, never `xargs -P`, never GNU parallel, never two
   `audiocpp_cli_prefix` processes, and never a second model load while the first
-  is alive. Two concurrent GPU runs can OOM a T4. Generate **one seed first**;
-  if it succeeds, run the other three sequentially.
+  is alive. Two concurrent GPU runs can OOM a T4. **Run all four seeds in one
+  `--request-sequence` process**; a second full process repays ~5 min of model
+  load. If memory is unproven, do a single short/semantic-only smoke run first,
+  not a full seed.
 - Before generation: `free -h`, `nvidia-smi`, `pgrep -af audiocpp_cli`; kill any
   stale process. **Before every seed**, `pgrep -af audiocpp_cli` must show at
   most one process; if it shows more, `pkill -f audiocpp_cli`, wait, and restart
@@ -227,12 +229,14 @@ subtract **26.88 s** from every coordinate.
 **Memory check — read the log before launching seeds 2–4:**
 
 - `yue2.request ... max_tokens=775` (not 7250, not 5606);
-- final `semantic.tokens` = **775**; if the log reports new tokens separately,
-  `emitted_tokens` = **103** (775 − 672);
-- `truncated 0`.
+- final `semantic.tokens` = **775**; in this binary `emitted_tokens` is also
+  **775** (the total, not 103 new);
+- `truncated 1` is **expected** when `min=max` (the AR is forced to stop at the
+  cap without an end token). Do not reject on `truncated`.
 
 If the log says 7250 or 5606, stop: the cap/prefix bounds were not applied, and
-the run is much longer than intended.
+the run is much longer than intended. Check `min_tokens`/`max_tokens`/`tokens`,
+not `truncated`.
 
 ## 3) Demucs + filter (~5–10 min)
 
@@ -245,7 +249,10 @@ Reject a candidate if:
 - its `مِلَّتِي` ends after **28.98** (would collide with `وَاعْتِقَادِي`);
 - its pitch contour differs from **220 → 247 → 247 → 221 → 200 Hz** in the used
   span;
-- |Δf0| > 20 cents or |ΔRMS| > 1 dB at the seam;
+- **at a steady-vowel seam only:** |Δf0| > 20 cents or |ΔRMS| > 1 dB. At a
+  consonant-onset seam (this case) the f0/RMS step is expected to be large:
+  s2 measured **140 cents / −4.4 dB** and still passed; use the 10 ms mix
+  envelope, click ratio (<0.4), and the ear.
 - a new defect appears.
 
 Do **not** use CTC to distinguish /m/ or to “prove” the consonant. The ear
@@ -277,7 +284,8 @@ Verify and print the numbers:
 - outside the comp region: **byte-identical** to the original CFG 1.5 WAV;
 - duration unchanged: **224.238667 s**;
 - original `فِي` / `وَاعْتِقَادِي` byte-identical where kept;
-- no f0/RMS jump at the seam; no click;
+- 10 ms mix envelope continuous across the seam; click ratio low (RUN3: 0.29);
+  f0/RMS reported but **not** used as a reject at a consonant onset;
 - candidate word end ≤28.98.
 
 ## 5) Listening — the user decides (~5–10 min)

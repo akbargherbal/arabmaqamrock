@@ -1,17 +1,19 @@
 # Case 002 — `وَالْأَجْدَادِ` (Abu al-Ala', take `3285212580`, arm `a01`)
 
-**Status: IN PROGRESS (2026-11-14).** The original L4 take is **closed** as a
-repair target (no exported tokens; T4 re-derivation is a different performance).
-The active track is the **T4 CFG 1.5 ABC take** (`repro_abc_cfg15.wav`), which
-has exported tokens and one opening defect: `مِلَّتِي` in the first verse,
-pronounced without the initial م (the repeated verse is correct). This folder
-holds the intake, the alignment index, the defect card, the audition clips, the
-preparation/friction log, and RUN2.
+**Status: REPAIRED / DELIVERED (2026-11-15).** The original L4 take is **closed**
+as a repair target (no exported tokens; T4 re-derivation is a different
+performance). The repaired track is the **T4 CFG 1.5 ABC take**
+(`repro_abc_cfg15.wav`): `مِلَّتِي` in the first verse, previously pronounced
+without the initial م, is fixed. The user heard the **م** and **no seam**.
 
-> **Current state:** [CHECKPOINT.md](CHECKPOINT.md) (2026-11-14). It is the
-> authoritative summary and it supersedes the 111.35 comp end below. It also
-> supersedes the original-take plan in this README: the next session repairs the
-> CFG 1.5 take, not the L4 original.
+- Final: `final_B_s2.wav`, sha `ae9217c1…87a654`, 224.238667 s
+- Edit: 27.46–28.98 s, vocal-only diff; byte-identical outside
+- Report: [RUN3.md](RUN3.md) · State: [CHECKPOINT.md](CHECKPOINT.md)
+
+> **Current state:** [CHECKPOINT.md](CHECKPOINT.md) is the authoritative
+> summary and it supersedes the 111.35 comp end below. It also supersedes the
+> original-take plan in this README: the repair was made on the CFG 1.5 take,
+> not the L4 original.
 
 > **Goal:** a real, user-perspective test of "fix one pronunciation error" —
 > first the preparation (this folder), then one GPU session on Colab.

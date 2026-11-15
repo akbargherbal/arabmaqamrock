@@ -5,9 +5,10 @@
 The deliverable is the workflow. The current case is the test, not the goal.
 
 > **Read §0 and §7 first.** The original L4 take is **closed** as a repair
-> target. The active track is the **CFG 1.5 ABC take** (`repro_abc_cfg15.wav`),
-> which the user prefers musically and which was generated with
-> `export_semantic=true`. The old `110.35` plan in §6A belongs to the original
+> target. The **repaired track** is the **CFG 1.5 ABC take**
+> (`repro_abc_cfg15.wav`), which the user prefers musically and which was
+> generated with `export_semantic=true`; the delivered comp is
+> `B_s2_3285212582.wav` (RUN3). The old `110.35` plan in §6A belongs to the original
 > take only; it does **not** apply to the CFG 1.5 track.
 
 ---
@@ -19,9 +20,9 @@ The deliverable is the workflow. The current case is the test, not the goal.
 | `abu01_a01_3285212580.wav` | **L4**, CFG 1.0, no ABC | **not exported** | **closed** — T4 re-derivation is a different performance |
 | `abu01_orig/abu01_a01_3285212580.wav` | **L4**, CFG **1.5**, no ABC | **not exported** | **not the active track** — the “orig” run is misnamed; 6095 tokens, no export |
 | `repro_abc.wav` | T4, CFG 1.0, ABC-conditioned | **5728**, exported | **fallback** — `وَالْأَجْدَادِ` correct, ~95 % similar, audible timbre shift; its `مِلَّتِي` was not checked |
-| `repro_abc_cfg15.wav` | T4, CFG **1.5**, ABC-conditioned | **5606**, exported | **active** — user prefers the music; opening defect `مِلَّتِي` (missing م) **repaired in RUN3**: `B_s2_3285212582.wav`, sha `ae9217c1…87a654` — م audible, no seam |
+| `repro_abc_cfg15.wav` | T4, CFG **1.5**, ABC-conditioned | **5606**, exported | **base — repaired** in RUN3 as `B_s2_3285212582.wav`, sha `ae9217c1…87a654` — م audible, no seam; original base untouched |
 
-### What the three sessions established
+### What the four sessions established
 
 - **Session 1 — Baghdad Moon / workflow.** The method came from a real repair:
   replace the smallest *musical* unit, keep the original everywhere else, comp
@@ -52,6 +53,13 @@ The deliverable is the workflow. The current case is the test, not the goal.
   initial م** — which created a bad first impression; the repeated verse sings
   the word correctly. The later verdict is the governing one for choosing the
   base take.
+- **Session 4 — repair delivered (2026-11-15).** One sequential process per
+  generation, G0 in 7 s, prefix 672, `min=max=775`, seeds `…580…583`. Candidate
+  **s2 / seed 3285212582** was comped on **27.46–28.98 s** (start moved from the
+  planned 27.50 because the candidate's nasal onset begins at ~27.45). The user
+  heard the **م** and answered **“No seam — accept 02.”** Final sha
+  `ae9217c1…87a654`, 224.238667 s, byte-identical outside the region. Machine
+  time **26 min**; wall **39 min**. Full report: [RUN3.md](RUN3.md).
 
 **Session-3 time, for the record:** assets + hashes 2.8 min; two token
 re-derivations 9.8 min (4.9 each); gate render 6.4 min; stop decision at
@@ -199,6 +207,18 @@ ends) becomes a comparison, not a guess, at zero extra cost.
 20. **Never reuse timestamps across takes.** The CFG 1.5 take is **224.239 s**,
     not 229.079 s. The same word can move by seconds. Re-align and re-measure
     on the new take.
+21. **The prefix locks the tokens, not the prefix audio.** The candidate
+    re-synthesizes 0–26.88 s through the NAR (`nar_noise=generated`); in RUN3 the
+    max abs difference there was **0.65**, so it is not bit-identical. Comp only
+    after the region you actually measured; never assume “same tokens ⇒ same
+    audio”.
+22. **`truncated 1` is expected when `min=max`.** The AR is forced to stop at
+    the cap without an end token. Check `min_tokens`, `max_tokens`,
+    `semantic.tokens`; do not reject the run on `truncated`.
+23. **At a consonant-onset seam, f0/RMS steps are not the gate.** The new /m/
+    replaces the previous vowel tail, so s2 measured **140 cents / −4.4 dB** at
+    27.46 and still passed the ear. Use the 10 ms mix envelope, click ratio
+    (**0.29**), and the ear; keep the 20-cent/1-dB rule for steady-vowel joins.
 
 ---
 
@@ -227,6 +247,10 @@ ends) becomes a comparison, not a guess, at zero extra cost.
 - **Rejecting a take on similarity-to-original when the user wants a new take.**
   That is a category error; keep it as an alternative and let the ear decide.
 - **Reusing the original take's map on a new take.** Re-align and re-measure.
+- **Expecting the candidate's prefix region to be bit-identical.** NAR
+  re-synthesis changes it (max abs diff 0.65 in RUN3); measure the comp region.
+- **Rejecting a `min=max` run because `truncated 1`.** That flag is expected;
+  check the bounds and token count instead.
 
 ---
 
@@ -240,6 +264,7 @@ ends) becomes a comparison, not a guess, at zero extra cost.
 | ABC (SheetSage2) | structure, beats, long-note flags, melody reference | phonemes, sample-accurate cuts; can be an octave off | ~1 min GPU / 140 s CPU |
 | semantic tokens | **the portable record of the performance; prefix continuation** | not recoverable after the fact | generation-time flag |
 | ABC *conditioning* (`cot=full` + `abc_file`) | a new take anchored to the score's structure/length | a reproduction; it changes the performance | ~9–11 min per 4-min track on T4 |
+| `comp_vocal_diff.py` / `verify_seam.py` | vocal-only diff comp, byte-identity outside, click ratio, 10 ms envelopes | the final verdict (ear) | seconds |
 
 **ABC's single biggest advantage:** it flags that a word does not end where the
 box says — the long-note trap. In the original take it showed a note
@@ -321,7 +346,7 @@ performance; the gate failed before any batch. See
 | generation | T4; seed `3285212580`; **guidance 1.5**; steps 8; context 24576; `cot=full`; `abc_file=abc/score.abc`; `nar_noise=generated`; semantic T=1, p=0.95, k=100, rp=1.2, window=50, min=200; cap 7250; LoRA a01 (AR+NAR 1.0); attention flash; `export_semantic=true` |
 | run | `20261114-191700_abc_cfg15` |
 | score | `cases/002_abu01_ajdad/abc/score.abc` (post-hoc transcription of the original; 190 ms grid at ♩=79) |
-| stems | **not yet generated** — run Demucs 4.1.0 `htdemucs` on this WAV |
+| stems | generated in RUN3 with Demucs 4.1.0 `htdemucs`; candidate vocals are in GCS `candidates/*_vocals.wav` |
 | user verdict | “CFG 1.5 is actually better in terms of music”; likes it; one mistake at the start; the mistake caused a negative first impression |
 | defect | **`مِلَّتِي`**, opening verse (lyrics line 1; aligner line 0: `غَيْرُ مُجْدٍ فِي مِلَّتِي وَاعْتِقَادِي`), **occurrence 1 of 2**; heard as **“لتي”** — the initial **م** is missing. Occurrence 2 (the repeated verse, lyrics line 3 / aligner line 2) is **correct**. **Repaired 2026-11-15 — see [RUN3.md](RUN3.md).** |
 | repaired | `B_s2_3285212582.wav`, sha `ae9217c138a62026605eedc849ccc7a45ee569504e21e76444e14f51d187a654`; comp 27.46–28.98 s, vocal-only diff, candidate seed `3285212582`; original file untouched |
@@ -361,9 +386,10 @@ performance; the gate failed before any batch. See
 | previous word `فِي` ends | ~27.48 |
 | **actual word end** | **~28.90** |
 | next word `وَاعْتِقَادِي` onset | **~29.00** (aligner 29.102) |
-| **comp B (default)** | **27.50 – 28.95** |
-| **comp D (fallback)** | **27.00 – 28.95** |
-| **comp A (last resort)** | 27.10 – 28.95 |
+| **comp B (planned)** | **27.50 – 28.95** |
+| **comp B (used, s2)** | **27.46 – 28.98** — candidate's nasal onset is ~27.45, so 27.50 would cut the م; this overlaps the last **~20 ms** of `فِي`'s vowel tail (27.46–27.48), which was accepted |
+| **comp D (planned/used)** | **27.00 – 28.95** (RUN3 used 27.00 – 28.98); not chosen |
+| **comp A (historical; not used)** | 27.10 – 28.95 |
 | correct occurrence 2 | aligner 41.423 – 42.244; actual ~**41.13 – 42.55** |
 
 > **The aligner box is an index, not a cut — again.** The box starts **~0.26 s
@@ -413,7 +439,11 @@ edge.
 2. word end **≤ 28.98** so the seam stays before `وَاعْتِقَادِي`;
 3. pitch contour close to **220 → 247 → 247 → 221 → 200 Hz** in the used span;
    no new defect;
-4. |Δf0| ≤ 20 cents and |ΔRMS| ≤ 1 dB at the seam.
+4. **at a steady-vowel seam only:** |Δf0| ≤ 20 cents and |ΔRMS| ≤ 1 dB. At a
+   **consonant-onset** seam (this case) the f0/RMS step is expected to be large:
+   s2 measured **140 cents / −4.4 dB** at 27.46 because the new /m/ replaces the
+   `فِي` vowel tail. Judge by the 10 ms mix envelope, click ratio **0.29**
+   (well under 1), and the ear — not by the steady-vowel thresholds.
 
 **ABC in this repair (decision):** do **not** transcribe the isolated ~1.4 s
 word. A **full-track transcription of `repro_abc_cfg15` is allowed as an
@@ -430,8 +460,15 @@ hear where the edit is. If only one holds, keep the CFG 1.5 take as it is.
 
 **Result (2026-11-15): both held.** B from seed `3285212582`, comp
 **27.46 – 28.98 s** (start moved 27.50 → 27.46 because the candidate's nasal
-onset begins ~50 ms earlier than the original word start). The user heard the
-**م** and answered *"No seam — accept 02"*. Full numbers in [RUN3.md](RUN3.md).
+onset begins ~50 ms earlier than the original word start; this replaces the last
+~20 ms of `فِي`'s vowel tail, 27.46–27.48). The user heard the
+**م** and answered *"No seam — accept 02"* on comp 02 and the 30 s opening
+passage; the full 224 s track was staged but not separately judged in the
+transcript, so a full-track listen remains the final check. The seam f0/RMS step was
+**140 cents / −4.4 dB** — expected at a consonant onset, not a reject; the click
+ratio was **0.29**. Full numbers in [RUN3.md](RUN3.md). Independently re-verified
+after the session: the GCS `final/final_B_s2.wav` sha matches, duration is
+224.238667 s, and the file is byte-identical outside **27.46–28.98 s**.
 
 ---
 
@@ -474,8 +511,8 @@ The card is closed in §6C; the alignment is saved at
 `intake/words_cfg15.json`, the measurement at `intake/measure_cfg15.json`.
 Do this once on the VM:
 
-- play `27.50–28.95` (B) and `27.00–28.95` (D) in a loop; the user confirms
-  they contain `مِلَّتِي` and that the **م** is missing;
+- play `27.46–28.98` (B, the actual RUN3 comp) and `27.00–28.98` (D) in a
+  loop; the user confirms they contain `مِلَّتِي` and that the **م** is missing;
 - play `41.13–42.55` (the correct occurrence) as the reference;
 - if the local stem is absent, run Demucs 4.1.0 `htdemucs` on the CFG 1.5 WAV
   and re-check the same two windows. Do not re-use the original take’s boxes.
@@ -491,14 +528,18 @@ If the loop does not match the card, stop and re-localize before any GPU batch.
   the phrase with margin. The comp ends at the candidate’s word end, not at 31.
 - Seeds `3285212580 + 0..3` first; **16 is a ceiling, not a target**.
 - **Sequential only; one `audiocpp_cli_prefix` process.** Two concurrent GPU
-  runs can OOM a T4. Generate one seed first, then the rest. Before every seed,
-  `pgrep -af audiocpp_cli` must show at most one process; no `&`, `xargs -P`, or
-  two generation notebook cells.
+  runs can OOM a T4. **Run all four seeds in one `--request-sequence` process**
+  (RUN3 split seed 0 from seeds 1–3 and paid a second ~5 min model load). If you
+  want a memory smoke test, use a single short/semantic-only run first, not a
+  full seed. Before every seed, `pgrep -af audiocpp_cli` must show at most one
+  process; no `&`, `xargs -P`, or two generation notebook cells.
 - Do **not** run Demucs or the optional ABC before/during generation; run them
   after the process exits (Demucs on CPU if RAM is tight).
-- Check the log before seeds 2–4: `max_tokens=775`, final tokens **775** (or
-  **103** new if reported separately), `truncated 0`. If it says 7250 or 5606,
-  stop — the bounds were not applied.
+- Check the log before seeds 2–4: `max_tokens=775`, final tokens **775**
+  (this binary reports `emitted_tokens 775` total, not 103 new). `truncated 1`
+  is **expected** when `min=max` (the AR is forced to stop at the cap without an
+  end token); do not reject on it. If the log says 7250 or 5606, stop — the
+  bounds were not applied.
 - Same request as the take: `guidance_scale=1.5`, `cot=full`,
   `abc_file=cases/002_abu01_ajdad/abc/score.abc`, `num_inference_steps=8`,
   `context=24576`, `nar_noise=generated`, semantic sampler defaults, cap 7250,
@@ -573,11 +614,17 @@ repair is already transparent or the session is tight.
 | listen | 5–10 min | — |
 | **total** | **20–25 min** | **25–30 min** |
 
+**Actual RUN3:** **26:01 machine / 39:22 wall.** Generation was 12:29 (5:22 for
+seed 0 alone + 7:07 for seeds 1–3 in one process); splitting seed 0 into its own
+process cost ~5 min of model load. All four seeds in one `--request-sequence`
+would have been ~7–8 min. The remaining wall overrun was ~8 min of listening
+plus ~5 min of write-up.
+
 **What breaks it:** (a) no exported tokens (gate becomes a session), (b) the
 wrong take (the user wants CFG 1.5, not the original), (c) a wrong unit (every
 render is wasted — here, trusting the 27.782 aligner box instead of the measured
-B 27.50 / D 27.00 – 28.95), (d) seed grinding after the same failure, (e) trying
-to comp across takes.
+B 27.46 / D 27.00 – 28.98), (d) seed grinding after the same failure, (e) trying
+to comp across takes, (f) splitting seeds across two processes.
 
 **What protects it:** export tokens at generation; choose the take the user will
 keep; re-align/re-measure on that take; one render, several comp widths; filter
@@ -609,6 +656,10 @@ before the ear; stop when the seam is audible.
 | 18 | **candidate tokens not exported** | future repair blocked | `export_semantic=true` for candidates too |
 | 19 | “same T4 machine” assumed to be required | unnecessary constraint | the exported tokens are the portable lock; a fresh T4 with the same binary is enough |
 | 20 | **aligner box late at the opening word** | would cut inside `مِلَّتِي` and leave the missing م | measure f0/spectral onset on the stem: actual start ~27.52, box 27.782 (~0.26 s late) |
+| 21 | **`truncated 1` read as “bounds not applied”** | would stop a good run | when `min=max`, `truncated 1` is expected; check `min_tokens`/`max_tokens`/`semantic.tokens` |
+| 22 | **steady-vowel f0/RMS thresholds applied to a consonant onset** | s2 measured 140 cents / −4.4 dB; the numbers reject the comp the ear accepted | at a consonant join use 10 ms envelope continuity + click ratio (<0.4) + the ear; keep f0/RMS for steady-vowel joins |
+| 23 | **seeds split across two processes** | ~5 min of model load | run all seeds in one `--request-sequence`; use a short smoke run only if memory is unproven |
+| 24 | **assuming “same prefix tokens ⇒ same prefix audio”** | the candidate re-synthesizes 0–26.88 s (NAR); max abs diff 0.65 | never assume bit-identity in the prefix; comp only after the region you measured |
 
 ---
 
@@ -620,13 +671,19 @@ before the ear; stop when the seam is audible.
 - `cases/002_abu01_ajdad/RUNBOOK.md` — original phase plan (historical; original
   take only).
 - `cases/002_abu01_ajdad/RUN2.md` — session-3 report: gate stop, ABC CFG 1.0,
-  CFG 1.5, evidence. **On `origin/main`; pull it before reading.**
+  CFG 1.5, evidence.
+- `cases/002_abu01_ajdad/RUN3.md` — **session-4 report: the delivered repair**
+  (`مِلَّتِي`, s2/seed 3285212582, comp 27.46–28.98, sha `ae9217c1…`), timing,
+  traps, reproduction.
+- `cases/002_abu01_ajdad/scripts/` — the reusable tools from RUN3:
+  `comp_vocal_diff.py`, `measure_word.py`, `onset_table.py`, `verify_seam.py`
+  (plus the older `make_loops.py` / `plot_gaps.py`).
 - `cases/002_abu01_ajdad/STEPS.md` — the plain-language repair procedure.
 - `cases/002_abu01_ajdad/intake/` — the original card/alignment/words/hashes,
   plus **`defect_card_cfg15.md`** (the closed opening card),
   **`words_cfg15.json`** (the CFG 1.5 alignment) and
-  **`measure_cfg15.json`** (the opening-defect map: B 27.50 / D 27.00 – 28.95,
-  prefix 672, max 775).
+  **`measure_cfg15.json`** (the opening-defect map and the delivered result:
+  B used **27.46 – 28.98**, D 27.00 – 28.98, prefix 672, max 775).
 - `cases/002_abu01_ajdad/spec/repair_spec.draft.json` — original numbers (end
   111.35 → historically corrected to ~110.30; **not the active plan**).
 - `cases/002_abu01_ajdad/scripts/plot_gaps.py` — generic gap chart.
@@ -637,10 +694,11 @@ before the ear; stop when the seam is audible.
   - `S01_LM_baghdad_moon.json` — workflow / Baghdad precedent;
   - `S02_LM_checkpoint-md.json` — checkpoint corrections;
   - `S03_VM_session-a11e0aba-…json` — Colab T4 run (ends 19:36Z, before the
-    later CFG 1.5 listening verdict).
-- `local_workspace/prompt.md` — the **old** Colab prompt for the original L4
-  take. **Do not reuse it for the CFG 1.5 opening repair.** Write a short new
-  prompt from §7, or use this checkpoint directly.
+    later CFG 1.5 listening verdict);
+  - `S04_VM_session-6e517eb9-…json` — session-4 Colab run; repair delivered.
+- `local_workspace/prompt.md` — the **current** CFG 1.5 repair prompt (the same
+  as `cases/002_abu01_ajdad/PROMPT_NEXT.md`). The old original-take prompt is
+  archived at `local_workspace/archive/prompt_before_cfg15.md`.
 
 **GCS evidence**
 
@@ -650,6 +708,11 @@ before the ear; stop when the seam is audible.
   - `repro_abc_cfg15.wav` (sha `4f9006de…`, 224.238667 s)
   - `tokens/abc_cfg15_semantic.json` (sha `c218c41c…`, 5606 frames)
   - `session/repro.log`, `score.abc`, `gate/`, `listen/`
+- **RUN3 repair: `gs://…/runs/20261115-042753_repair002_cfg15/`**
+  - `final/final_B_s2.wav` — sha `ae9217c1…87a654`, 224.238667 s
+  - `final/final_sidecar.json` — hashes, params, comp points, verdict
+  - `comp/comp.json`, `comp/verify_*.json`, `comp/B_s2…`, `B_s3…`, `D_s2…`
+  - `candidates/s0…s3` WAV + vocals, `tokens/`, `inputs/`, `session/timing.tsv`
 
 **One line to remember:** choose the take you will keep, repair it from its own
 tokens, measure the unit on its stem, and let the ear — not the gate — choose

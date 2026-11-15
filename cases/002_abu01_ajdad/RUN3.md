@@ -2,10 +2,11 @@
 
 **Session:** Colab T4 (sm75), 2026-11-15, 04:26:01Z → 05:05:23Z
 **Base:** `repro_abc_cfg15.wav`, sha `4f9006de…f95b4a`, 224.238667 s / 48 kHz stereo
-**Deliverable:** `work/cfg15/comp/B_s2_3285212582.wav`, sha
+**Deliverable:** GCS `final/final_B_s2.wav` (local build:
+`work/cfg15/comp/B_s2_3285212582.wav`), sha
 `ae9217c138a62026605eedc849ccc7a45ee569504e21e76444e14f51d187a654`
 **Verdict (user's ear):** **the م is audible, no seam heard.** 02 (B, seed 2)
-preferred over 03 (B, seed 3); 04 (D, seed 2) not preferred.
+preferred over 03 (B, seed 3); 04 (D, seed 2) was not chosen.
 
 > The original take was never modified. Every comp is byte-identical outside
 > 27.46–28.98 s.
@@ -102,8 +103,10 @@ yue2.semantic.tokens 775        (not 5606, not 7250)
    kind of short, dark, voiced segment (centroid 391–634 while rising).
 6. **Filter mechanically, then let the ear decide.** Reject only on things that
    are measurable: word end past 28.98 s, contour off the
-   195→220→247→221 Hz shape, a new defect, a seam step. The /m/ itself is not
-   provable — see §4.3 — so the survivors go to the ear labelled, not pre-judged.
+   195→220→247→221 Hz shape, a new defect, or a seam click/envelope
+   discontinuity. Do **not** reject on the f0/RMS step at a consonant onset
+   (trap 7). The /m/ itself is not provable — see §4.3 — so the survivors go to
+   the ear labelled, not pre-judged.
 7. **Comp the vocal only** (`comp_vocal_diff.py`):
    `mix + (cand_voc − orig_voc)` on 27.46–28.98 s, difference computed at
    44.1 kHz, resampled to 48 kHz, 15 ms linear ramps **on the difference**.
@@ -140,11 +143,13 @@ Chosen candidate: **s2 / seed 3285212582**.
 - **Comp points measured per candidate, not copied.** The card's B start (27.50)
   was right for the original audio but wrong for the candidate: the new nasal
   onset begins at **~27.45**. B was moved to **27.46**, the latest start that
-  keeps the murmur while staying after `فِي`'s vowel body. This is the one change
-  to the plan, and it is the change that made the م audible.
+  keeps the murmur. This is 20 ms before the measured end of `فِي`'s vowel
+  (27.48), so it replaces the last ~20 ms of that vowel tail; `فِي` before 27.46
+  is byte-identical. This is the one change to the plan, and it is the change
+  that made the م audible.
 - **Vocal-only diff + ramps.** Byte-identity outside the region verified; seam
   sample-step 0.29× the max step inside the region on B (0.23× on B_s3); no
-  click.
+  click. The f0/RMS step at the consonant onset is large by design — see trap 7.
 
 ## 4. What failed, and the traps
 
@@ -175,6 +180,13 @@ Chosen candidate: **s2 / seed 3285212582**.
    workflow is repeated: run *all* seeds a session can need in **one**
    `--request-sequence` process, and only fall back to a second process if the
    first run fails.
+7. **The card's f0/RMS seam thresholds do not apply at a consonant onset.**
+   B_s2's seam measured **d_f0 = 140 cents** and **d_rms = −4.41 dB** — far
+   outside the 20-cent / 1-dB rule — because the new /m/ replaces the `فِي`
+   vowel tail. The meaningful checks were the 10 ms mix-envelope continuity and
+   the click ratio (**0.29**); the ear accepted. Do not reject a
+   consonant-onset comp on the steady-vowel thresholds; keep those for joins
+   inside a sustained vowel.
 
 ---
 
@@ -182,11 +194,12 @@ Chosen candidate: **s2 / seed 3285212582**.
 
 | condition | how judged | result |
 |---|---|---|
-| the **م** is audible at the start of `مِلَّتِي` | user's ear on 01 → 02, and on the full track | **yes** |
-| the user cannot hear where the edit is | user's ear, `Do you hear a seam?` → *"No seam — accept 02"* | **yes** |
+| the **م** is audible at the start of `مِلَّتِي` | user's ear on 01 → 02 and the 30 s opening passage | **yes** |
+| the user cannot hear where the edit is | user's ear on 02: *"No seam — accept 02"*. The full 224 s track was staged but was not separately judged in the transcript. | **yes (opening/02)** |
+| seam continuity | 10 ms mix envelope continuous; click ratio **0.29**; f0/RMS step 140 cents / −4.4 dB (expected at a consonant onset) | **yes** |
 | outside the region unchanged | byte comparison vs `repro_abc_cfg15.wav` | **identical** |
 | duration unchanged | 224.238667 s | **yes** |
-| `فِي` / `وَاعْتِقَادِي` untouched | outside 27.46–28.98 | **byte-identical** |
+| `فِي` / `وَاعْتِقَادِي` untouched | `فِي` before 27.46 and `وَاعْتِقَادِي` after 28.98; the comp replaces the last ~20 ms of `فِي`'s vowel tail | **byte-identical outside the region** |
 | candidate word end before the next word | 28.95 < 29.00 | **yes** |
 
 Occurrence 2 (repeated verse) was never touched: no donor splice was made from
@@ -209,6 +222,12 @@ session/     timing.tsv, KEY.txt, logs/
 
 Blind A/B was staged (`clip1.wav`, `clip2.wav`, key in `session/KEY.txt`) but the
 verdict was reached from the labelled comparison; the key was not needed.
+
+> **Precision note on `فِي`:** `final_sidecar.json` lists `فِي` under
+> `untouched`. Precisely, `فِي` before 27.46 is byte-identical; the comp starts
+> 20 ms before the measured vowel end (27.48) to include the candidate's /m/
+> onset, so the last ~20 ms of that vowel tail is part of the edit. The
+> byte-identity claim is for everything **outside 27.46–28.98**.
 
 Reproduce the comp (scripts are in this repo, `cases/002_abu01_ajdad/scripts/`):
 

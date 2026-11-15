@@ -46,5 +46,15 @@
     "guidance_scale": 1.5,
     "cot": "full",
     "abc_file": "cases/002_abu01_ajdad/abc/score.abc"
+  },
+  "result": {
+    "status": "delivered",
+    "date": "2026-11-15",
+    "candidate": "s2_3285212582",
+    "comp_region_s": [27.46, 28.98],
+    "final": "final_B_s2.wav",
+    "sha256": "ae9217c138a62026605eedc849ccc7a45ee569504e21e76444e14f51d187a654",
+    "verdict": "م audible; no seam heard",
+    "report": "cases/002_abu01_ajdad/RUN3.md"
   }
 }
