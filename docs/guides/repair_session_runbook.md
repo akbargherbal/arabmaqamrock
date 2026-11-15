@@ -6,582 +6,417 @@
 > The aligner finds the word; the ear decides the defect; the tools narrow the
 > search and execute the edit.
 
-**Version:** 0.1 — 2026-10-22  
-**Status:** draft for the first live run  
+**Version:** 1.0 — 2026-11-15
+
+**Status:** proven on the first clean run
+([`cases/002_abu01_ajdad/RUN3.md`](../../cases/002_abu01_ajdad/RUN3.md):
+`مِلَّتِي`, 26 min machine / 39 min wall).
+
 **Companion:** [Fixing Mispronunciations in AI Music](fixing_ai_music_mispronunciations.md)
-(the field guide: principles, evidence, failure modes) and the
-[Baghdad Moon token surgery](../happy_accidents/Baghdad_Moon/token_surgery/README.md)
-reference run.
+(the field guide: principles, evidence, failure modes).
+
+> **Baghdad Moon is historical.** It was the learning case, not the reference.
+> Its old handoff documents remain for evidence, but do not follow them as the
+> current procedure. The current reference is RUN3 / case 002.
 
 ---
 
 ## How to use this document
 
-- **Before the session:** read §1–3 and fill the intake sheet in §8.
-- **During the session:** follow §5 one step at a time. Fill the record in §4 as
-  you go.
-- **After the session:** §9 closes the case. The filled record is the template
+- **Before the session:** read §1–§3 and fill the intake sheet.
+- **During the session:** follow §5 one phase at a time. Fill the record in §4.
+- **After the session:** §6 closes the case. The filled record is the template
   for the next song.
-- **If a rule conflicts with what you hear:** the ear wins. Change the rule
-  only after the session, with a note and a measurement.
+- **If a rule conflicts with what you hear:** the ear wins. Change the rule only
+  after the session, with a note and a measurement.
 
 The motion in one block:
 
 ```
-listen → collect defects → freeze + align → defect card → propose unit
-→ approve loop → render batch → score + shortlist → audition → comp
-→ verify → package → full listen
+listen → collect defects → G0 token check → defect card → approve unit
+→ one batch (4 seeds, one process) → filter → audition → comp
+→ verify → full listen → package → close
 ```
 
 ### One-screen checklist
 
 ```
 [ ] Exact take hashed; original frozen
-[ ] Lyric + semantic token stream + seed/prompt located
-[ ] Alignment run on the exact stem/timebase used for the comp
-[ ] All defects collected before any editing
+[ ] Tokens exist for this take; count + duration + sha match (G0)
 [ ] Defect card filled for each occurrence
+[ ] Vocal stem isolated on the same timebase as the comp
 [ ] Unit proposed; 2–4 s loop approved by ear
-[ ] Generation and comp windows recorded
-[ ] Seed batch rendered (short tails, one batch)
-[ ] Candidates scored on the comp window; shortlist of 3–5
+[ ] Prefix built from the take's own tokens
+[ ] One process; seeds sequential; 4 seeds first
+[ ] Log checked: prefix 672, min=max=775, tokens 775 (truncated 1 expected)
+[ ] Demucs after generation; candidates filtered
 [ ] Take picked by ear
-[ ] All accepted units comped in one pass onto the original
-[ ] Outside-diff = 0; edges, duration, kept melisma, downstream checked
-[ ] Full section / full track listened
-[ ] Record, manifest, checksums, A/B pack written
+[ ] Vocal-only diff comp; B and D from the same candidate
+[ ] Outside-diff = 0; duration unchanged; click ratio low
+[ ] Full section / full track listened; blind A/B
+[ ] Record, manifest, checksums, sidecar written
 ```
-
----
-
-## Decisions locked in this session
-
-1. The aligner is an **index**, not a ruler. It finds the word; it does not
-   define the cut.
-2. The edit is a **musical unit**, not a word box: note offsets, breaths and the
-   next onset decide the boundaries.
-3. A correct held note is **never** replaced to fix a word.
-4. The human owns four gates: the defect card, the unit approval, the take pick
-   and the final listen.
-5. **One case = one take.** Collect all defects before editing; batch the
-   renders.
-6. No UI, no full re-render, and no `repair` CLI until the first live run proves
-   the specification.
 
 ---
 
 ## 1. The deal
 
-This session is:
+This runbook is:
 
 - **one case = one take**; do not mix takes in a case;
 - one existing take, preserved;
 - one or more named words, fixed in one pass;
 - a deterministic composite: outside the changed spans, the final is
-  byte-identical to the original in the same sample format;
-- documented with a record, a manifest and an A/B pack.
+  byte-identical to the original;
+- one GPU session if the take has exported tokens.
 
-This session is **not**:
+It is **not**:
 
-- a new generation;
-- a mix revision;
-- a lyric rewrite;
-- a UI project;
-- a seed lottery;
-- a research loop. The method is fixed before the session starts.
+- a new full generation;
+- a donor splice from another take;
+- a reason to replace a correct held note;
+- a licence to fix by ear without verification.
 
-**Done means:** the target words pass the ear, everything kept is unchanged,
-the checks pass, and the record is filled.
+The four human gates:
+
+1. the defect card (what was heard, which occurrence);
+2. the unit/strategy (where the comp starts and ends);
+3. the take pick (which candidate);
+4. the final listen (full section/track, blind A/B).
+
+Everything else is mechanical.
 
 ---
 
 ## 2. What the reference run proved
 
-These findings are the reason for the rules below. They are not up for
-renegotiation mid-session; the full evidence is in field guide §14 and the
-Baghdad `token_surgery/` docs.
-
-| finding | consequence for this session |
+| claim | evidence |
 |---|---|
-| The aligner found 125/125 words in ~45 s CPU, but word starts can be ~0.6 s late and ends at holds are unstable. | Use it as an **index** — which word, which occurrence, roughly where — not as the cut. |
-| The repair unit is wider than the word: word 2 starts at 203.92 s, but the unit starts at 202.21 s. | Find the unit from the **audio** (note offsets, breaths, next onset), not from the word box. |
-| The phrase candidate sang the word but ended the final note on D4 instead of the original G4. | **Never replace a correct held note** to fix a word. |
-| Per-character scores separated the bad `ه` (−3.2 vs fixed −0.1) and `ف` (−5.0 vs fixed −0.1); word scores diluted them. | Score the **target characters on the comp window**, not the whole phrase. |
-| The final is bit-identical outside the two changed spans in the same sample format; the word-1 composite preserves the original outside its unit. | **Comp onto the original**, verify outside the union, and do not chain full re-renders. |
+| G0 can be 7 s | 5606/25 = 224.24 s, WAV/tokens hashes match; no re-derive |
+| one process is memory-safe | one `audiocpp_cli_prefix` at a time; ~6.7 GiB host RAM on a 12 GiB T4; no crash |
+| four seeds are enough | four re-sang within 30–40 ms; s2/s3 had the dark nasal onset; s2 chosen |
+| one render covers B and D | prefix 672 → max 775; same candidate, two comp widths |
+| the unit follows the candidate | card said 27.50; s2's /m/ starts ~27.45; comp used 27.46 |
+| a consonant onset is not a steady-vowel join | s2: 140 cents / −4.4 dB, click ratio 0.29; ear accepted |
+| outside-diff can be zero | final byte-identical outside 27.46–28.98; duration unchanged |
+
+The full numbers are in `RUN3.md` §1–§5.
 
 ---
 
 ## 3. Roles
 
-| human | tool |
-|---|---|
-| Listen to the whole take and collect defects. | Align, locate, list occurrences. |
-| Write the defect card: occurrence, heard vs target, note-after, what must not change. | Propose the unit, the two windows and the prefix/max. |
-| Approve the unit by loop. | Render the seed batch. |
-| Pick the take by ear. | Score, filter, shortlist. |
-| Final full-section listen. | Comp, verify, package, record. |
-| Decide keep / fix / abandon. | Never decide aesthetics. |
+| role | owns | does not own |
+|---|---|---|
+| human | defect card, unit approval, take pick, final verdict | technical commands |
+| agent/tool | hashes, alignment, measurement, generation, comp, verification | whether the seam is audible |
+| both | stop rules and acceptance | “it sounds fine” without a measurement |
 
-The human gates are not ceremony. They are exactly where the machine is
-unreliable: a single consonant, timbre, “same singer”, and whether the note
-after the word is correct.
+The agent must ask only: **“Do you hear a seam?”** or **“Which version is
+better?”** Do not ask the user to choose sample rates, prefixes or fades.
 
 ---
 
 ## 4. The repair record
 
-One record per case. Fill it as you go; it is the model for every future song.
+Fill this once per case; it is the handoff and the audit trail.
 
-```yaml
-case:
-song:
-take:
-take_sha256:
-model / seed / prompt:
-lyric:
-target_word:
-occurrence:
-section / line:
-defect:
-  heard:
-  target:
-  class:            # consonant | vowel | syllable | wrong word | ending/tanwin | stress | note/pitch | timing | mix
-  note_after:       # keep | replace | unsure
-  must_not_change:
-alignment:
-unit:               # start–end
-generation:         # start–end, prefix, max
-comp:               # start–end, fades, gain
-candidates:         # seeds, count
-shortlist:          # take, char score, f0, duration, edge
-accepted:
-final:              # path, sha256, changed spans, outside diff
-checks:             # outside 0 | edges | duration | melisma | downstream
-verdict:            # ship | keep original | retry
-notes:
+```
+Case / take:
+Original WAV + sha256:
+Duration / sample rate / channels:
+Tokens + sha256 + frame count:
+Model / LoRA / binary / GPU:
+Seed / sampler / guidance / steps / context:
+Defect word / occurrence / heard / target:
+Aligner box:
+Measured word start / end:
+Previous word / next word:
+Prefix tokens / prefix seconds:
+min_tokens / max_tokens:
+Candidates / chosen candidate:
+Comp region / ramps:
+Outside max abs diff:
+Duration unchanged:
+Click ratio / envelope:
+Verdict / who heard it / scope:
 ```
 
 ---
 
 ## 5. The protocol
 
-### Phase 0 — Intake (human, before any editing)
+### Phase 0 — Intake and G0 (tool, ~1 min)
 
-1. Listen to the whole track once without stopping to fix anything.
-2. Note every defect: timestamp, section, line, word, what you heard.
-3. Decide whether the take is worth keeping. If not, generate a new take; this
-   runbook is for a take you want to preserve.
-4. Do **not** open the editor yet. Batch the defects; one session repairs all
-   of them.
+1. Hash the WAV; freeze the original.
+2. Confirm the tokens exist and are this take's:
+   ```
+   len(tokens) / 25 ≈ duration_s
+   sha256(tokens) == recorded
+   sha256(wav) == recorded
+   ```
+3. If tokens are missing, stop. Re-derive is a separate foundation test and can
+   fail across GPU architectures; see the guide §3.3.
+4. Record the run dir and the G0 numbers.
 
-**Output:** a list of candidate defects. No audio edits yet.
+### Phase 1 — Localize (tool + human, ~5–10 min)
 
----
+1. Listen to the whole track once; collect all defects before editing.
+2. For the target, align the CFG/new take with the same lyrics. The aligner is
+   an **index**, not a cut.
+3. Demucs 4.1.0 `htdemucs` (or the version that produced the original stems).
+4. Measure on the vocal stem:
+   - f0 / RMS / spectral centroid / low-band share;
+   - consonant closure/burst (for a final consonant) or nasal onset (for /m/);
+   - word end, next-word onset, held note.
+5. Write the card; approve the unit with a 2–4 s loop.
 
-### Phase 1 — Freeze and align (tool)
+**Opening defect?** Use the intro as prefix if it exists. If the defect is the
+first vocal sound and there is no prefix, the left edge is the file start; judge
+the whole opening.
 
-**Input:** the exact take, the lyric, the semantic token stream, the seed and
-prompt.
+### Phase 2 — Generate (tool, ~5–10 min GPU)
 
-**Do:**
+1. Build the prefix from the take's own tokens:
+   ```
+   prefix = tokens[:round(unit_start_s × 25)]
+   ```
+   RUN3: 672 tokens = 26.88 s (120 ms before the /f/ of `فِي`).
+2. Set `semantic_min_tokens = semantic_max_tokens = round(gen_end_s × 25)`.
+   RUN3: 775 = 31.00 s (line ends ~30.68).
+3. Same request as the take: `guidance_scale`, `cot`, `abc_file`,
+   `num_inference_steps`, `context`, `nar_noise`, sampler, LoRA, attention.
+4. **One process, all seeds in one `--request-sequence`.** 4 seeds first; 16 is
+   a ceiling. No `&`, `xargs -P`, GNU parallel, or two notebook cells.
+5. Before every seed: `pgrep -af audiocpp_cli` must show at most one process.
+6. Read the log before the next seed:
+   ```
+   semantic_prefix_frames=672
+   min_tokens=775 max_tokens=775
+   semantic.tokens 775
+   truncated 1   ← expected when min=max
+   ```
+7. Do not run Demucs or the optional ABC before/during generation.
 
-- hash the take; never overwrite it;
-- align the lyric to the **exact stem/timebase** that will be comped (usually
-  the vocal stem);
-- confirm every target occurrence and its neighbours;
-- list occurrences with timestamps and line numbers; play a short clip if a
-  word repeats;
-- record the model revision and the alignment date.
+### Phase 3 — Filter (tool + human, ~5 min)
 
-**Output:** `words.json`, occurrence list, hashes.
+1. Demucs each candidate.
+2. Measure per candidate:
+   - word onset/end on its own stem;
+   - f0 contour;
+   - spectral centroid / low-band share at the consonant onset;
+   - lag vs the original.
+3. Reject if:
+   - the word end passes the next word onset;
+   - the contour differs from the original in the used span;
+   - a new defect appears;
+   - the consonant onset is not darker/nasal where it should be.
+4. Keep at most 3–5 for listening. Do not select on envelope correlation alone;
+   it hides wrong pitch.
 
-**Gate:** the target words are found, the neighbours are known, and the stem
-and alignment use the same timebase.
+### Phase 4 — Comp (tool, ~5 min)
 
-**Fail:** no token stream → the prefix route is unavailable. Choose donor or
-section re-render and record why. Do not pretend the prefix route is available.
+1. Vocal-only diff:
+   ```
+   new_mix = mix + (candidate_vocals − original_vocals)
+   ```
+   inside the region; difference at 44.1 kHz, resample to 48 kHz.
+2. Never `no_vocals + candidate`.
+3. Boundaries:
+   - **B (default):** candidate consonant onset → candidate word end; keep the
+     previous word.
+   - **D (fallback):** previous word onset → candidate word end; replaces one
+     correct word but may give a cleaner consonant join.
+4. 15 ms ramps on the difference; no long crossfade.
+5. Remember: the prefix region is not bit-identical; comp only after the region
+   you measured.
 
----
+### Phase 5 — Verify and listen (tool + human, ~5–10 min)
 
-### Phase 2 — Defect card (human)
+1. Print:
+   - final sha256; duration; sample rate; channels;
+   - outside max abs diff = 0;
+   - 10 ms envelope across the seam; click ratio;
+   - candidate word end < next word onset;
+   - kept melisma/final note intact.
+2. Prepare:
+   - `01_line_original.wav`;
+   - `02_line_B.wav`;
+   - `03_line_D.wav`;
+   - the full track for the chosen version;
+   - blind A/B (original vs repaired, random order, key hidden).
+3. Ask only: **“Do you hear a seam?”** / **“Which is better?”**
+4. If the user hears a seam → stop; the original stays.
+5. Record the scope: opening/02 vs full track.
 
-For each defect, fill the `defect` block in §4.
+### Phase 6 — Package and close (tool + human, ~5 min)
 
-**Rules:**
+Store under the run's GCS folder:
 
-- The **occurrence** is part of the defect. Fix “this occurrence”, not “the
-  word”.
-- Rough phonetics is enough for `heard`.
-- `note_after: unsure` defaults to **keep the original note** and comp only the
-  word. That is the safe side.
-- If the defect is the note itself — pitch, melisma, a held final vowel — say
-  so; the unit changes.
-- Write `must_not_change`: the phrase, the melisma, the instrumental, the
-  timing.
+```
+inputs/      WAV + token + lyrics/style/score
+tokens/      full tokens + prefix + sha
+candidates/  all candidates (WAV + vocals), including rejects
+comp/        comp.json + B/D + verify_*.json
+final/       chosen WAV + sha + sidecar + blind A/B + key
+session/     timing.tsv + notes + logs
+```
 
-**Output:** one card per defect.
+Write/update the case report (`RUN<n>.md`) with:
 
-**Gate:** `heard`, `target`, `class` and `note_after` are filled. No rendering
-before this.
-
----
-
-### Phase 3 — Propose the unit (tool)
-
-For each card:
-
-- **Start:** the last real boundary before the word — a note offset, a breath,
-  a real gap — minus 0.2–0.3 s. Do not use the aligned word start if it falls
-  inside the word.
-- **End:** the next word’s onset or the note boundary. If the word’s own final
-  note is held and correct, end **before** the hold.
-- **Mode:** `word-only` by default; `note-replace` only if the card says the
-  note is the defect.
-- **Two windows:**
-  - `generation` — where the model starts re-singing; at or before the unit
-    start. Cutting earlier is safe: the extra lead is generated and discarded,
-    not comped.
-  - `comp` — what is actually replaced; the musical unit.
-  - They may differ. If the comp starts before the generation cut, that lead-in
-    comes from the candidate and must be auditioned.
-- **Prefix/max:** `prefix = floor(gen_start × 25)`,
-  `max = ceil(gen_end × 25)`, on the exact token timeline. Leave a small tail.
-- **Flags:** no gap before the word, continuous word, long hold, neighbour
-  inside the unit, unit longer than ~4 s, target at the song edge.
-
-**Output:** `spec/repair_spec.json` plus a 2–4 s loop of original vs proposed
-unit.
-
-**Gate:** none yet; the human approves next.
-
----
-
-### Phase 4 — Approve the unit (human)
-
-Loop the proposed unit 2–3 times. Check:
-
-- the first consonant is inside the loop;
-- the last vowel is inside the loop;
-- the note after the word is the one you intend to keep or replace;
-- the join is at a performance boundary, not mid-word.
-
-**Output:** approved numbers, or a nudge of ±0.1–0.3 s.
-
-**Gate:** “This is the smallest unit that contains the defect and keeps what is
-correct.” If you cannot say yes, widen to the phrase and log why. Do not render
-yet.
-
----
-
-### Phase 5 — Render the batch (tool)
-
-- Build the request from the **baseline token stream**; use the approved
-  prefix/max.
-- Sweep 8–16 seeds; 32 only if the first round fails.
-- Render a **short tail**, not the whole song.
-- Batch all words in the case in one session; model load is the fixed cost.
-- Save every request and seed.
-
-**Output:** `candidates/` with one WAV per seed, plus the requests.
-
-**Gate:** every candidate exists through the comp end; no truncation.
-
-**Fail:** truncation → increase max. Model or environment error → fix the
-environment; do not change the musical parameters.
-
----
-
-### Phase 6 — Score and shortlist (tool)
-
-Score **on the comp window only**:
-
-- target character scores (same aligner), compared to the original and to a
-  known-correct occurrence if one exists;
-- f0 contour and final note;
-- duration and onset lag;
-- edge RMS step and click.
-
-**Hard filters:**
-
-- wrong final note when the note is being kept → reject;
-- audible edge step → reject or mark;
-- duration/onset off by more than ~20% → flag.
-
-**Output:** a table and a shortlist of 3–5.
-
-**Gate:** at least one candidate is not worse than the original on the target
-characters. If all candidates fail the same phoneme, stop and change the text
-or respelling; do not add seeds.
-
----
-
-### Phase 7 — Audition and pick (human)
-
-A/B the original and the shortlist at the same timestamp. Check:
-
-- the word, not just the phoneme;
-- the note after it;
-- the join;
-- the timbre — “same singer”.
-
-**Output:** accepted take, or reject.
-
-**Gate:** “Same singer, right word, right note, no audible join.”
-
-**Fail:** use the branches in §6. After two rounds, stop; keep the original or
-change the route.
-
----
-
-### Phase 8 — Comp and verify (tool)
-
-- Apply all accepted units to the **original** in one pass.
-- Vocal stem only; keep the instrumental.
-- Fades and level match inside the unit; joins at the approved boundaries.
-- Verify:
-  - outside the union of comps: max abs diff = 0;
-  - edge steps: report, do not hide;
-  - duration unchanged; no clipping or DC;
-  - target character score not worse, and ideally improved;
-  - kept melisma: f0 contour and end unchanged;
-  - local re-align: downstream words did not move.
-
-**Output:** `output/final.wav`, `qc/`.
-
-**Gate:** all checks pass. If not, fix the cause; never ship a failed check.
-
----
-
-### Phase 9 — Package and close (tool + human)
-
-- A/B clips and a full-track review file.
-- Manifest, checksums, reproduce script.
-- The filled record from §4.
-- One paragraph: what worked, what did not, which rule changed.
-
-**Human:** full-section or full-track listen. Verdict: ship / keep original /
-retry.
-
-**Output:** the case folder. This is the model for the next song.
+- actual timing vs the 30-minute budget;
+- what worked/failed/traps;
+- the acceptance table;
+- the exact comp points and token bounds;
+- what to script next.
 
 ---
 
 ## 6. Failure branches
 
-| symptom | likely cause | action |
-|---|---|---|
-| First consonant missing | cut too late; alignment late | move the generation and comp start earlier by 0.2 s |
-| Word right, hold wrong | the note was replaced | switch to word-only; keep the original hold |
-| Audible click or level jump | join mid-word or no fade | widen the comp 50 ms; fade inside the unit; level-match |
-| All seeds sing the same wrong phoneme | text/prompt, not luck | change the phonetic respelling in the request; do not grind seeds |
-| Candidate timing drifts | wrong stem/timebase; time-stretch | align the exact stem; do not time-stretch |
-| Score high, ear rejects | metric gap | trust the ear; the score is a filter |
-| Downstream words move | whole-file re-align instability | re-align locally; compare word timings around the edit |
-| Unit includes a neighbour | boundary chosen from the word box | use the note offset/onset; re-approve |
-| No safe gap before the word | continuous phrase | widen to the phrase; if still unsafe, section re-render |
-| Best take is not better | the repair is making it worse | keep the original; record the decision |
+| branch | action |
+|---|---|
+| G0 fails (count/duration/sha) | stop; wrong token file; do not re-derive blindly |
+| tokens missing | re-derive gate is a separate session; if it fails, stop |
+| one seed crashes / OOM | check host vs CUDA OOM; high-RAM once; `cot=off` once; stop |
+| log says 7250/5606 | bounds not applied; stop before more seeds |
+| all seeds miss the phoneme | one phonetic respelling / one wider unit; then stop |
+| candidate word end collides with next word | reject; widen or choose another seed |
+| audible seam | stop; original stays |
+| f0/RMS step is large at a consonant onset | expected; judge by envelope/click/ear |
+| user identifies the repaired file in blind A/B | not transparent; stop/iterate |
 
 ---
 
-## 7. Guards
-
-1. **Preserve first.** Hash; never overwrite.
-2. **Repair, don’t re-render.**
-3. **The unit is musical, not lexical.**
-4. **Cut before the error;** keep 100% of the context before it.
-5. **Keep what is correct;** replace less.
-6. **Never replace a correct held note** to fix a word.
-7. **Score what you comp;** the ear is the oracle.
-8. **Bit-identity outside the edit** (same sample format) is the only
-   guarantee.
-9. **If 32 seeds fail the same way, it is the text, not luck.**
-10. **Stop at good enough;** keeping the original is a valid outcome.
-
----
-
-## 8. The first live run
-
-### Intake
-
-- **Batch:** the songs you are listening to now.
-- **When you hear it:** pause, write the timestamp, section, lyric line and what
-  you heard; resume. Do not open the editor.
-- **Trigger:** the first defect you are sure of.
-- **Do not fix while listening.** Finish the listen, then start the session.
-- If a second defect appears in the same take, include it in the same case and
-  batch the renders.
-
-### Pre-flight for the chosen take
+## 7. Timing and token math
 
 ```
-[ ] The take has its semantic token stream, seed and prompt
-[ ] The lyric file matches what was actually sung
-[ ] A vocal stem exists, or can be separated
-[ ] The exact stem/timebase for the comp is known
-[ ] The original is hashed and write-protected
+frames      = seconds × 25
+prefix      = round(unit_start_s × 25)
+max         = round(gen_end_s × 25)
+min         = max
+tokens      = max (this binary reports total, not new)
+truncated   = 1 when min=max (expected)
 ```
 
-**Route check:** Phase 5 assumes a prefix-capable token model. If the take is
-from a hosted system without token/prefix control, replace Phase 5 with the
-donor or section-regeneration route from the field guide; the intake, defect
-card, unit approval and verification steps still apply.
-
-### Case sheet
+RUN3:
 
 ```
-case: 001
-song:
-take:
-section / line:
-word:
-occurrence:
-heard:
-target:
-note after: keep / replace / unsure
-must not change:
+prefix 672  = 26.88 s
+max    775  = 31.00 s
+line end   ~30.68 s
+comp B     27.46–28.98 s
 ```
 
-### Dry run: known example from the current batch
-
-Use these two cards to rehearse the spec and the loop before a live defect, if
-you want a dry run. They are **not** the session; they are the test.
-
-| field | `مُكْفَهِرًّا` | `حُصُونٌ` |
-|---|---|---|
-| section | Chorus | Verse 1 |
-| line | `مُكْفَهِرًّا عَلَى الْحَوَادِثِ` | `تَنْمِينَا حُصُونٌ` |
-| occurrence | 1 of 1 | 1 of 1 |
-| heard | to confirm | to confirm |
-| target | `مُكْفَهِرًّا` | `حُصُونٌ` |
-| likely class | ending / shadda / long vowel | `ص` |
-| note after | to confirm; default keep | to confirm; default keep |
-
-If the defect is the final held vowel, the card must say `note after: replace`;
-otherwise the default is word-only.
-
-A side note: the lyric’s `...اؤوا` endings are unusual and may cause other
-wobbles. Treat that as a generation-prompt issue, not a reason to change this
-protocol mid-repair.
-
-### Session order
-
-1. Freeze and align the chosen take.
-2. Fill the defect card(s).
-3. Propose and approve the unit(s).
-4. Render all words in one batch.
-5. Score and shortlist.
-6. Audition and pick.
-7. Comp and verify.
-8. Package and full listen.
-9. Fill the record and close.
-
-### Time box
+Budget:
 
 | phase | human | machine |
-|---|---|---|
-| listen + intake | 5–10 min | — |
-| freeze + align | — | ~1 min |
-| defect card + unit approval | 5–10 min | — |
-| render (8–16 seeds, short tails) | — | 10–20 min |
-| score + shortlist | — | 1–2 min |
-| audition + pick | 5–10 min | — |
-| comp + verify | — | 1–2 min |
-| full listen + record | 5–10 min | — |
+|---|---:|---:|
+| intake/card | 5–8 min | 2–3 min |
+| G0 | — | 30 s |
+| generation (4 seeds) | 2–5 min | 7–12 min |
+| filter | 3–5 min | 2–3 min |
+| comp + verify | 5–8 min | 1 min |
+| listen | 5–10 min | — |
+| **total** | **20–25 min** | **~26 min** |
 
-**Stop rule:** two render rounds per word. If no candidate beats the original by
-ear, keep the original or change the route.
-
-### What not to do in this run
-
-- Do not build a UI.
-- Do not re-render the whole song.
-- Do not rewrite the lyric mid-repair.
-- Do not accept a take because its score is high.
-- Do not keep grinding seeds after the same failure.
-- Do not ship without the outside-diff check.
+The first process pays the model load (~5 min). All seeds in one process cost
+~45 s per extra seed after the first. Splitting seeds across two processes costs
+another load.
 
 ---
 
-## 9. What we are not building yet
+## 8. Case folder layout
 
-- **The `repair` CLI.** The first live run is the specification. Automate only
-  what you had to do by hand twice.
-- **An automatic wrong-word detector.** Character scores are a filter, not a
-  verdict.
-- **A replacement for the aligner.**
-- **A UI.** Audition files in the DAW or player are enough.
+```
+cases/<case>/
+  README.md
+  RUNBOOK.md
+  CHECKPOINT.md
+  RUN2.md, RUN3.md, ...
+  intake/
+    defect_card.md
+    words.json
+    measure.json
+    hashes.txt
+  spec/
+    repair_spec.json
+  scripts/
+    comp_vocal_diff.py
+    measure_word.py
+    onset_table.py
+    verify_seam.py
+  review/
+    gaps.png
+    clips...
+```
 
-### Protocol change control
-
-After the live run, change a step only if the session produced evidence for it.
-Record the change, the reason and the affected case. Do not silently turn the
-method back into trial and error.
+The audio, stems, tokens and candidates live in the run folder on GCS, not in
+git. Keep the scripts and the manifest in git.
 
 ---
 
-## Appendix A — Timing and token math
+## 9. Command cheat sheet (local token model)
 
-- The model timeline is **25 frames per second**.
-- `prefix = floor(gen_start × 25)`; `max = ceil(gen_end × 25)`.
-- Reference: `3933 / 25 = 157.32`, `5056 / 25 = 202.24`,
-  `5397 / 25 = 215.88`.
-- The comp window can be wider than the generation window; the extra lead or
-  tail comes from the candidate and is auditioned.
-- Use the exact stem/timebase. A cached stem 25 ms longer than the mix is enough
-  to move a join.
-- A short tail is usually enough; verify the candidate exists through the comp
-  end. Rendering to the end of the song is not required.
+```bash
+# 0. G0
+python3 - <<'PY'
+import json, wave, hashlib
+w = wave.open('work/cfg15/repro_abc_cfg15.wav')
+print('duration', w.getnframes()/w.getframerate())
+t = json.load(open('work/cfg15/abc_cfg15_semantic.json'))
+print('tokens', len(t), '->', len(t)/25)
+PY
 
-## Appendix B — Case folder layout
+# 1. prefix
+python3 - <<'PY'
+import json
+t = json.load(open('work/cfg15/abc_cfg15_semantic.json'))
+assert len(t) == 5606
+json.dump(t[:672], open('work/cfg15/tokens_prefix_672.json', 'w'))
+PY
 
-```
-cases/<case-id>/
-  README.md              one-page summary + verdict
-  record.md              the filled §4 record
-  inputs/                original.wav, hashes, requests
-  stems/                 original + candidate vocals
-  tokens/                baseline + prefixes
-  spec/                  repair_spec.json, loops
-  candidates/            one WAV per seed
-  qc/                    comp/verify reports, edge steps
-  output/                final.wav + sha256
-  review/                A/B clips, full-track review file
-```
+# 2. generation (one process; all seeds in the request sequence)
+. ./cuda_loader_path.sh
+./bin/audiocpp_cli_prefix --task gen --family yue2 \
+  --model models/Yue2-3B-GGUF --backend cuda --threads 8 \
+  --request-sequence work/cfg15/req_seeds.json \
+  --out-dir work/cfg15/cand --log
 
-Copy the reference run’s layout; do not invent a new one.
+# 3. Demucs (after generation)
+pip install -q "demucs==4.1.0"
+python3 -m demucs -n htdemucs --two-stems=vocals -d cuda \
+  -o work/cfg15/stems work/cfg15/cand/s2_3285212582.wav
 
-## Appendix C — Command cheat sheet
+# 4. comp (vocal-only diff)
+python3 cases/002_abu01_ajdad/scripts/comp_vocal_diff.py \
+  --orig-mix work/cfg15/repro_abc_cfg15.wav \
+  --orig-voc work/cfg15/stems/htdemucs/repro_abc_cfg15/vocals.wav \
+  --cand-voc work/cfg15/stems/htdemucs/s2_3285212582/vocals.wav \
+  --start 27.46 --end 28.98 --cand-offset 0 \
+  --out work/cfg15/comp/B_s2.wav
 
-Current pieces (paths from the reference run and the karaoke repo; exact
-reference commands are in field guide §14):
-
-- alignment: `a1_align_run.py` / `a0_align.py` (`yue2-karaoke-align`)
-- comp: `scripts/comp_region.py`
-- verify: `scripts/verify_final.py`
-- melisma: `scripts/analyze_melisma.py`
-- render: the prefix-capable `audio.cpp` binary plus a request JSON
-
-Future CLI (not built yet):
-
-```
-repair index <run>
-repair occurrences "<word>"
-repair fix <id> --seeds 16
-repair audition <id>
-repair accept <id> <take>
-repair build
+# 5. verify
+python3 cases/002_abu01_ajdad/scripts/verify_seam.py \
+  work/cfg15/comp/B_s2.wav \
+  work/cfg15/stems/htdemucs/repro_abc_cfg15/vocals.wav \
+  work/cfg15/stems/htdemucs/s2_3285212582/vocals.wav \
+  27.46 28.98 B_s2
 ```
 
-Record the exact command in the case record, even if it is manual. The first run
-defines the CLI.
+---
 
-## Appendix D — Glossary
+## 10. Glossary
 
-- **Unit:** the musical span that contains the defect and is replaced.
-- **Generation window:** where the model starts and ends re-singing.
-- **Comp window:** the span actually grafted into the original.
-- **Melisma:** a sustained or ornamented note, often after the word.
-- **Prefix:** the semantic-token position where the re-sing starts.
-- **Bit-identity:** outside the comp, the final is byte-for-byte the original.
-- **Defect card:** the human’s structured description of the error.
-- **Repair record:** the filled, reproducible account of the case.
+- **G0:** token consistency check (count + duration + sha), not a render.
+- **Prefix:** the token sequence before the generated unit.
+- **B / D:** comp widths — word-onset join vs previous-word onset join.
+- **Comp:** local audio splice; vocal-only diff.
+- **Click ratio:** seam sample step relative to the max step inside the region.
+- **Spectrum centroid:** brightness of a short spectrum; useful for nasal onset.
+- **`truncated 1`:** expected when `min=max`; not a failure.
+
+---
+
+*Runbook v1.0. If you remember one line: **G0, one process, four seeds, measure
+the unit, comp the vocal only, and let the ear decide.***

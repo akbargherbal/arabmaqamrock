@@ -1,3 +1,7 @@
+> **Historical prompt (2026-10-20).** Do not reuse for a new repair. The current
+> guide is `docs/guides/fixing_ai_music_mispronunciations.md` v2.0; the reference
+> run is `cases/002_abu01_ajdad/RUN3.md`.
+>
 > **v1 DELIVERED — 2026-10-20 14:50 UTC; one open polish item.**
 > Both words are fixed and `$B/final/FINAL_e1_ar_s03_s08.wav` (`51c6e238…`) is
 > delivered. The user hears a join in the **outro** edit (S2); S1 is transparent.

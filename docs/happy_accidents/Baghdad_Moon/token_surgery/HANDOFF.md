@@ -1,5 +1,13 @@
 # HANDOFF — Baghdad Moon B: token-level repair of two mispronounced words
 
+> **Historical (2026-10-20).** This handoff describes the learning run, which
+> took several sessions and hours and hit the missing-token/cross-architecture
+> gate. It is preserved for evidence and lessons, not as the current procedure.
+> The current guide is
+> [`docs/guides/fixing_ai_music_mispronunciations.md`](../../../guides/fixing_ai_music_mispronunciations.md)
+> v2.0; the reference run is
+> [`cases/002_abu01_ajdad/RUN3.md`](../../../../cases/002_abu01_ajdad/RUN3.md).
+
 **This document supersedes `happy_accident.zip` / `agent_prompt_fix_two_words.md`.**
 It was written after working the problem on the actual T4 environment. Read this
 first; use the Claude prompt only as background.

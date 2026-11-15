@@ -1,5 +1,9 @@
 # CHECKPOINT — Baghdad Moon B two-word repair
 
+> **Historical case study (2026-10-20).** This is the learning run, not the
+> current workflow. See `docs/guides/fixing_ai_music_mispronunciations.md` v2.0
+> and `cases/002_abu01_ajdad/RUN3.md`.
+
 **Status: v2 DELIVERED — candidate `41` accepted by ear.** Both words are
 correct, the outro join is fixed, and the original 5.5 s final `ه` melisma is
 untouched. The earlier v1 (`…_s08`) is superseded but kept.
