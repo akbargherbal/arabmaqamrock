@@ -20,6 +20,14 @@ without breaking the file or losing track of what you changed.
 This is a method that has worked, not the only method. If you can satisfy §4 and
 §5 another way, do that instead; the checks are the contract, the steps are not.
 
+> **Tooling status (2026-11-15).** The `maqam` CLI in §3 is the planned target
+> interface from `docs/plans/model-and-tool-selection.md`; it is **not
+> implemented in this repo yet**. The tracked validator is `check_abc.py`, and
+> it depends on `datasets/five_stars/measure/abc.py`, which is gitignored and
+> local-only. Until both exist on your machine, do the timeline, phrase, clean
+> and apply steps with a scratch script and report that script's printed output;
+> never claim a `maqam` result that did not run.
+
 ## 1. The gate
 
 Before any work, confirm you have all four inputs:
@@ -79,15 +87,27 @@ substitution). Expressing the edit this way makes the rhythm structurally
 impossible to disturb, which is the property you want.
 
 **7. Write, verify, report.** Serialise back to ABC, then verify §4. Report from
-tool output, never from memory.
+the validator's or scratch script's printed output, never from memory.
 
 ## 3. Tools
 
-Use these. If one is missing or broken, say so and stop — do not write a
-replacement inline. Duplicated or ad-hoc parsers are where counting errors enter,
-and once the counts are wrong everything downstream is wrong.
+The table below is the target `maqam` interface. It is a contract for the planned
+tool, not a description of what ships today: no `maqam` executable exists in this
+repo as of 2026-11-15. The only tracked validator is `check_abc.py`:
 
-| tool | must return |
+```bash
+./check_abc.py <score.abc> --lyrics <lyrics.txt> [--corpus-dir <dir>]
+```
+
+It checks structure, texture and originality, but it does not build the phrase
+table, clean, apply, diff or measure the §4 table. It also imports
+`datasets/five_stars/measure/abc.py`, which is gitignored/local-only, so confirm
+it runs before relying on it. If a target tool is missing, say so and stop —
+do not write a replacement inline. Duplicated or ad-hoc parsers are where
+counting errors enter, and once the counts are wrong everything downstream is
+wrong.
+
+| target command | must return |
 |---|---|
 | `maqam inspect <score.abc> --phrases` | the phrase table from step 2, plus bar sums, note counts per voice, sections, meters, the transcript's own accidentals |
 | `maqam clean <in.abc> -o <clean.abc>` | pass 1, with a log of every mechanical change and the resulting bar sums |
@@ -107,8 +127,9 @@ and once the counts are wrong everything downstream is wrong.
 ```
 
 Pitch spelling, accidental state within a bar, octave marks and tie handling are
-the tool's job. Do not hand-write ABC to work around a spelling problem — say
-what you wanted and let the tool report what it could not express.
+the target tool's job (or your scratch script's, until `maqam` exists). Do not
+hand-write ABC to work around a spelling problem — say what you wanted and let
+the tool report what it could not express.
 
 ## 4. Verification
 
@@ -140,7 +161,8 @@ the report. A silent overrun is a defect; a justified one is a judgement call.
 
 ## 5. Report
 
-`CHANGES.txt`, one block per score, every number copied from `maqam validate`:
+`CHANGES.txt`, one block per score, every number copied from `maqam validate`
+when it exists, otherwise from the current validator or scratch script:
 `notes_in, notes_out, notes_removed, notes_pitched, notes_pitched_pct,
 accidentals, bars, sections, phrases_total, phrases_coloured, coloured_bars,
 plain_phrases_untouched, rhythm_kept, register_shift, maqam_figures`.

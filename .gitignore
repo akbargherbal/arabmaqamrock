@@ -8,6 +8,9 @@
 __pycache__/
 *.pyc
 
+# docs-reconciler scratch output (claims.json / drift_report.md)
+/.reconcile/
+
 # optional SheetSage2 transcription env + cache
 /.venv-sheetsage2/
 /.cache/

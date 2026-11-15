@@ -3,7 +3,7 @@
 
 One input JSON -> 1..N songs x 1..M takes each, generated **strictly
 sequentially** (never in parallel: two concurrent runs can OOM the NAR graph)
-through the canonical runner INFERENCE/run_one.sh, into one self-contained run
+through the canonical runner run_one.sh, into one self-contained run
 folder under out/. Random seeds by default.
 
 Schema (strict: unknown keys are an error)
@@ -155,7 +155,7 @@ LORA_ALIAS_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SCORE_ALIAS_RE = LORA_ALIAS_RE
 CHORD_RE = re.compile(r'"[A-G][#b]?[^"]*"')
 TRUNC_RE = re.compile(r"truncated\s*[=:]\s*([01])", re.IGNORECASE)
-SEC_PER_TRACK = 389.6  # T4 mean wall/track, docs/INFERENCE.md benchmark
+SEC_PER_TRACK = 389.6  # T4 mean wall/track, measured in this repo
 CHECKPOINT_STEP = 5000
 FRAMES_PER_SECOND = 25  # YuE2 semantic token rate
 # A score fixes the length, so the cap is the score plus one generous margin
@@ -1681,7 +1681,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="generate.py",
         description="Generate tracks from a JSON of songs (style + lyrics + optional "
-                    "ABC score) through INFERENCE/run_one.sh, sequentially, random "
+                    "ABC score) through run_one.sh, sequentially, random "
                     "seeds by default.",
         epilog="See README.md ('Bring your own lyrics') for the JSON schema.",
     )

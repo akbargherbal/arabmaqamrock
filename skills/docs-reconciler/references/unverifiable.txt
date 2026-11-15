@@ -1,0 +1,101 @@
+# Tokens that legitimately resolve outside this repo or are generated at runtime.
+#
+# Matched with fnmatch against the raw token (glob syntax; `*` crosses `/`).
+# Curate this by hand. Every entry suppresses a class of missing-path/false-flag
+# findings, so a broad glob here is how you silently hide real drift.
+#
+# Rules of thumb:
+# - runtime artifacts belong under `out/`, `logs/`, `work/`, or a case folder;
+# - downloaded model weights are never in git;
+# - example inputs/outputs in docs are illustrative, not repo files;
+# - scope a token to one doc with `path/to/doc.md :: glob` when only the example
+#   or the negated mention is legitimate.
+
+# --- external source trees (audio.cpp / ai-toolkit / SheetSage2 clones) ------
+src/yue2/*
+protocol.py
+sampling.py
+pipeline.py
+
+# --- downloaded model weights (CC-BY-NC-4.0; staged by install.sh / hf) -----
+*.safetensors
+*.gguf
+
+# --- runtime sidecars and layouts written under out/ or work/ ---------------
+batch_manifest.json
+batch_summary.txt
+input.json
+_time.txt
+_gpu.csv
+_driver.log
+_timings.csv
+transcribe_manifest.json
+run_manifest.json
+_archive_index.json
+UPLOAD_POLICY.json
+binaries/index.json
+transcripts/_archive_index.json
+logs/gcp_backup_stdout.log
+
+# --- pronunciation-repair working tree (case-relative, not committed) -------
+work/*
+final/*
+comp/*
+session/*
+abc/*
+semantic.json
+comp.json
+timing.tsv
+hashes.txt
+words.json
+measure.json
+repair_spec.json
+defect_card.md
+CHECKPOINT.md
+*.wav
+*.mp3
+
+# --- local-only archives (local_workspace/ is gitignored) -------------------
+local_workspace/*
+
+# --- local-only check_abc.py dependency (gitignored parser) ------------------
+datasets/five_stars/measure*
+
+# --- example inputs / outputs used in command illustrations -----------------
+my_songs.json
+my_lyrics.txt
+lyrics.txt
+l.txt
+in.abc
+clean.abc
+mid.abc
+edit.json
+decisions.json
+CHANGES.txt
+_style.txt
+
+# --- placeholders: `scores/...`, `docs/happy_accidents/.../scripts/` --------
+*...*
+path/to/*
+
+# --- illustrative flag mention, not a shipped flag claim --------------------
+skills/docs-reconciler/SKILL.md :: --from-run
+
+# --- status-marked proposals / target interfaces, not shipped code ----------
+# `skills/maqam-edit` labels the maqam CLI as planned; `analysis/vendor` labels
+# its production modules as not yet in the repo; `docs/suno-generation-controls`
+# labels 7.3 as not implemented (2026-11-15).
+skills/maqam-edit/SKILL.md :: --phrases
+skills/maqam-edit/SKILL.md :: --edit
+skills/maqam-edit/SKILL.md :: --against
+docs/suno-generation-controls.md :: --from-run
+docs/suno-generation-controls.md :: --set
+analysis/vendor/README.md :: analysis/abc_scale.py
+analysis/vendor/README.md :: analysis/abc_calibrate.py
+analysis/vendor/README.md :: analysis/run_yt500_similarity.py
+
+# --- ambiguous basename: manifests/ and eval/ both carry this name ----------
+docs/suno-generation-controls.md :: tarab_test_01.json
+
+# --- explicitly negated flag: "no separate --gcs flag is needed" ------------
+docs/transcription.md :: --gcs

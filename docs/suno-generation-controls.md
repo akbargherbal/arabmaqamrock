@@ -333,7 +333,7 @@ seconds field would trade a measured quantity for a guess.
 |---|---|---|---|---|
 | 7.1 | Flat per-song control keys (`guidance_scale`, `semantic_*`, `abc_*`, `lora_*_scale`) | ~75 lines | **High** — the real control surface, per track instead of per batch | `generate.py`, `run_one.sh`, README |
 | 7.2 | Record resolved controls in sidecar/manifest, print in `--dry-run` | ~15 lines | **High** — without it, 7.1 makes runs less reproducible | `generate.py` |
-| 7.3 | `--from-run <dir>` to clone a run's exact settings | ~25 lines | Medium — A/B becomes one flag | `generate.py` |
+| 7.3 | `--from-run <dir>` to clone a run's exact settings | ~25 lines | Medium — A/B becomes one flag | `generate.py` (proposed) |
 | 7.4 | One-line provenance note in `MODEL_CARD.md` | ~5 lines | Medium (legal, not technical) | `MODEL_CARD.md` |
 
 ### 7.1 Per-song control keys
@@ -438,6 +438,10 @@ net-negative for reproducibility.
 
 ### 7.3 `--from-run <dir>`
 
+**Status: not implemented (2026-11-15).** No `--from-run` or `--set` flag exists
+in `generate.py`; this is a proposal. The zero-code alternative below is the
+current workaround.
+
 `input.json` is copied into every run, so the data exists. The obstacle is path
 resolution: `base_dir` is relative to the manifest that contains it, and after
 copying it points at the wrong place.
@@ -456,10 +460,14 @@ this prevents.
 
 ### 7.4 Zero-code items
 
+**Status (2026-11-15):** the README batch-global sentence is already present
+(`README.md`, “Sampler and adapter controls”); the `MODEL_CARD.md` provenance
+paragraph is still open.
+
 - `MODEL_CARD.md`: one paragraph on where the training audio came from and that
   Suno's Terms forbid using its output to train other models (§8).
-- `README.md`: one sentence that `EXTRA_REQUEST_OPTS` is **batch-global** — it
-  currently reads like a per-run knob.
+- `README.md`: keep the sentence that `EXTRA_REQUEST_OPTS` is **batch-global**
+  beside the control-key rules (already present).
 
 ### 7.5 Regression check against `manifests/`
 
