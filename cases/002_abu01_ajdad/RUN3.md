@@ -72,6 +72,49 @@ yue2.sampling.semantic … min_tokens=775 max_tokens=775
 yue2.semantic.tokens 775        (not 5606, not 7250)
 ```
 
+### 2.1 Method, step by step (the part that is easy to lose)
+
+1. **Do not re-derive.** G0 is a count + duration + sha check. `5606/25 = 224.24 s`
+   matches the WAV, and the file sha matches the run that produced the WAV, so the
+   token stream *is* this take's performance. Everything downstream uses it.
+2. **Build the prefix from the take's own stream:** `tokens[:672]` = 26.88 s,
+   ~120 ms before the /f/ of `فِي`, so the model enters the phrase on its own.
+3. **One request shape, four seeds.** `min = max = 775` (31.00 s). Verify the
+   request line in the log *before* the second seed; a wrong bound invalidates
+   every later candidate.
+4. **Demucs 4.1.0 `htdemucs` on the original and on every candidate** (same
+   version that produced the map in `measure_cfg15.json`). All vocal measurements
+   are on the 44.1 kHz stem, never on the mix.
+5. **Measure the onset per candidate**, not from the card. For each stem, at
+   10 ms / 5 ms resolution: `pyin` f0, RMS, spectral centroid, band shares
+   (`onset_table.py`, `measure_word.py`). What separates a nasal onset from a
+   plain vowel onset here is **centroid**, not pitch or level:
+
+   | candidate | pre-vowel dark segment (centroid) | f0 there | vowel onset (f0→220) | word end | verdict |
+   |---|---|---|---|---|---|
+   | original (defect) | none — 232–261 Hz throughout | 195–201 | 27.52 | ~28.90 | “لتي” |
+   | s0 `…580` | 27.40–27.49 (~203) | 196 | 27.52 | ~28.95 | kept, not chosen |
+   | s1 `…581` | none — 264–400 | 201 | 27.56 | ~29.0 | rejected |
+   | **s2 `…582`** | **27.455–27.555 (208–228)** | 198–200 | 27.56 | ~28.95 | **chosen** |
+   | s3 `…583` | 27.44–27.54 (199–215) | 195–198 | 27.58 | ~29.0 | runner-up |
+
+   Reference for comparison: occurrence 2's onset at 41.06–41.09 is the same
+   kind of short, dark, voiced segment (centroid 391–634 while rising).
+6. **Filter mechanically, then let the ear decide.** Reject only on things that
+   are measurable: word end past 28.98 s, contour off the
+   195→220→247→221 Hz shape, a new defect, a seam step. The /m/ itself is not
+   provable — see §4.3 — so the survivors go to the ear labelled, not pre-judged.
+7. **Comp the vocal only** (`comp_vocal_diff.py`):
+   `mix + (cand_voc − orig_voc)` on 27.46–28.98 s, difference computed at
+   44.1 kHz, resampled to 48 kHz, 15 ms linear ramps **on the difference**.
+8. **Verify** (`verify_seam.py`): byte-identity outside the region, unchanged
+   duration, 10 ms mix envelope across the seam (continuous for B: 0.131 →
+   0.128 → 0.109 → 0.117 → 0.139 across the join), max sample step at the seam
+   vs. inside the region, click ratio.
+9. **Two widths from the same candidate**, B (join at the word) and D (join at
+   the /f/), plus the runner-up seed as a B variant — three clips, one listening
+   round.
+
 Comp:
 
 ```
@@ -159,7 +202,7 @@ Occurrence 2 (repeated verse) was never touched: no donor splice was made from
 inputs/      WAV + token + lyrics/style/score copies
 tokens/      abc_cfg15_semantic.json (5606) + tokens_prefix_672.json
 candidates/  s0…s3 WAV + vocals (all four, no rejects hidden)
-comp/        comp.json, B_s2, B_s3, D_s2 (+ per-comp verification JSON)
+comp/        comp.json, B_s2, B_s3, D_s2, verify_*.json, m_original.json
 final/       final_B_s2.wav, final_sidecar.json, blind clip1/clip2
 session/     timing.tsv, KEY.txt, logs/
 ```
@@ -167,13 +210,24 @@ session/     timing.tsv, KEY.txt, logs/
 Blind A/B was staged (`clip1.wav`, `clip2.wav`, key in `session/KEY.txt`) but the
 verdict was reached from the labelled comparison; the key was not needed.
 
-Reproduce the comp:
+Reproduce the comp (scripts are in this repo, `cases/002_abu01_ajdad/scripts/`):
 
 ```bash
-python3 work/cfg15/comp.py \
+python3 cases/002_abu01_ajdad/scripts/comp_vocal_diff.py \
   --orig-mix work/cfg15/repro_abc_cfg15.wav \
   --orig-voc work/cfg15/stems/htdemucs/repro_abc_cfg15/vocals.wav \
   --cand-voc work/cfg15/stems/htdemucs/s2_3285212582/vocals.wav \
   --start 27.46 --end 28.98 --cand-offset 0 \
   --out work/cfg15/comp/B_s2_3285212582.wav
 ```
+
+| script | what it does |
+|---|---|
+| `scripts/measure_word.py` | f0, RMS, low-band and flatness around the word; word-end search |
+| `scripts/onset_table.py` | 10 ms table (t, RMS, f0, low-band %, flatness) for one window |
+| `scripts/comp_vocal_diff.py` | the vocal-only diff comp + byte-identity verification |
+| `scripts/verify_seam.py` | seam f0/RMS, click ratio, 10 ms envelopes across the join |
+
+Inputs are not in git (WAVs, stems, tokens, binary — `.gitignore`): fetch the
+original from `inputs/` in the GCS run folder and re-run Demucs 4.1.0 to get the
+stems, or pull `candidates/*_vocals.wav` from the same folder and skip Demucs.
