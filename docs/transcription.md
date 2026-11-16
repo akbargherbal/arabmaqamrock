@@ -33,6 +33,11 @@ By default (`--full`) the ABC keeps the Vocal and Ins melody staves **and**
 chord symbols. `--melody-only` omits the chord symbols. Neither mode is
 “lead vocal only”.
 
+MuseScore and other notation editors cannot open ABC. To view or print a score,
+see the separate sandbox [akbargherbal/score-lab](https://github.com/akbargherbal/score-lab)
+— it holds an ABC primer and an ABC → MusicXML converter. This repo does not
+depend on it.
+
 ## Install
 
 Prerequisites:

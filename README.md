@@ -392,6 +392,10 @@ render via `run_one.sh`’s `COT`/`ABC_FILE` environment variables; see
 The optional env is also available via `./install.sh --with-transcribe` and
 `./setup_colab.sh --with-transcribe`.
 
+To *read* a `score.abc` as a printed page or open it in MuseScore, use the
+separate sandbox [akbargherbal/score-lab](https://github.com/akbargherbal/score-lab)
+(ABC primer, MuseScore setup, ABC → MusicXML). Nothing here depends on it.
+
 ## License
 
 **The weights are non-commercial.** This project is a derivative of
