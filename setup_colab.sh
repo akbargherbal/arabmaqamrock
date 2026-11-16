@@ -10,8 +10,9 @@
 #      install GNU time if absent (run_one.sh wraps the binary in /usr/bin/time)
 #   2. stage the prebuilt audiocpp_cli for this GPU's arch (./plumbing/fetch_binary.sh)
 #   3. download the YuE2 GGUF model + the three ArabMaqamRock LoRA sets from
-#      Hugging Face (v3 style pair, own instrumental pair, blend pairs), plus the
-#      two third-party adapters used by the round-04/06 manifests
+#      Hugging Face (v3 style pair, own instrumental pair, blend pairs
+#      a0.1/a0.15/a0.2), plus the two third-party adapters used by the
+#      round-04/06 manifests
 #   4. start the GCS backup sidecar (detached; MP3 trials + transcript archives)
 #
 # Idempotent: re-running skips what is already present. Nothing here needs a build
@@ -49,8 +50,8 @@ INSTR_OWN_NAR="arabic-instrumental-nar.safetensors"
 INSTR_OWN_SHA256_AR="69517eea8bbc9fec2ace47c271f1bde7058881e89eabe9f9c0b10cb91ae97edb"
 INSTR_OWN_SHA256_NAR="f84fdd4e9332c8be27e2d716fec9048f3d8ea3835c5e7582d6689322b6e0ea2f"
 # Blends: rank-concat merges of the v3 pair with the instrumental pair; the
-# alpha is baked into the files (0.1 conservative floor, 0.15 middle setting;
-# a0.2 exists on HF but is intentionally not staged).
+# alpha is baked into the files (0.1 conservative floor, 0.15 middle setting,
+# 0.2 intended primary arm — 16.5% donor share).
 HF_BLEND_REPO="akbargherbal/arabmaqamrock-blend-yue2-lora"
 BLEND_A1_AR="a0.1/v3instr_a0.1_ar.safetensors"
 BLEND_A1_NAR="a0.1/v3instr_a0.1_nar.safetensors"
@@ -60,6 +61,10 @@ BLEND_A15_AR="a0.15/v3instr_a0.15_ar.safetensors"
 BLEND_A15_NAR="a0.15/v3instr_a0.15_nar.safetensors"
 BLEND_A15_SHA256_AR="fef2104e13560700e118af92b7be139f7711df59e2a68ddde4691a0e5a5fecc3"
 BLEND_A15_SHA256_NAR="e1696863534e330b290ad92fbe16d904b69b8e5eebf208b9ba738778447a1fb7"
+BLEND_A2_AR="a0.2/v3instr_a0.2_ar.safetensors"
+BLEND_A2_NAR="a0.2/v3instr_a0.2_nar.safetensors"
+BLEND_A2_SHA256_AR="820f1ce90ab64965606a5a57451b2dcf255072ab4b9c7be182bc14b80bd86dd6"
+BLEND_A2_SHA256_NAR="f9738e214361c02428f6baa01327ba42ce1208236d33868fd6c3d3a7b584225f"
 # Third-party AR-only adapter for instrumental covers (round 04). It is loaded
 # instead of the arabmaqamrock AR adapter; the NAR adapter stays off (scale 0).
 HF_INST_LORA_REPO="Mothersuperior/YuE2-instrumental-cot-full-loras"
@@ -109,9 +114,10 @@ hf download "$HF_GGUF_REPO" --include "sidecars/*" --local-dir "$MODELS" >/dev/n
 hf download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS" >/dev/null && ok "v3 LoRA"
 mkdir -p "$LORAS/arabic-instrumental"
 hf download "$HF_INSTR_OWN_REPO" "$INSTR_OWN_AR" "$INSTR_OWN_NAR" --local-dir "$LORAS/arabic-instrumental" >/dev/null && ok "own instrumental LoRA"
-mkdir -p "$LORAS/blend/a0.1" "$LORAS/blend/a0.15"
+mkdir -p "$LORAS/blend/a0.1" "$LORAS/blend/a0.15" "$LORAS/blend/a0.2"
 hf download "$HF_BLEND_REPO" "$BLEND_A1_AR" "$BLEND_A1_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.1"
 hf download "$HF_BLEND_REPO" "$BLEND_A15_AR" "$BLEND_A15_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.15"
+hf download "$HF_BLEND_REPO" "$BLEND_A2_AR" "$BLEND_A2_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.2"
 
 # sha256 pins for every own adapter (warn-only: a corrected upstream re-upload
 # should not brick the setup).
@@ -132,6 +138,8 @@ sha_warn "$LORAS/blend/$BLEND_A1_AR" "$BLEND_A1_SHA256_AR" "blend a0.1 AR"
 sha_warn "$LORAS/blend/$BLEND_A1_NAR" "$BLEND_A1_SHA256_NAR" "blend a0.1 NAR"
 sha_warn "$LORAS/blend/$BLEND_A15_AR" "$BLEND_A15_SHA256_AR" "blend a0.15 AR"
 sha_warn "$LORAS/blend/$BLEND_A15_NAR" "$BLEND_A15_SHA256_NAR" "blend a0.15 NAR"
+sha_warn "$LORAS/blend/$BLEND_A2_AR" "$BLEND_A2_SHA256_AR" "blend a0.2 AR"
+sha_warn "$LORAS/blend/$BLEND_A2_NAR" "$BLEND_A2_SHA256_NAR" "blend a0.2 NAR"
 mkdir -p "$LORAS/instrumental"
 hf download "$HF_INST_LORA_REPO" "$HF_INST_LORA" --local-dir "$LORAS/instrumental" >/dev/null && ok "instrumental LoRA"
 if [ -f "$LORAS/instrumental/$HF_INST_LORA" ]; then

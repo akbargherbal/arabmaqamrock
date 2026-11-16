@@ -22,6 +22,35 @@ timbre/arrangement/style match, but "flat / generic" melodic inventiveness. A st
 adapter with `cot=off` cannot make the composer more inventive; that is a settings /
 prompt / selection problem (see the parent repo's v3 "spice" sweep).
 
+## Arabic instrumental — [`akbargherbal/arabic-instrumental-yue2-lora`](https://huggingface.co/akbargherbal/arabic-instrumental-yue2-lora)
+
+Instrumental arrangement character (no vocals), and the **donor branch** behind the
+blends below.
+
+| | |
+|---|---|
+| AR adapter | `arabic-instrumental-ar.safetensors` — sha256 `69517eea8bbc9fec2ace47c271f1bde7058881e89eabe9f9c0b10cb91ae97edb` |
+| NAR adapter | `arabic-instrumental-nar.safetensors` — sha256 `f84fdd4e9332c8be27e2d716fec9048f3d8ea3835c5e7582d6689322b6e0ea2f` |
+| Trained to | step 5500 (final, "ck5500") |
+
+## Blends (v3 × instrumental) — [`akbargherbal/arabmaqamrock-blend-yue2-lora`](https://huggingface.co/akbargherbal/arabmaqamrock-blend-yue2-lora)
+
+Rank-concat merges of the v3 pair (**carrier**) with the instrumental pair
+(**donor**): one file pair per alpha, with the alpha **baked into the weights**.
+Runtime `lora_*_scale` multiplies the whole adapter — it does not change the
+v3↔instrumental ratio; load a different arm to change the ratio.
+
+| Arm | Files | Donor share (AR) | sha256 AR / NAR (first 12) |
+|---|---|---:|---|
+| `a0.1` | `a0.1/v3instr_a0.1_{ar,nar}.safetensors` | 8.9% | `d48109b3117b` / `88f00bcb1b60` |
+| `a0.15` | `a0.15/v3instr_a0.15_{ar,nar}.safetensors` | 12.9% | `fef2104e1356` / `e1696863534e` |
+| `a0.2` | `a0.2/v3instr_a0.2_{ar,nar}.safetensors` | 16.5% | `820f1ce90ab6` / `f9738e214361` |
+
+`a0.2` is the intended primary arm, `a0.1` the conservative floor, `a0.15` the middle
+setting; alphas 0.3 / 0.5 were rejected in listening (vocal damage) and deleted. Each
+arm is a normal 392-tensor rank-64 bf16 pair — verify by sha256, not by
+`plumbing/check_lora.py --kind nar` (that expectation describes NAR-v9 adapters).
+
 ## Quran pronunciation — [`akbargherbal/quran-pronunciation-yue2-lora`](https://huggingface.co/akbargherbal/quran-pronunciation-yue2-lora)
 
 A **diction/pronunciation** adapter trained on Quran recitation (AHH-filtered, 3

@@ -375,8 +375,15 @@ released here inherit that: **non-commercial use only.**
 
 ## Provenance
 
-- **Weights:** [`akbargherbal/arabmaqamrock-yue2-lora`](https://huggingface.co/akbargherbal/arabmaqamrock-yue2-lora)
-  (v3) and [`akbargherbal/quran-pronunciation-yue2-lora`](https://huggingface.co/akbargherbal/quran-pronunciation-yue2-lora).
+- **Weights:**
+  [`akbargherbal/arabmaqamrock-yue2-lora`](https://huggingface.co/akbargherbal/arabmaqamrock-yue2-lora)
+  (v3 style, vocals),
+  [`akbargherbal/arabic-instrumental-yue2-lora`](https://huggingface.co/akbargherbal/arabic-instrumental-yue2-lora)
+  (instrumental donor) and
+  [`akbargherbal/arabmaqamrock-blend-yue2-lora`](https://huggingface.co/akbargherbal/arabmaqamrock-blend-yue2-lora)
+  (v3 × instrumental blends `a0.1` / `a0.15` / `a0.2`, alpha baked in). The
+  [`quran-pronunciation-yue2-lora`](https://huggingface.co/akbargherbal/quran-pronunciation-yue2-lora)
+  diction adapter is published but shelved (not staged by `install.sh`).
 - **Parent project** (training, dataset, research trail, monitoring): [`akbargherbal/maqamrock-yue2-lora-finetuning`](https://github.com/akbargherbal/maqamrock-yue2-lora-finetuning).
 - **Base model:** [`m-a-p/YuE2-3B`](https://huggingface.co/m-a-p/YuE2-3B) →
   [`audio-cpp/Yue2-3B-GGUF`](https://huggingface.co/audio-cpp/Yue2-3B-GGUF).

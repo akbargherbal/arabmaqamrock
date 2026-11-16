@@ -3,9 +3,9 @@
 #   1. stage audiocpp_cli  (prebuilt from GCS if available, else build from source)
 #   2. download the YuE2 GGUF model + VAE + sidecars from Hugging Face
 #   3. download the three ArabMaqamRock LoRA sets from Hugging Face:
-#        v3 style pair            -> loras/
-#        own instrumental pair    -> loras/arabic-instrumental/
-#        blend pairs (a0.1, a0.15)-> loras/blend/{a0.1,a0.15}/
+#        v3 style pair                     -> loras/
+#        own instrumental pair             -> loras/arabic-instrumental/
+#        blend pairs (a0.1, a0.15, a0.2)   -> loras/blend/{a0.1,a0.15,a0.2}/
 #
 # Idempotent. The binary step is delegated to plumbing/fetch_binary.sh, which is
 # GCS-first with a build fallback, so this works both on a Colab VM with GCS access
@@ -37,6 +37,8 @@ BLEND_A1_AR="a0.1/v3instr_a0.1_ar.safetensors"
 BLEND_A1_NAR="a0.1/v3instr_a0.1_nar.safetensors"
 BLEND_A15_AR="a0.15/v3instr_a0.15_ar.safetensors"
 BLEND_A15_NAR="a0.15/v3instr_a0.15_nar.safetensors"
+BLEND_A2_AR="a0.2/v3instr_a0.2_ar.safetensors"
+BLEND_A2_NAR="a0.2/v3instr_a0.2_nar.safetensors"
 
 # sha256 pins (from the published model cards); mismatches are warnings, not
 # failures — a corrected upstream re-upload should not brick the installer.
@@ -48,6 +50,8 @@ BLEND_A1_SHA256_AR="d48109b3117bf7851390ac9d4de86a45c5edd99cc5d17ddb97481e5c77ef
 BLEND_A1_SHA256_NAR="88f00bcb1b60cb7638eff07d7f1a7ff1d19705e987a138bf82e0c36e84ea5b58"
 BLEND_A15_SHA256_AR="fef2104e13560700e118af92b7be139f7711df59e2a68ddde4691a0e5a5fecc3"
 BLEND_A15_SHA256_NAR="e1696863534e330b290ad92fbe16d904b69b8e5eebf208b9ba738778447a1fb7"
+BLEND_A2_SHA256_AR="820f1ce90ab64965606a5a57451b2dcf255072ab4b9c7be182bc14b80bd86dd6"
+BLEND_A2_SHA256_NAR="f9738e214361c02428f6baa01327ba42ce1208236d33868fd6c3d3a7b584225f"
 
 BIN_ARGS=()
 WITH_TRANSCRIBE=0
@@ -80,7 +84,7 @@ $HF download "$HF_GGUF_REPO" yue2-3b-bf16.gguf yue2-vae-f16.gguf --local-dir "$M
 $HF download "$HF_GGUF_REPO" --include "sidecars/*" --local-dir "$MODELS"
 
 echo "== 3. LoRAs from Hugging Face (three sets) =="
-mkdir -p "$LORAS" "$LORAS/arabic-instrumental" "$LORAS/blend/a0.1" "$LORAS/blend/a0.15"
+mkdir -p "$LORAS" "$LORAS/arabic-instrumental" "$LORAS/blend/a0.1" "$LORAS/blend/a0.15" "$LORAS/blend/a0.2"
 
 echo "-- 3a. ArabMaqamRock v3 (style, vocals) --"
 $HF download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS"
@@ -91,6 +95,7 @@ $HF download "$HF_INSTR_OWN_REPO" "$INSTR_AR" "$INSTR_NAR" --local-dir "$LORAS/a
 echo "-- 3c. blends of v3 x instrumental (alpha baked in) --"
 $HF download "$HF_BLEND_REPO" "$BLEND_A1_AR" "$BLEND_A1_NAR" --local-dir "$LORAS/blend"
 $HF download "$HF_BLEND_REPO" "$BLEND_A15_AR" "$BLEND_A15_NAR" --local-dir "$LORAS/blend"
+$HF download "$HF_BLEND_REPO" "$BLEND_A2_AR" "$BLEND_A2_NAR" --local-dir "$LORAS/blend"
 
 echo "-- 3d. sha256 check (warn only) --"
 sha256_warn() {  # file, expected
@@ -110,6 +115,8 @@ sha256_warn "$LORAS/blend/$BLEND_A1_AR" "$BLEND_A1_SHA256_AR"
 sha256_warn "$LORAS/blend/$BLEND_A1_NAR" "$BLEND_A1_SHA256_NAR"
 sha256_warn "$LORAS/blend/$BLEND_A15_AR" "$BLEND_A15_SHA256_AR"
 sha256_warn "$LORAS/blend/$BLEND_A15_NAR" "$BLEND_A15_SHA256_NAR"
+sha256_warn "$LORAS/blend/$BLEND_A2_AR" "$BLEND_A2_SHA256_AR"
+sha256_warn "$LORAS/blend/$BLEND_A2_NAR" "$BLEND_A2_SHA256_NAR"
 
 echo "== verifying =="
 ok=1
@@ -117,7 +124,8 @@ for f in bin/audiocpp_cli "$MODELS/yue2-3b-bf16.gguf" "$MODELS/yue2-vae-f16.gguf
          "$LORAS/$LORA_AR" "$LORAS/$LORA_NAR" \
          "$LORAS/arabic-instrumental/$INSTR_AR" "$LORAS/arabic-instrumental/$INSTR_NAR" \
          "$LORAS/blend/$BLEND_A1_AR" "$LORAS/blend/$BLEND_A1_NAR" \
-         "$LORAS/blend/$BLEND_A15_AR" "$LORAS/blend/$BLEND_A15_NAR"; do
+         "$LORAS/blend/$BLEND_A15_AR" "$LORAS/blend/$BLEND_A15_NAR" \
+         "$LORAS/blend/$BLEND_A2_AR" "$LORAS/blend/$BLEND_A2_NAR"; do
   if [ -e "$f" ]; then echo "  [ok] $f"; else echo "  [MISSING] $f"; ok=0; fi
 done
 [ -d "$MODELS/sidecars" ] && echo "  [ok] $MODELS/sidecars" || { echo "  [MISSING] $MODELS/sidecars"; ok=0; }
