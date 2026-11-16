@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One observed YuE2 generation (LoRA AR+NAR scale 1.0) with audio.cpp.
+# One observed YuE2 generation with audio.cpp (default pair: blend a0.15).
 # Usage: run_one.sh <Maqam> <seed> [semantic_max_tokens]
 #   cap defaults to "auto": derived from the lyrics via duration_cap.py
 #   (95th-percentile cap dur_cap = 111.1 + 0.3126*N_letters, rounded to 10 s;
@@ -13,10 +13,14 @@
 #   ABC_FILE    external ABC score; requires COT=melody|full
 #   PLAN_DIR    pass --out-dir here: when COT != off and no ABC_FILE is given,
 #               the model's planned score.abc is written into this folder
-#   LORA_AR     AR adapter (default: $ROOT/loras/arabmaqamrock-v3-ar.safetensors)
-#   LORA_NAR    NAR adapter (default: $ROOT/loras/arabmaqamrock-v3-nar.safetensors)
+#   LORA_AR     AR adapter (default: $ROOT/loras/blend/a0.15/v3instr_a0.15_ar.safetensors)
+#   LORA_NAR    NAR adapter (default: $ROOT/loras/blend/a0.15/v3instr_a0.15_nar.safetensors)
+#               The blend a0.15 pair is the default generation arm since 2026-11-16;
+#               see docs/generation-defaults.md. Pass the v3 pair to opt out.
 #   LORA_AR_SCALE / LORA_NAR_SCALE  per-expert adapter strength, default 1.0.
 #               Scale 0 switches that expert's adapter off (base weights).
+#               The adopted preset (AR 0.75, NAR 1.0, guidance 1.5, cot off) is
+#               set per manifest in generate.py; this raw runner is neutral.
 # Writes everything under $OUT so each run is self-contained:
 #   $OUT/<Maqam>_<seed>.wav        audio
 #   $OUT/<Maqam>_<seed>.log        CLI --log (TRACE/TIMING, errors)
@@ -42,8 +46,8 @@ mkdir -p "$OUT"
 
 style="${STYLE_FILE:-$ROOT/prompts/${M}_style.txt}"
 lyrics="${LYRICS_FILE:-$ROOT/prompts/${M}_lyrics.txt}"
-LORA_AR="${LORA_AR:-$ROOT/loras/arabmaqamrock-v3-ar.safetensors}"
-LORA_NAR="${LORA_NAR:-$ROOT/loras/arabmaqamrock-v3-nar.safetensors}"
+LORA_AR="${LORA_AR:-$ROOT/loras/blend/a0.15/v3instr_a0.15_ar.safetensors}"
+LORA_NAR="${LORA_NAR:-$ROOT/loras/blend/a0.15/v3instr_a0.15_nar.safetensors}"
 # Per-expert scales; 0 switches that expert's adapter off (base weights).
 LORA_AR_SCALE="${LORA_AR_SCALE:-1.0}"
 LORA_NAR_SCALE="${LORA_NAR_SCALE:-1.0}"

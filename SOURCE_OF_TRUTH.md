@@ -8,6 +8,7 @@ History files are authoritative for what happened, never for what is true now.
 | CLI flags / defaults | `python3 generate.py --help` and `generate.py` argparse | script flags beat prose |
 | Manifest schema / field names | `generate.py` docstring + `SONG_KEYS` / `DEFAULT_KEYS` / `CONTROL_SPECS`; `manifests/README.md` | strict: unknown keys are errors; validate with `python3 generate.py <manifest> --dry-run` |
 | Generation controls | `generate.py` `CONTROL_SPECS` + `manifests/controls.example.json` | `docs/suno-generation-controls.md` Appendix D explains semantics; code owns bounds |
+| Default generation preset | `docs/generation-defaults.md` + `manifests/imru_al_qais_sama_laka_shawqun_a015.json` | blend `a0.15`, `guidance_scale: 1.5`, `lora_ar_scale: 0.75`, `lora_nar_scale: 1.0`, `cot: off`; built-in pair in `generate.py` / `run_one.sh` |
 | Install / stage the runtime | `install.sh`, `setup_colab.sh`, `plumbing/fetch_binary.sh --help` | `plumbing/README.md` describes the GCS prefix |
 | Generate / resume / output layout | `README.md`, `generate.py` docstring, `run_one.sh` | `--dry-run` is the executable description |
 | Backup / GCS layout | `plumbing/backup_to_gcp.py --help`, `plumbing/README.md` | script flags beat prose |

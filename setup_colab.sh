@@ -12,9 +12,11 @@
 #   2. stage the prebuilt audiocpp_cli for this GPU's arch (./plumbing/fetch_binary.sh)
 #   3. download the YuE2 GGUF model + the default ArabMaqamRock LoRA sets from
 #      Hugging Face: the blend a0.15 pair (v3 x instrumental, alpha baked in)
-#      and the own Arabic-instrumental pair. The other own sets (v3 style pair,
-#      blend a0.1/a0.2) and the two third-party adapters (round-04/06) are
-#      staged as commented-out downloads: uncomment when a manifest needs them.
+#      and the own Arabic-instrumental pair. The scales, guidance and cot
+#      settings are in docs/generation-defaults.md. The other own sets (v3
+#      style pair, blend a0.1/a0.2) and the two third-party adapters
+#      (round-04/06) are staged as commented-out downloads: uncomment when a
+#      manifest needs them.
 #   4. start the GCS backup sidecar (detached; MP3 trials + transcript archives)
 #
 # Idempotent: re-running skips what is already present. Nothing here needs a build
@@ -197,13 +199,10 @@ if [ "$WITH_TRANSCRIBE" = 1 ]; then
 fi
 
 echo
-echo "Ready. Validate then generate (blend a0.15 pair; the built-in default pair"
-echo "is v3, which this setup no longer stages — see the commented blocks above):"
-echo "  python3 generate.py manifests/songs.example.json --dry-run \\"
-echo "      --lora-ar loras/blend/a0.15/v3instr_a0.15_ar.safetensors \\"
-echo "      --lora-nar loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+echo "Ready. Validate then generate (the built-in adapter pair is blend a0.15):"
+echo "  python3 generate.py manifests/songs.example.json --dry-run"
 echo "  (drop --dry-run to render; loras/arabic-instrumental/ holds the"
-echo "   instrumental-only pair)"
+echo "   instrumental-only pair; the v3 pair is opt-in — see the commented blocks above)"
 if [ "$WITH_TRANSCRIBE" = 1 ]; then
   echo "  ./transcribe.sh out/latest --dry-run"
 else

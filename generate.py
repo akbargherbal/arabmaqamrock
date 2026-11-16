@@ -67,7 +67,9 @@ the plan stage and are rejected with cot=off or an external score. Setting any
 control key is mutually exclusive with the batch-global EXTRA_REQUEST_OPTS.
 
 Precedence: song field > CLI flag > "defaults" > built-in default. For `lora`
-there is no CLI flag: song > `defaults.lora` > the `--lora-ar`/`--lora-nar` pair.
+there is no CLI flag: song > `defaults.lora` > the `--lora-ar`/`--lora-nar` pair
+(the pair itself defaults to the blend a0.15 adapters; see
+docs/generation-defaults.md).
 For `cot` the CLI flag is `--cot`. Adapter pairs are existence-checked in
 preflight before any GPU work; score files are checked while resolving the JSON.
 
@@ -139,11 +141,17 @@ BIN = ROOT / "bin" / "audiocpp_cli"
 MODEL_DIR = ROOT / "models" / "Yue2-3B-GGUF"
 MODEL_GGUF = "yue2-3b-bf16.gguf"
 VAE_GGUF = "yue2-vae-f16.gguf"
+# File names used by the "dir" form of a manifest 'loras' alias.
 LORA_AR_NAME = "arabmaqamrock-v3-ar.safetensors"
 LORA_NAR_NAME = "arabmaqamrock-v3-nar.safetensors"
 LORA_DIR = ROOT / "loras"
-LORA_AR = LORA_DIR / LORA_AR_NAME
-LORA_NAR = LORA_DIR / LORA_NAR_NAME
+# Built-in adapter pair: the blend a0.15 pair (v3 x Arabic-instrumental), the
+# default generation arm since 2026-11-16. See docs/generation-defaults.md.
+# The standalone v3 pair is opt-in through a manifest 'lora' alias.
+DEFAULT_LORA_AR = LORA_DIR / "blend" / "a0.15" / "v3instr_a0.15_ar.safetensors"
+DEFAULT_LORA_NAR = LORA_DIR / "blend" / "a0.15" / "v3instr_a0.15_nar.safetensors"
+LORA_AR = DEFAULT_LORA_AR
+LORA_NAR = DEFAULT_LORA_NAR
 AUDIO_CPP = ROOT / "audio.cpp"
 
 TRIGGER = "arabmaqamrock "
@@ -1709,10 +1717,12 @@ def build_parser() -> argparse.ArgumentParser:
                    help="do not auto-prepend 'arabmaqamrock ' to styles")
     p.add_argument("--lora-ar", default=None,
                    help="default AR adapter for songs with no 'lora' alias "
-                        "(built-in default: the live converted v2 pair)")
+                        "(built-in default: the blend a0.15 AR adapter, "
+                        "loras/blend/a0.15/v3instr_a0.15_ar.safetensors)")
     p.add_argument("--lora-nar", default=None,
                    help="default NAR adapter for songs with no 'lora' alias "
-                        "(built-in default: the live converted v2 pair)")
+                        "(built-in default: the blend a0.15 NAR adapter, "
+                        "loras/blend/a0.15/v3instr_a0.15_nar.safetensors)")
     return p
 
 

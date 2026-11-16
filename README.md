@@ -39,6 +39,10 @@ python3 generate.py manifests/songs.example.json --dry-run   # validate + print 
 python3 generate.py manifests/songs.example.json             # the real run  → out/<timestamp>_.../  (a .wav)
 ```
 
+The staged adapter pair is the blend `a0.15` pair (v3 × Arabic-instrumental),
+and it is also the built-in default — no `--lora-ar` / `--lora-nar` flags needed.
+See [Generation defaults](docs/generation-defaults.md).
+
 `install.sh` stages `audiocpp_cli` for your GPU's arch — from this project's GCS
 prefix when reachable (fast), otherwise by building from source (~20 min cold; no GPU
 needed to build). Force either path:
@@ -252,6 +256,22 @@ Rules that keep it predictable:
 each) to compare against. `--dry-run` prints the resolved values per track;
 semantics and code references are in
 [docs/suno-generation-controls.md](docs/suno-generation-controls.md) Appendix D.
+
+### Default preset
+
+Adopted 2026-11-16 from the five-poem blend-arm listening batch. The default
+is the blend `a0.15` pair at `lora_ar_scale: 0.75`, `lora_nar_scale: 1.0`,
+`guidance_scale: 1.5`, `cot: off`, `quantile: 0.95`, one take per song. The
+built-in adapter pair and the installer already use it, so a manifest without a
+`lora` field renders the default.
+
+- Recipe, evidence, scope and the copy-paste `defaults` block:
+  [docs/generation-defaults.md](docs/generation-defaults.md)
+- Runnable reference (five poems, winning seeds):
+  [`manifests/imru_al_qais_sama_laka_shawqun_a015.json`](manifests/imru_al_qais_sama_laka_shawqun_a015.json)
+
+Experiments, sweeps and test manifests are exempt: override the axis you are
+testing and record the verdict.
 
 ## Base prompt
 

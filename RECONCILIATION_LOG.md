@@ -59,3 +59,33 @@ unpublished.
 - 2026-11-16 — HF card `akbargherbal/arabmaqamrock-blend-yue2-lora` — added the
   `a0.2` row/bullet/provenance line, made `a0.2` the load example, and replaced
   “not published here” with the primary-arm note — authority: same manifest.
+
+## 2026-11-16 — blend a0.15 adopted as the generation default
+
+Listening decision on the five-poem blend sweep. The 15-track batch
+`gs://akbar-december-2024-backup/arabmaqamrock/runs/20261116-121703_imru_al_qais_sama_laka_shawqun_mix_grid/`
+rendered `a0.1` / `a0.15` / `a0.2` at one seed per poem; `a0.15` was judged the
+best arm. This is a reviewable working default, not a blind measurement; test
+and experiment manifests are exempt.
+
+- 2026-11-16 — `docs/generation-defaults.md` — new authority for the default
+  recipe: blend `a0.15`, `lora_ar_scale: 0.75`, `lora_nar_scale: 1.0`,
+  `guidance_scale: 1.5`, `cot: off`, `quantile: 0.95`, one take per song;
+  records the batch evidence, scope and review procedure — authority: the
+  batch `batch_summary.txt` / per-track sidecars and the listening verdict.
+- 2026-11-16 — `manifests/imru_al_qais_sama_laka_shawqun_a015.json` — new
+  runnable reference: the winning `a0.15` arm (five poems, same seeds, same
+  caps) with the preset in `defaults` — authority: `generate.py --dry-run`
+  resolves 5 tracks with caps 7750/7500/7250/7500/8250, matching the batch.
+- 2026-11-16 — `generate.py`, `run_one.sh` — built-in adapter pair changed from
+  the standalone v3 pair to `loras/blend/a0.15/v3instr_a0.15_{ar,nar}.safetensors`;
+  `"dir"` aliases still resolve to `arabmaqamrock-v3-{ar,nar}` — authority:
+  `docs/generation-defaults.md`, staged layout in `install.sh`.
+- 2026-11-16 — `install.sh`, `setup_colab.sh` — closing hints now use the
+  built-in default (no `--lora-ar` / `--lora-nar` flags); the staged set is
+  unchanged (blend `a0.15` + own instrumental) — authority: same.
+- 2026-11-16 — `README.md`, `docs/base-prompt.md`, `MODEL_CARD.md`,
+  `manifests/README.md`, `SOURCE_OF_TRUTH.md` — point at the preset and the
+  reference manifest; `MODEL_CARD.md` now records that `a0.15` won the
+  listening batch while `a0.2` was the merge-time intended primary — authority:
+  same.

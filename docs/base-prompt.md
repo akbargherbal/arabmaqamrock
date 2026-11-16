@@ -87,9 +87,13 @@ These were tested and are not adopted:
 `massive choir` is the opposite case: it started as an experiment and is now a
 fixed part of the base.
 
-Sampler settings are a separate axis from the prompt. `space-stallion` used
-`lora_nar_scale: 0.5` and `guidance_scale: 1.5`, but those are not part of the
-style text; change them only as a deliberate settings experiment.
+Sampler settings are a separate axis from the prompt. The current default
+preset is the blend `a0.15` pair with `lora_ar_scale: 0.75`,
+`lora_nar_scale: 1.0`, `guidance_scale: 1.5`, `cot: off` and `quantile: 0.95`;
+see [`generation-defaults.md`](generation-defaults.md) for the evidence and the
+copy-paste block. `space-stallion` used `lora_nar_scale: 0.5` and
+`guidance_scale: 1.5`, but those are not part of the style text; change them
+only as a deliberate settings experiment.
 
 ## Where this is used
 

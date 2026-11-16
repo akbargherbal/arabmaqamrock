@@ -46,10 +46,15 @@ v3↔instrumental ratio; load a different arm to change the ratio.
 | `a0.15` | `a0.15/v3instr_a0.15_{ar,nar}.safetensors` | 12.9% | `fef2104e1356` / `e1696863534e` |
 | `a0.2` | `a0.2/v3instr_a0.2_{ar,nar}.safetensors` | 16.5% | `820f1ce90ab6` / `f9738e214361` |
 
-`a0.2` is the intended primary arm, `a0.1` the conservative floor, `a0.15` the middle
-setting; alphas 0.3 / 0.5 were rejected in listening (vocal damage) and deleted. Each
-arm is a normal 392-tensor rank-64 bf16 pair — verify by sha256, not by
-`plumbing/check_lora.py --kind nar` (that expectation describes NAR-v9 adapters).
+`a0.2` was the intended primary arm at merge time; `a0.1` is the conservative
+floor and `a0.15` the middle setting. In the 2026-11-16 five-poem listening
+batch (`runs/20261116-121703_imru_al_qais_sama_laka_shawqun_mix_grid`), `a0.15`
+was preferred, so it is now the **default generation arm**
+([`docs/generation-defaults.md`](docs/generation-defaults.md)); `a0.2` remains
+available for experiments. Alphas 0.3 / 0.5 were rejected in listening (vocal
+damage) and deleted. Each arm is a normal 392-tensor rank-64 bf16 pair — verify
+by sha256, not by `plumbing/check_lora.py --kind nar` (that expectation describes
+NAR-v9 adapters).
 
 ## Quran pronunciation — [`akbargherbal/quran-pronunciation-yue2-lora`](https://huggingface.co/akbargherbal/quran-pronunciation-yue2-lora)
 

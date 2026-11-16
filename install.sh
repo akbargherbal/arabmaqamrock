@@ -5,7 +5,8 @@
 #   3. download the default ArabMaqamRock LoRA sets from Hugging Face:
 #        blend a0.15 (v3 x instrumental)   -> loras/blend/a0.15/
 #        own instrumental pair             -> loras/arabic-instrumental/
-#      These two are the default generation stack. The other own sets (v3
+#      These two are the default generation stack; the scales, guidance and
+#      cot settings are in docs/generation-defaults.md. The other own sets (v3
 #      style pair, blend a0.1, blend a0.2) are kept below as commented-out
 #      downloads in section 3 — uncomment the matching block (and its sha256
 #      line) only if a manifest needs them.
@@ -158,13 +159,10 @@ if [ "$ok" = 1 ]; then
     ./plumbing/setup_transcribe.sh
   fi
   echo
-  echo "Done. Then (explicit blend a0.15 pair; the built-in default pair is v3,"
-  echo "which this installer no longer stages — see the commented blocks above):"
-  echo "  python3 generate.py manifests/songs.example.json --dry-run \\"
-  echo "      --lora-ar loras/blend/a0.15/v3instr_a0.15_ar.safetensors \\"
-  echo "      --lora-nar loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+  echo "Done. The built-in adapter pair is the staged blend a0.15 pair:"
+  echo "  python3 generate.py manifests/songs.example.json --dry-run"
   echo "  (drop --dry-run to actually render; use loras/arabic-instrumental/ for the"
-  echo "   instrumental-only pair)"
+  echo "   instrumental-only pair; the v3 pair is opt-in — see the commented blocks above)"
   if [ "$WITH_TRANSCRIBE" = 1 ]; then
     echo "  ./transcribe.sh out/latest --dry-run"
   else
