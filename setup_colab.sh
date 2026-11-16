@@ -9,7 +9,9 @@
 #   1. sanity-check tooling (nvidia-smi, gcloud/gsutil auth, hf, python3) and
 #      install GNU time if absent (run_one.sh wraps the binary in /usr/bin/time)
 #   2. stage the prebuilt audiocpp_cli for this GPU's arch (./plumbing/fetch_binary.sh)
-#   3. download the YuE2 GGUF model + LoRA from Hugging Face
+#   3. download the YuE2 GGUF model + the three ArabMaqamRock LoRA sets from
+#      Hugging Face (v3 style pair, own instrumental pair, blend pairs), plus the
+#      two third-party adapters used by the round-04/06 manifests
 #   4. start the GCS backup sidecar (detached; MP3 trials + transcript archives)
 #
 # Idempotent: re-running skips what is already present. Nothing here needs a build
@@ -36,6 +38,28 @@ HF_GGUF_REPO="audio-cpp/Yue2-3B-GGUF"
 HF_LORA_REPO="akbargherbal/arabmaqamrock-yue2-lora"
 LORA_AR="arabmaqamrock-v3-ar.safetensors"
 LORA_NAR="arabmaqamrock-v3-nar.safetensors"
+LORA_SHA256_AR="3531bb9106d2292eefe58eabe11ec08bb7dddc69554f2b016dc9f13f711fab18"
+LORA_SHA256_NAR="a7eabcadb22146048bcb5e65d04828ee9454559523ca161bd38c06060deb0cae"
+# Own Arabic-instrumental pair (no vocals; also the donor behind the blends).
+# NB: the round-04 third-party adapter below is a DIFFERENT adapter and is still
+# used by the fadhl_shaker_instrumental manifests — both are staged.
+HF_INSTR_OWN_REPO="akbargherbal/arabic-instrumental-yue2-lora"
+INSTR_OWN_AR="arabic-instrumental-ar.safetensors"
+INSTR_OWN_NAR="arabic-instrumental-nar.safetensors"
+INSTR_OWN_SHA256_AR="69517eea8bbc9fec2ace47c271f1bde7058881e89eabe9f9c0b10cb91ae97edb"
+INSTR_OWN_SHA256_NAR="f84fdd4e9332c8be27e2d716fec9048f3d8ea3835c5e7582d6689322b6e0ea2f"
+# Blends: rank-concat merges of the v3 pair with the instrumental pair; the
+# alpha is baked into the files (0.1 conservative floor, 0.15 middle setting;
+# a0.2 exists on HF but is intentionally not staged).
+HF_BLEND_REPO="akbargherbal/arabmaqamrock-blend-yue2-lora"
+BLEND_A1_AR="a0.1/v3instr_a0.1_ar.safetensors"
+BLEND_A1_NAR="a0.1/v3instr_a0.1_nar.safetensors"
+BLEND_A1_SHA256_AR="d48109b3117bf7851390ac9d4de86a45c5edd99cc5d17ddb97481e5c77ef64a0"
+BLEND_A1_SHA256_NAR="88f00bcb1b60cb7638eff07d7f1a7ff1d19705e987a138bf82e0c36e84ea5b58"
+BLEND_A15_AR="a0.15/v3instr_a0.15_ar.safetensors"
+BLEND_A15_NAR="a0.15/v3instr_a0.15_nar.safetensors"
+BLEND_A15_SHA256_AR="fef2104e13560700e118af92b7be139f7711df59e2a68ddde4691a0e5a5fecc3"
+BLEND_A15_SHA256_NAR="e1696863534e330b290ad92fbe16d904b69b8e5eebf208b9ba738778447a1fb7"
 # Third-party AR-only adapter for instrumental covers (round 04). It is loaded
 # instead of the arabmaqamrock AR adapter; the NAR adapter stays off (scale 0).
 HF_INST_LORA_REPO="Mothersuperior/YuE2-instrumental-cot-full-loras"
@@ -82,7 +106,32 @@ echo "== 2. binary =="
 echo "== 3. model + LoRA =="
 hf download "$HF_GGUF_REPO" yue2-3b-bf16.gguf yue2-vae-f16.gguf --local-dir "$MODELS" >/dev/null && ok "ggufs"
 hf download "$HF_GGUF_REPO" --include "sidecars/*" --local-dir "$MODELS" >/dev/null && ok "sidecars"
-hf download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS" >/dev/null && ok "LoRA"
+hf download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS" >/dev/null && ok "v3 LoRA"
+mkdir -p "$LORAS/arabic-instrumental"
+hf download "$HF_INSTR_OWN_REPO" "$INSTR_OWN_AR" "$INSTR_OWN_NAR" --local-dir "$LORAS/arabic-instrumental" >/dev/null && ok "own instrumental LoRA"
+mkdir -p "$LORAS/blend/a0.1" "$LORAS/blend/a0.15"
+hf download "$HF_BLEND_REPO" "$BLEND_A1_AR" "$BLEND_A1_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.1"
+hf download "$HF_BLEND_REPO" "$BLEND_A15_AR" "$BLEND_A15_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.15"
+
+# sha256 pins for every own adapter (warn-only: a corrected upstream re-upload
+# should not brick the setup).
+sha_warn() {  # file, expected, label
+  if [ -f "$1" ]; then
+    if echo "$2  $1" | sha256sum -c - >/dev/null 2>&1; then
+      ok "sha256: $3"
+    else
+      warn "sha256 mismatch: $3 ($1)"
+    fi
+  fi
+}
+sha_warn "$LORAS/$LORA_AR" "$LORA_SHA256_AR" "v3 AR"
+sha_warn "$LORAS/$LORA_NAR" "$LORA_SHA256_NAR" "v3 NAR"
+sha_warn "$LORAS/arabic-instrumental/$INSTR_OWN_AR" "$INSTR_OWN_SHA256_AR" "own instrumental AR"
+sha_warn "$LORAS/arabic-instrumental/$INSTR_OWN_NAR" "$INSTR_OWN_SHA256_NAR" "own instrumental NAR"
+sha_warn "$LORAS/blend/$BLEND_A1_AR" "$BLEND_A1_SHA256_AR" "blend a0.1 AR"
+sha_warn "$LORAS/blend/$BLEND_A1_NAR" "$BLEND_A1_SHA256_NAR" "blend a0.1 NAR"
+sha_warn "$LORAS/blend/$BLEND_A15_AR" "$BLEND_A15_SHA256_AR" "blend a0.15 AR"
+sha_warn "$LORAS/blend/$BLEND_A15_NAR" "$BLEND_A15_SHA256_NAR" "blend a0.15 NAR"
 mkdir -p "$LORAS/instrumental"
 hf download "$HF_INST_LORA_REPO" "$HF_INST_LORA" --local-dir "$LORAS/instrumental" >/dev/null && ok "instrumental LoRA"
 if [ -f "$LORAS/instrumental/$HF_INST_LORA" ]; then
