@@ -39,6 +39,7 @@ the manifest lives in `manifests/`. A manifest with assets next to it can omit
 | `fadhl_shaker_instrumental_06_habeetak_polish.json` | 7 | Round 06: improve the winning full-transcription take with NAR v9 vs Arabic NAR, section tags, a compact style, and 32 ODE steps. |
 | `fadhl_shaker_instrumental_07_prompt_sweep.json` | 6 | Round 07: generic (song-agnostic) style-prompt sweep — bare vs generic cover vs generic dense vs prose control vs +Arabic vs section tags; no instrument/key/BPM hardcoding. |
 | `yt500_instrumental_489.json` | 489 | YT500 corpus, exactly the round-18 recipe (style, instrumental_v9 LoRAs, scales, `cot=full`, `lyrics_from_score`). Scores are materialized by `plumbing/yt500_generation_corpus.py --fetch`; 489 of 495 tracks. |
+| `imru_al_qais_sama_laka_shawqun_mix_grid.json` | 15 | Imru' al-Qais (`سما لك شوق`) five poems × blend `a0.1`/`a0.15`/`a0.2`; one memorable-prime seed per poem shared across the three arms, `repeat: 1`, `guidance_scale: 1.5`, `lora_ar_scale: 0.75`. Lyrics/styles inline from `imru_al_qais_sama_laka_shawqun.json` (base prompt per `docs/base-prompt.md`); expects the `install.sh` layout `loras/blend/{a0.1,a0.15,a0.2}/`. |
 
 Validate any manifest without a GPU:
 
