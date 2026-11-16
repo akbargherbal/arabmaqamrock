@@ -22,6 +22,7 @@ def make_args(**overrides) -> argparse.Namespace:
         mp3_bitrate="192k", mp3_cache="/tmp/mp3-cache",
         transcode_unverified=False, legacy_transcripts=False,
         compression="gzip", require_run_manifest=False,
+        include_wav=False, allow_concurrent=False,
     )
     values.update(overrides)
     return argparse.Namespace(**values)
@@ -128,19 +129,99 @@ class SyncRunTests(unittest.TestCase):
                 compress_transcripts=True)
         self.assertEqual(copied, [wav])
 
-    def test_policy_error_falls_back_to_legacy_sync(self):
+    def test_policy_error_keeps_wavs_local(self):
         args = make_args()
         calls = []
         with mock.patch.object(backup_to_gcp, "export_run",
                                side_effect=audio_export.PolicyError("bad")), \
              mock.patch.object(backup_to_gcp, "sync",
                                side_effect=lambda *a, **k:
-                               calls.append(k.get("exclude")) or True):
+                               calls.append(list(k.get("exclude", []))) or True):
             ok = backup_to_gcp.sync_run(
                 self.run_dir, "gs://b/runs/run", args, mock.Mock(),
                 compress_transcripts=True)
         self.assertTrue(ok)
-        self.assertEqual(calls, [None])
+        self.assertEqual(calls, [[
+            backup_to_gcp.WAV_EXCLUDE, backup_to_gcp.TRANSCRIPT_RAW_EXCLUDE]])
+
+    def test_policy_error_with_include_wav_syncs_wavs(self):
+        args = make_args(include_wav=True)
+        calls = []
+        with mock.patch.object(backup_to_gcp, "export_run",
+                               side_effect=audio_export.PolicyError("bad")), \
+             mock.patch.object(backup_to_gcp, "sync",
+                               side_effect=lambda *a, **k:
+                               calls.append(list(k.get("exclude", []))) or True):
+            backup_to_gcp.sync_run(
+                self.run_dir, "gs://b/runs/run", args, mock.Mock(),
+                compress_transcripts=True)
+        self.assertEqual(calls, [[backup_to_gcp.TRANSCRIPT_RAW_EXCLUDE]])
+
+    def test_failed_mp3_withholds_wav_by_default(self):
+        args = make_args()
+        wav = self.run_dir / "take_1.wav"
+        wav.write_bytes(b"x")
+        report = audio_export.ExportReport(
+            run_dir=self.run_dir,
+            policy=audio_export.UploadPolicy(),
+            fallbacks=[wav],
+            errors=[(wav, "no ffmpeg")],
+        )
+        copied = []
+        logger = mock.Mock()
+        with mock.patch.object(backup_to_gcp, "export_run", return_value=report), \
+             mock.patch.object(backup_to_gcp, "sync", return_value=True), \
+             mock.patch.object(backup_to_gcp, "cache_run_dir",
+                               return_value=self.cache), \
+             mock.patch.object(backup_to_gcp, "copy_file",
+                               side_effect=lambda src, dst, *a, **k:
+                               copied.append(Path(src)) or True):
+            ok = backup_to_gcp.sync_run(
+                self.run_dir, "gs://b/runs/run", args, logger,
+                compress_transcripts=True)
+        self.assertTrue(ok)
+        self.assertEqual(copied, [])
+        warnings = " ".join(str(c.args[0]) for c in logger.warning.call_args_list)
+        self.assertIn("NOT uploaded", warnings)
+        self.assertIn("--include-wav", warnings)
+
+    def test_include_wav_uploads_fallback(self):
+        args = make_args(include_wav=True)
+        wav = self.run_dir / "take_1.wav"
+        wav.write_bytes(b"x")
+        report = audio_export.ExportReport(
+            run_dir=self.run_dir,
+            policy=audio_export.UploadPolicy(),
+            fallbacks=[wav],
+            errors=[(wav, "no ffmpeg")],
+        )
+        copied = []
+        with mock.patch.object(backup_to_gcp, "export_run", return_value=report), \
+             mock.patch.object(backup_to_gcp, "sync", return_value=True), \
+             mock.patch.object(backup_to_gcp, "cache_run_dir",
+                               return_value=self.cache), \
+             mock.patch.object(backup_to_gcp, "copy_file",
+                               side_effect=lambda src, dst, *a, **k:
+                               copied.append(Path(src)) or True):
+            backup_to_gcp.sync_run(
+                self.run_dir, "gs://b/runs/run", args, mock.Mock(),
+                compress_transcripts=True)
+        self.assertEqual(copied, [wav])
+
+
+class DaemonLockTests(unittest.TestCase):
+    def test_second_lock_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(backup_to_gcp, "REPO_ROOT", Path(tmp)):
+            logger = mock.Mock()
+            first = backup_to_gcp.acquire_daemon_lock("gs://b/run", logger)
+            self.assertIsNotNone(first)
+            try:
+                self.assertIsNone(
+                    backup_to_gcp.acquire_daemon_lock("gs://b/run", logger))
+                logger.error.assert_called()
+            finally:
+                first.close()
 
 
 if __name__ == "__main__":

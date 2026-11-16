@@ -89,3 +89,14 @@ and experiment manifests are exempt.
   reference manifest; `MODEL_CARD.md` now records that `a0.15` won the
   listening batch while `a0.2` was the merge-time intended primary — authority:
   same.
+- 2026-11-16 — `plumbing/backup_to_gcp.py`, `plumbing/audio_export.py`,
+  `plumbing/README.md`, `README.md`, tests — a failed MP3 export no longer
+  uploads the WAV by default: the take is withheld for that pass, retried next
+  pass, and the warning names it plus the `--include-wav` opt-in; a daemon lock
+  refuses a second `--interval-minutes` loop (`--allow-concurrent` overrides,
+  `--once` unaffected) and the encode temp file is per-process — authority: the
+  2026-11-16 `logs/gcp_backup.log`, which shows two daemons (5-min from setup at
+  12:15:12, 2-min manual at 12:18:58) racing on `<take>.mp3.tmp`; the resulting
+  `Errno 2` / `ffmpeg wrote no MP3` errors at 13:43:10, 14:40:30 and 15:06:32
+  pushed three WAVs into `runs/20261116-121703_*` although their MP3s succeeded
+  seconds later (`rsync` never deletes, so they stayed).

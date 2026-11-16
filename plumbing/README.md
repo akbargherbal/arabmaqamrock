@@ -18,7 +18,8 @@ gs://akbar-december-2024-backup/arabmaqamrock/
   binaries/<arch-tag>/audiocpp_cli + .sha256 + manifest.json   prebuilt, arch-selected
   runs/<timestamp>_<label>/                                    mirrored from ./out/
     <take>.mp3                    default: trial audio (WAV stays local)
-    <take>.wav                    only for takes marked in UPLOAD_POLICY.json
+    <take>.wav                    only for takes marked in UPLOAD_POLICY.json,
+                                  or with --include-wav when the MP3 fails
     UPLOAD_POLICY.json            optional per-run audio policy
     transcripts/<take>.tar.gz     compressed complete transcription dirs
     transcripts/_archive_index.json
@@ -32,8 +33,10 @@ gs://akbar-december-2024-backup/arabmaqamrock/
 Generation always writes WAV locally. `backup_to_gcp.py` transcodes finished
 WAVs to MP3 in `.cache/gcs_mp3/` (outside `out/`) and uploads only the MP3 by
 default. A take or run opted into WAV with `mark_production.py` uploads the WAV
-instead. Finished transcript song directories are archived to `<take>.tar.gz`
-before upload; incomplete ones are never archived.
+instead. If an MP3 export fails, the take is **not** uploaded as WAV by
+default: the pass logs a warning and retries next pass (`--include-wav` opts
+into uploading the WAV anyway). Finished transcript song directories are
+archived to `<take>.tar.gz` before upload; incomplete ones are never archived.
 
 The GGUF model and the LoRA are **not** here — they come from Hugging Face and are
 re-downloaded on a fresh VM.
@@ -70,6 +73,7 @@ python plumbing/binary_registry.py --check    # manifest sha256 vs published .sh
 
 python plumbing/backup_to_gcp.py --once     # one backup pass
 python plumbing/backup_to_gcp.py            # daemon every 5 min
+python plumbing/backup_to_gcp.py --include-wav   # allow WAV on MP3 failure
 # inspect the policies without uploading:
 python plumbing/backup_to_gcp.py --once --dry-run
 python plumbing/audio_export.py out/<run> --dry-run
@@ -79,7 +83,14 @@ python plumbing/mark_production.py out/<run> --take <name>_<seed>
 ```
 
 Escape hatches: `--audio-upload wav` restores the old upload-everything-WAV
-behaviour, and `--legacy-transcripts` uploads raw transcript directories.
+behaviour, `--include-wav` uploads a take's WAV when its MP3 export fails
+(default: withhold and retry), and `--legacy-transcripts` uploads raw
+transcript directories.
+
+Only one backup daemon may run per checkout: a second `--interval-minutes`
+loop exits with code 4 ("another backup daemon is already running") instead of
+duplicating the sync. `--allow-concurrent` overrides, and `--once` is always
+allowed (handy for cron).
 
 The transcription venv and its module cache are git-ignored
 (`.venv-sheetsage2/`, `.cache/`). Nothing in the generation path imports them.
@@ -99,9 +110,14 @@ pgrep -af backup_to_gcp.py
   `binaries/<tag>/manifest.json` records the commit, and `fetch_binary.sh --build
   --publish` rebuilds and re-records it.
 - **MP3 trials need `ffmpeg`.** If it is missing (or an encode fails), the
-  sidecar uploads the WAV for that take instead of dropping audio. The MP3
-  cache is local (`.cache/gcs_mp3/`) and is never placed inside `out/`, so
+  take is withheld from that pass and retried; the pass logs which takes were
+  skipped and how to upload them as WAV (`--include-wav`). The MP3 cache is
+  local (`.cache/gcs_mp3/`) and is never placed inside `out/`, so
   `transcribe.py` still sees one audio file per take.
+- **Never run two daemons on one checkout.** They race on the same
+  `<take>.mp3.tmp` cache file, which looks like an encode failure; the daemon
+  lock now refuses the second loop. `gsutil rsync` never deletes, so a WAV
+  uploaded by accident stays until you remove it by hand.
 - **Building needs no GPU** (`nvcc` cross-compiles for `--cuda-arch`); it needs the
   CUDA toolkit + cmake + ccache and takes ~21 min cold.
 - `GCP_ROOT` (bucket root) is runtime-supplied, never hardcoded in the scripts beyond a

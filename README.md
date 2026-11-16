@@ -342,15 +342,20 @@ plans/<name>_<seed>/score.abc   model-planned score (cot != off, no score given)
 
 Generation always writes the `.wav` locally. The GCS backup sidecar treats
 runs as trials by default: it transcodes finished WAVs to MP3 and uploads only
-the MP3. To keep a take (or a whole run) as WAV in GCS:
+the MP3. If an encode fails, that take is withheld from the pass and retried —
+no WAV is uploaded unless you ask for it. To keep a take (or a whole run) as
+WAV in GCS:
 
 ```bash
 python plumbing/mark_production.py out/<run> --take <name>_<seed>
 # or: python plumbing/mark_production.py out/<run> --all
 ```
 
-The next backup pass uploads the selected WAVs. Revert to the old upload
-behaviour for one pass with `backup_to_gcp.py --audio-upload wav`.
+The next backup pass uploads the selected WAVs. For a global escape hatch use
+`backup_to_gcp.py --include-wav` (WAV on encode failure) or `--audio-upload wav`
+(the old upload-everything-WAV behaviour). Running a second daemon in another
+terminal is refused while the first one is alive; GCS never deletes, so a WAV
+uploaded by accident has to be removed by hand.
 
 ## Optional: symbolic transcription
 

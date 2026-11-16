@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 import tempfile
@@ -207,6 +208,28 @@ class EncodeTests(Base):
                 audio_export.ensure_mp3(self.run_dir, wav, self.cache, "128k")
         mp3 = audio_export.mp3_cache_path(self.cache, self.run_dir, wav)
         self.assertFalse(mp3.exists())
+
+    def test_tmp_name_is_per_process(self):
+        wav = self.take("a_1")
+        seen: list[str] = []
+
+        def fake_run(cmd, **kw):
+            if cmd[-1].endswith(".tmp"):
+                seen.append(cmd[-1])
+                Path(cmd[-1]).write_bytes(b"mp3")
+
+        with mock.patch.object(audio_export, "_require_tool",
+                               return_value="ffmpeg"), \
+             mock.patch.object(audio_export, "_run_command",
+                               side_effect=fake_run), \
+             mock.patch.object(audio_export, "probe_duration",
+                               return_value=None):
+            result = audio_export.ensure_mp3(
+                self.run_dir, wav, self.cache, "128k")
+        self.assertEqual(result.status, "created")
+        self.assertEqual(len(seen), 1)
+        self.assertTrue(seen[0].endswith(f".{os.getpid()}.tmp"))
+        self.assertNotEqual(seen[0], str(result.mp3) + ".tmp")
 
     def test_index_records_wav_size_not_mp3_size(self):
         wav = self.take("a_1", seconds=0.5)

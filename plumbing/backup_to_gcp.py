@@ -14,10 +14,18 @@ its size settles, so a torn upload self-heals.
 
 By default this sidecar treats every run as a trial: finished WAVs are
 transcoded to MP3 (cached under `.cache/gcs_mp3/`) and only the MP3 is
-uploaded. A run can opt into WAV upload with `UPLOAD_POLICY.json` (see
+uploaded. If the MP3 export fails, the take is withheld from that pass and
+retried on the next one — pass `--include-wav` to upload the WAV instead
+(remember: `gsutil rsync` never deletes, so an uploaded WAV stays). A run can
+opt into WAV upload with `UPLOAD_POLICY.json` (see
 `plumbing/mark_production.py`). Finished per-song transcript directories are
 archived to `<take>.tar.gz` before upload. Both behaviours have escape hatches:
 `--audio-upload wav` and `--legacy-transcripts`.
+
+Only one daemon may mirror the prefix at a time: a second `--interval-minutes`
+loop refuses to start (use `--allow-concurrent` to override). Two daemons used
+to race on the same MP3 temp file, which looked like an encode failure and
+uploaded WAVs by the fallback path.
 
 A `run_manifest.json` is written at the prefix root so the prefix identifies
 itself and refuses to be shared by a different `--run-name`.
@@ -38,6 +46,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import json
 import logging
 import os
@@ -150,6 +159,13 @@ def parse_args() -> argparse.Namespace:
                    help="Upload format for finished WAV takes: 'mp3' (default) "
                         "transcodes and uploads MP3; 'wav' is the old behaviour. "
                         "UPLOAD_POLICY.json can select WAV per take/run.")
+    p.add_argument("--include-wav", action="store_true",
+                   help="Upload the WAV of a take whose MP3 export fails. "
+                        "Default: withhold that take from the pass and retry "
+                        "next pass — a WAV uploaded to GCS is never deleted.")
+    p.add_argument("--allow-concurrent", action="store_true",
+                   help="Start the daemon even if another one already holds "
+                        "the lock (two daemons make duplicate syncs).")
     p.add_argument("--mp3-bitrate", default=DEFAULT_BITRATE,
                    help=f"MP3 bitrate (default: {DEFAULT_BITRATE}).")
     p.add_argument("--mp3-cache", default=str(DEFAULT_MP3_CACHE),
@@ -240,6 +256,7 @@ def ensure_manifest(prefix: str, run_name: str, targets, args: argparse.Namespac
         "base": args.base,
         "prefix": prefix,
         "audio_upload": args.audio_upload,
+        "include_wav": args.include_wav,
         "mp3_bitrate": args.mp3_bitrate if args.audio_upload == "mp3" else None,
         "transcript_archives": not args.legacy_transcripts,
         "transcript_compression": (args.compression
@@ -342,10 +359,16 @@ def sync_run(run_dir: Path, remote_dir: str, args: argparse.Namespace,
             bitrate=args.mp3_bitrate,
             require_finished=not args.transcode_unverified,
             dry_run=args.dry_run, logger=logger)
-    except Exception as exc:  # noqa: BLE001 - never lose the backup
-        logger.error("audio policy failed for %s: %s; uploading WAVs as "
-                     "a safe fallback", run_dir, exc)
-        return sync(run_dir, remote_dir, args, logger)
+    except Exception as exc:  # noqa: BLE001 - a broken policy must not stop the mirror
+        logger.error("audio policy failed for %s: %s", run_dir, exc)
+        excludes = run_excludes(args, compress_transcripts=compress_transcripts)
+        if args.include_wav or args.audio_upload == "wav":
+            excludes = [p for p in excludes if p != WAV_EXCLUDE]
+        else:
+            logger.warning("%s: WAVs stay local (default) until the policy is "
+                           "fixed; pass --include-wav to upload them anyway.",
+                           run_dir)
+        return sync(run_dir, remote_dir, args, logger, exclude=excludes)
 
     logger.info("audio %s: %s", run_dir, report.summary())
 
@@ -360,12 +383,26 @@ def sync_run(run_dir: Path, remote_dir: str, args: argparse.Namespace,
         ok = sync(cache_dir, remote_dir, args, logger,
                   exclude=[r".*\.json$"]) and ok
 
-    for wav in report.wavs + report.fallbacks:
+    # Policy-selected takes (mark_production.py) are explicit per-run opt-ins.
+    for wav in report.wavs:
         ok = copy_file(wav, remote_dir, args, logger) and ok
 
     if report.fallbacks:
-        logger.warning("%s: %d WAV(s) uploaded because MP3 export failed",
-                       run_dir, len(report.fallbacks))
+        if args.include_wav:
+            for wav in report.fallbacks:
+                ok = copy_file(wav, remote_dir, args, logger) and ok
+            logger.warning("%s: %d WAV(s) uploaded because MP3 export failed "
+                           "(--include-wav)", run_dir, len(report.fallbacks))
+        else:
+            names = ", ".join(w.name for w in report.fallbacks[:3])
+            if len(report.fallbacks) > 3:
+                names += f" (+{len(report.fallbacks) - 3} more)"
+            logger.warning(
+                "%s: %d take(s) NOT uploaded this pass: MP3 export failed for "
+                "%s. No WAV was uploaded (default) and the take will be "
+                "retried next pass. Use --include-wav to upload the WAV now, "
+                "or mark_production.py to keep selected takes as WAV.",
+                run_dir, len(report.fallbacks), names)
     return ok
 
 
@@ -407,6 +444,43 @@ def sync_out_root(out_root: Path, remote_root: str, args: argparse.Namespace,
     for path in top_files:
         copy_file(path, remote_root, args, logger)
     return synced, len(runs)
+
+
+def acquire_daemon_lock(prefix: str, logger: logging.Logger):
+    """Hold an exclusive lock so two daemons never mirror the same prefix.
+
+    Two loops used to race on the same ``<take>.mp3.tmp`` file: one renamed it
+    while the other was still writing, the loser looked like an encode failure,
+    and the fallback pushed the WAV to GCS permanently. Returns the open lock
+    handle (keep it alive for the process lifetime), or None when held.
+    """
+    try:
+        import fcntl
+    except ImportError:  # pragma: no cover - non-POSIX
+        return None
+
+    safe = re.sub(r"[^A-Za-z0-9._-]+", "-", prefix).strip("-")[-40:] or "prefix"
+    digest = hashlib.sha256(prefix.encode("utf-8")).hexdigest()[:8]
+    path = REPO_ROOT / ".cache" / f"gcp_backup.{safe}.{digest}.lock"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    handle = open(path, "a+", encoding="utf-8")  # noqa: SIM115 - lives with the daemon
+    try:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        handle.seek(0)
+        holder = handle.read().strip() or "unknown"
+        handle.close()
+        logger.error("another backup daemon is already running (pid %s) for "
+                     "%s; refusing to duplicate the sync. Pass "
+                     "--allow-concurrent only if you really want two loops.",
+                     holder, prefix)
+        return None
+    handle.seek(0)
+    handle.truncate()
+    handle.write(str(os.getpid()))
+    handle.flush()
+    logger.info("daemon lock: %s", path)
+    return handle
 
 
 def main() -> int:
@@ -457,11 +531,21 @@ def main() -> int:
                 args.once, args.dry_run)
     logger.info("audio upload: %s (mp3 bitrate=%s, cache=%s)",
                 args.audio_upload, args.mp3_bitrate, args.mp3_cache)
+    logger.info("wav on mp3 failure: %s",
+                "enabled (--include-wav)" if args.include_wav else
+                "off — the take is skipped and retried; pass --include-wav to "
+                "upload its WAV (GCS never deletes, so it would stay)")
     logger.info("transcript archives: %s (compression=%s, require-manifest=%s)",
                 not args.legacy_transcripts, args.compression,
                 args.require_run_manifest)
     for src, sub, _ in targets:
         logger.info("  watching %s -> %s/%s", src, prefix, sub)
+
+    lock = None
+    if not args.once and not args.dry_run and not args.allow_concurrent:
+        lock = acquire_daemon_lock(prefix, logger)
+        if lock is None:
+            return 4
 
     if not ensure_manifest(prefix, args.run_name, targets, args, logger):
         return 3

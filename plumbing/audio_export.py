@@ -329,7 +329,10 @@ def ensure_mp3(run_dir: Path, wav: Path, cache_root: Path,
     ffmpeg = _require_tool("ffmpeg")
     _require_tool("ffprobe")
     mp3.parent.mkdir(parents=True, exist_ok=True)
-    tmp = mp3.with_name(mp3.name + ".tmp")
+    # Per-process temp name: two backup processes encoding the same take must
+    # not rename/unlink each other's half-written file (that race used to look
+    # like "ffmpeg wrote no MP3" and pushed the WAV to GCS).
+    tmp = mp3.with_name(f"{mp3.name}.{os.getpid()}.tmp")
     try:
         _run_command([
             ffmpeg, "-nostdin", "-hide_banner", "-loglevel", "error", "-y",
@@ -442,8 +445,7 @@ def export_run(run_dir: Path, cache_root: Path, *,
             report.errors.append((wav, str(exc)))
             report.fallbacks.append(wav)
             report.results.append(Mp3Result(wav, None, "failed", str(exc)))
-            _log(logger, "error", "mp3 failed for %s: %s; WAV will be uploaded",
-                 wav.name, exc)
+            _log(logger, "error", "mp3 failed for %s: %s", wav.name, exc)
             continue
         report.results.append(result)
         if result.status in ("created", "cached", "planned") and result.mp3:
