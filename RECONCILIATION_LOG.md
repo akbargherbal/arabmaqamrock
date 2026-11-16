@@ -100,3 +100,11 @@ and experiment manifests are exempt.
   `Errno 2` / `ffmpeg wrote no MP3` errors at 13:43:10, 14:40:30 and 15:06:32
   pushed three WAVs into `runs/20261116-121703_*` although their MP3s succeeded
   seconds later (`rsync` never deletes, so they stayed).
+- 2026-11-16 — `run_one.sh`, `README.md` — the per-take `_gpu.csv` now starts
+  with a header row and carries `timestamp_utc,elapsed_s,gpu_index` alongside
+  the four `nvidia-smi` fields (`gpu_util_pct`, `mem_used_mib`, `power_w`,
+  `temp_c`), one row per visible GPU per second; `[N/A]` passes through — the
+  old files had four bare columns with no labels, no time reference and no GPU
+  index, and were left untouched (bygones) — authority: `run_one.sh` lines
+  that write the CSV and a real 2026-11-16 trace (max 100 %, 11329 MiB,
+  95.52 W, 81 °C, confirming the field order).

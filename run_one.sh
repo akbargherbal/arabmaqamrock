@@ -25,7 +25,9 @@
 #   $OUT/<Maqam>_<seed>.wav        audio
 #   $OUT/<Maqam>_<seed>.log        CLI --log (TRACE/TIMING, errors)
 #   $OUT/<Maqam>_<seed>_time.txt   /usr/bin/time -v (wall, max RSS, CPU%)
-#   $OUT/<Maqam>_<seed>_gpu.csv    1 Hz: util, mem_used, power, temp
+#   $OUT/<Maqam>_<seed>_gpu.csv    1 Hz GPU trace, with a header row:
+#                                  timestamp_utc, elapsed_s, gpu_index,
+#                                  gpu_util_pct, mem_used_mib, power_w, temp_c
 #   $OUT/_runs_status.log          one START/END line per run (always)
 set -u
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -86,9 +88,26 @@ else
   CAP="$CAP_ARG"
 fi
 
-: > "$csv"
-( while :; do nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw,temperature.gpu \
-    --format=csv,noheader,nounits >> "$csv" 2>/dev/null; sleep 1; done ) &
+# 1 Hz GPU trace. The header makes the file readable on its own; one row per
+# visible GPU per second. Units: percent, MiB, W, °C. nvidia-smi prints [N/A]
+# for a field the driver does not expose, so such rows pass through verbatim.
+printf '%s\n' \
+  'timestamp_utc,elapsed_s,gpu_index,gpu_util_pct,mem_used_mib,power_w,temp_c' \
+  > "$csv"
+gpu_t0=$(date +%s)
+( while :; do
+    ts=$(date -u +%FT%TZ)
+    el=$(( $(date +%s) - gpu_t0 ))
+    idx=0
+    while IFS= read -r row; do
+      [ -n "$row" ] || continue
+      row="${row// /}"
+      printf '%s,%s,%s,%s\n' "$ts" "$el" "$idx" "$row" >> "$csv"
+      idx=$((idx + 1))
+    done < <(nvidia-smi --query-gpu=utilization.gpu,memory.used,power.draw,temperature.gpu \
+               --format=csv,noheader,nounits 2>/dev/null)
+    sleep 1
+  done ) &
 SM=$!
 
 line="=== START ${M} seed=${S} cap=${CAP} (${CAP_ARG}) cot=${COT} abc=${ABC_FILE:-none} ar_lora=${LORA_AR} nar_lora=${LORA_NAR} $(date -u +%FT%TZ) ==="

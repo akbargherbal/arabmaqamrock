@@ -340,6 +340,13 @@ plans/<name>_<seed>/score.abc   model-planned score (cot != off, no score given)
 
 `out/latest` names the newest run. Re-run with `--out-dir <folder>` to resume.
 
+`_gpu.csv` is a 1 Hz GPU trace with a header row:
+`timestamp_utc,elapsed_s,gpu_index,gpu_util_pct,mem_used_mib,power_w,temp_c`
+(one row per visible GPU; `[N/A]` passes through when the driver does not report
+a field). Host wall time, peak RSS and CPU% are in `_time.txt`, not the CSV.
+Runs recorded before 2026-11-16 have headerless CSV files (four GPU columns in
+the same order); they were left as-is.
+
 Generation always writes the `.wav` locally. The GCS backup sidecar treats
 runs as trials by default: it transcodes finished WAVs to MP3 and uploads only
 the MP3. If an encode fails, that take is withheld from the pass and retried —
