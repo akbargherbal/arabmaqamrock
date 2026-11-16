@@ -5,12 +5,12 @@
   },
   "loras": {
     "a01": {
-      "ar": "loras/experiments/mix_v3/a0.1/v3instr_a0.1_ar.safetensors",
-      "nar": "loras/experiments/mix_v3/a0.1/v3instr_a0.1_nar.safetensors"
+      "ar": "loras/v3instr_a0.1_ar.safetensors",
+      "nar": "loras/v3instr_a0.1_nar.safetensors"
     },
     "p015": {
-      "ar": "loras/experiments/prototypes/a0.15/v3_arabmaqamrock_lora__arabic_instrumental_lora__a0.15_ar.safetensors",
-      "nar": "loras/experiments/prototypes/a0.15/v3_arabmaqamrock_lora__arabic_instrumental_lora__a0.15_nar.safetensors"
+      "ar": "loras/v3_arabmaqamrock_lora__arabic_instrumental_lora__a0.15_ar.safetensors",
+      "nar": "loras/v3_arabmaqamrock_lora__arabic_instrumental_lora__a0.15_nar.safetensors"
     }
   },
   "songs": [
