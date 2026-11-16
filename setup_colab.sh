@@ -3,16 +3,18 @@
 # Fresh Colab VM -> ready to generate, in one command.
 #
 #   ./setup_colab.sh
+#   ./setup_colab.sh --verify            # re-hash cached LoRAs too (default: only fresh)
 #   ./setup_colab.sh --with-transcribe   # also build the optional CPU transcription env
 #
 # Does, in order:
 #   1. sanity-check tooling (nvidia-smi, gcloud/gsutil auth, hf, python3) and
 #      install GNU time if absent (run_one.sh wraps the binary in /usr/bin/time)
 #   2. stage the prebuilt audiocpp_cli for this GPU's arch (./plumbing/fetch_binary.sh)
-#   3. download the YuE2 GGUF model + the three ArabMaqamRock LoRA sets from
-#      Hugging Face (v3 style pair, own instrumental pair, blend pairs
-#      a0.1/a0.15/a0.2), plus the two third-party adapters used by the
-#      round-04/06 manifests
+#   3. download the YuE2 GGUF model + the default ArabMaqamRock LoRA sets from
+#      Hugging Face: the blend a0.15 pair (v3 x instrumental, alpha baked in)
+#      and the own Arabic-instrumental pair. The other own sets (v3 style pair,
+#      blend a0.1/a0.2) and the two third-party adapters (round-04/06) are
+#      staged as commented-out downloads: uncomment when a manifest needs them.
 #   4. start the GCS backup sidecar (detached; MP3 trials + transcript archives)
 #
 # Idempotent: re-running skips what is already present. Nothing here needs a build
@@ -22,9 +24,11 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 . plumbing/env.sh
 
 WITH_TRANSCRIBE=0
+FORCE_VERIFY=0       # 0 = sha256 only for files fetched in this run (fast restart)
 while [ $# -gt 0 ]; do
   case "$1" in
     --with-transcribe) WITH_TRANSCRIBE=1; shift ;;
+    --verify)          FORCE_VERIFY=1; shift ;;
     -h|--help)         awk 'NR>1 && /^set -euo/{exit} NR>1{print}' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
@@ -37,21 +41,24 @@ mkdir -p "$MODELS" "$LORAS" "$LOG_DIR"
 
 HF_GGUF_REPO="audio-cpp/Yue2-3B-GGUF"
 HF_LORA_REPO="akbargherbal/arabmaqamrock-yue2-lora"
+# v3 style/voice pair — OPT-IN, not staged by default (the blend a0.15 pair
+# already carries its character). The download block is commented in section 3.
 LORA_AR="arabmaqamrock-v3-ar.safetensors"
 LORA_NAR="arabmaqamrock-v3-nar.safetensors"
 LORA_SHA256_AR="3531bb9106d2292eefe58eabe11ec08bb7dddc69554f2b016dc9f13f711fab18"
 LORA_SHA256_NAR="a7eabcadb22146048bcb5e65d04828ee9454559523ca161bd38c06060deb0cae"
 # Own Arabic-instrumental pair (no vocals; also the donor behind the blends).
-# NB: the round-04 third-party adapter below is a DIFFERENT adapter and is still
-# used by the fadhl_shaker_instrumental manifests — both are staged.
+# DEFAULT: staged by section 3.
+# NB: the round-04 third-party adapter below is a DIFFERENT adapter, used by the
+# fadhl_shaker_instrumental manifests — it is opt-in and commented out.
 HF_INSTR_OWN_REPO="akbargherbal/arabic-instrumental-yue2-lora"
 INSTR_OWN_AR="arabic-instrumental-ar.safetensors"
 INSTR_OWN_NAR="arabic-instrumental-nar.safetensors"
 INSTR_OWN_SHA256_AR="69517eea8bbc9fec2ace47c271f1bde7058881e89eabe9f9c0b10cb91ae97edb"
 INSTR_OWN_SHA256_NAR="f84fdd4e9332c8be27e2d716fec9048f3d8ea3835c5e7582d6689322b6e0ea2f"
 # Blends: rank-concat merges of the v3 pair with the instrumental pair; the
-# alpha is baked into the files (0.1 conservative floor, 0.15 middle setting,
-# 0.2 intended primary arm — 16.5% donor share).
+# alpha is baked into the files. DEFAULT: a0.15 only (the middle setting).
+# a0.1 (conservative floor) and a0.2 (16.5% donor share) are OPT-IN below.
 HF_BLEND_REPO="akbargherbal/arabmaqamrock-blend-yue2-lora"
 BLEND_A1_AR="a0.1/v3instr_a0.1_ar.safetensors"
 BLEND_A1_NAR="a0.1/v3instr_a0.1_nar.safetensors"
@@ -108,52 +115,71 @@ fi
 echo "== 2. binary =="
 ./plumbing/fetch_binary.sh
 
-echo "== 3. model + LoRA =="
+echo "== 3. model + LoRA (default: blend a0.15 + own instrumental) =="
 hf download "$HF_GGUF_REPO" yue2-3b-bf16.gguf yue2-vae-f16.gguf --local-dir "$MODELS" >/dev/null && ok "ggufs"
 hf download "$HF_GGUF_REPO" --include "sidecars/*" --local-dir "$MODELS" >/dev/null && ok "sidecars"
-hf download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS" >/dev/null && ok "v3 LoRA"
 mkdir -p "$LORAS/arabic-instrumental"
 hf download "$HF_INSTR_OWN_REPO" "$INSTR_OWN_AR" "$INSTR_OWN_NAR" --local-dir "$LORAS/arabic-instrumental" >/dev/null && ok "own instrumental LoRA"
-mkdir -p "$LORAS/blend/a0.1" "$LORAS/blend/a0.15" "$LORAS/blend/a0.2"
-hf download "$HF_BLEND_REPO" "$BLEND_A1_AR" "$BLEND_A1_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.1"
+mkdir -p "$LORAS/blend/a0.15"
 hf download "$HF_BLEND_REPO" "$BLEND_A15_AR" "$BLEND_A15_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.15"
-hf download "$HF_BLEND_REPO" "$BLEND_A2_AR" "$BLEND_A2_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.2"
 
-# sha256 pins for every own adapter (warn-only: a corrected upstream re-upload
-# should not brick the setup).
+# --- optional LoRAs: NOT downloaded by default -------------------------------
+# The blend a0.15 pair already carries the v3 style/voice character, so the
+# standalone v3 pair, the a0.1/a0.2 blend arms and the two third-party adapters
+# are staged only on demand. Uncomment a block (download + its sha256 line) when
+# a manifest needs it.
+#
+# hf download "$HF_LORA_REPO" "$LORA_AR" "$LORA_NAR" --local-dir "$LORAS" >/dev/null && ok "v3 LoRA"
+# mkdir -p "$LORAS/blend/a0.1" "$LORAS/blend/a0.2"
+# hf download "$HF_BLEND_REPO" "$BLEND_A1_AR" "$BLEND_A1_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.1"
+# hf download "$HF_BLEND_REPO" "$BLEND_A2_AR" "$BLEND_A2_NAR" --local-dir "$LORAS/blend" >/dev/null && ok "blend a0.2"
+#
+# Round-04 third-party AR-only instrumental adapter (fadhl_shaker_instrumental
+# manifests; loaded instead of the arabmaqamrock AR adapter, NAR stays at 0):
+# mkdir -p "$LORAS/instrumental"
+# hf download "$HF_INST_LORA_REPO" "$HF_INST_LORA" --local-dir "$LORAS/instrumental" >/dev/null && ok "instrumental LoRA"
+#
+# Round-06 NAR decoder LoRA (the third-party adapter's recommended pairing):
+# mkdir -p "$LORAS/nar"
+# hf download "$HF_NAR_LORA_REPO" "$HF_NAR_LORA" --local-dir "$LORAS/nar" >/dev/null && ok "NAR v9 LoRA"
+
+# sha256 pins for the default adapters (warn-only: a corrected upstream
+# re-upload should not brick the setup). Cached files are skipped unless
+# --verify is passed, so a re-run stays fast.
 sha_warn() {  # file, expected, label
-  if [ -f "$1" ]; then
-    if echo "$2  $1" | sha256sum -c - >/dev/null 2>&1; then
-      ok "sha256: $3"
-    else
-      warn "sha256 mismatch: $3 ($1)"
-    fi
+  [ -f "$1" ] || return 0
+  if [ "$FORCE_VERIFY" = 0 ] \
+     && [ $(( $(date +%s) - $(stat -c %Y "$1") )) -gt 300 ]; then
+    echo "  [skip] sha256: $3 (cached — use --verify to re-hash)"
+    return 0
+  fi
+  if echo "$2  $1" | sha256sum -c - >/dev/null 2>&1; then
+    ok "sha256: $3"
+  else
+    warn "sha256 mismatch: $3 ($1)"
   fi
 }
-sha_warn "$LORAS/$LORA_AR" "$LORA_SHA256_AR" "v3 AR"
-sha_warn "$LORAS/$LORA_NAR" "$LORA_SHA256_NAR" "v3 NAR"
 sha_warn "$LORAS/arabic-instrumental/$INSTR_OWN_AR" "$INSTR_OWN_SHA256_AR" "own instrumental AR"
 sha_warn "$LORAS/arabic-instrumental/$INSTR_OWN_NAR" "$INSTR_OWN_SHA256_NAR" "own instrumental NAR"
-sha_warn "$LORAS/blend/$BLEND_A1_AR" "$BLEND_A1_SHA256_AR" "blend a0.1 AR"
-sha_warn "$LORAS/blend/$BLEND_A1_NAR" "$BLEND_A1_SHA256_NAR" "blend a0.1 NAR"
 sha_warn "$LORAS/blend/$BLEND_A15_AR" "$BLEND_A15_SHA256_AR" "blend a0.15 AR"
 sha_warn "$LORAS/blend/$BLEND_A15_NAR" "$BLEND_A15_SHA256_NAR" "blend a0.15 NAR"
-sha_warn "$LORAS/blend/$BLEND_A2_AR" "$BLEND_A2_SHA256_AR" "blend a0.2 AR"
-sha_warn "$LORAS/blend/$BLEND_A2_NAR" "$BLEND_A2_SHA256_NAR" "blend a0.2 NAR"
-mkdir -p "$LORAS/instrumental"
-hf download "$HF_INST_LORA_REPO" "$HF_INST_LORA" --local-dir "$LORAS/instrumental" >/dev/null && ok "instrumental LoRA"
-if [ -f "$LORAS/instrumental/$HF_INST_LORA" ]; then
-  echo "$HF_INST_LORA_SHA256  $LORAS/instrumental/$HF_INST_LORA" | sha256sum -c - >/dev/null \
-    && ok "instrumental LoRA sha256" \
-    || warn "instrumental LoRA sha256 mismatch (round 04 may fail)"
-fi
-mkdir -p "$LORAS/nar"
-hf download "$HF_NAR_LORA_REPO" "$HF_NAR_LORA" --local-dir "$LORAS/nar" >/dev/null && ok "NAR v9 LoRA"
-if [ -f "$LORAS/nar/$HF_NAR_LORA" ]; then
-  echo "$HF_NAR_LORA_SHA256  $LORAS/nar/$HF_NAR_LORA" | sha256sum -c - >/dev/null \
-    && ok "NAR v9 LoRA sha256" \
-    || warn "NAR v9 LoRA sha256 mismatch (round 06 may fail)"
-fi
+# Opt-in pins (enable together with the matching download block above):
+# sha_warn "$LORAS/$LORA_AR" "$LORA_SHA256_AR" "v3 AR"
+# sha_warn "$LORAS/$LORA_NAR" "$LORA_SHA256_NAR" "v3 NAR"
+# sha_warn "$LORAS/blend/$BLEND_A1_AR" "$BLEND_A1_SHA256_AR" "blend a0.1 AR"
+# sha_warn "$LORAS/blend/$BLEND_A1_NAR" "$BLEND_A1_SHA256_NAR" "blend a0.1 NAR"
+# sha_warn "$LORAS/blend/$BLEND_A2_AR" "$BLEND_A2_SHA256_AR" "blend a0.2 AR"
+# sha_warn "$LORAS/blend/$BLEND_A2_NAR" "$BLEND_A2_SHA256_NAR" "blend a0.2 NAR"
+# if [ -f "$LORAS/instrumental/$HF_INST_LORA" ]; then
+#   echo "$HF_INST_LORA_SHA256  $LORAS/instrumental/$HF_INST_LORA" | sha256sum -c - >/dev/null \
+#     && ok "instrumental LoRA sha256" \
+#     || warn "instrumental LoRA sha256 mismatch (round 04 may fail)"
+# fi
+# if [ -f "$LORAS/nar/$HF_NAR_LORA" ]; then
+#   echo "$HF_NAR_LORA_SHA256  $LORAS/nar/$HF_NAR_LORA" | sha256sum -c - >/dev/null \
+#     && ok "NAR v9 LoRA sha256" \
+#     || warn "NAR v9 LoRA sha256 mismatch (round 06 may fail)"
+# fi
 
 echo "== 4. backup sidecar =="
 if pgrep -f 'plumbing/backup_to_gcp.py' >/dev/null; then
@@ -171,9 +197,13 @@ if [ "$WITH_TRANSCRIBE" = 1 ]; then
 fi
 
 echo
-echo "Ready. Validate then generate:"
-echo "  python3 generate.py manifests/songs.example.json --dry-run"
-echo "  python3 generate.py manifests/songs.example.json"
+echo "Ready. Validate then generate (blend a0.15 pair; the built-in default pair"
+echo "is v3, which this setup no longer stages — see the commented blocks above):"
+echo "  python3 generate.py manifests/songs.example.json --dry-run \\"
+echo "      --lora-ar loras/blend/a0.15/v3instr_a0.15_ar.safetensors \\"
+echo "      --lora-nar loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+echo "  (drop --dry-run to render; loras/arabic-instrumental/ holds the"
+echo "   instrumental-only pair)"
 if [ "$WITH_TRANSCRIBE" = 1 ]; then
   echo "  ./transcribe.sh out/latest --dry-run"
 else
