@@ -1,0 +1,38 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "repeat": 1,
+    "lora": "a015",
+    "cot": "full",
+    "guidance_scale": 1.5,
+    "lora_ar_scale": 0.75,
+    "lora_nar_scale": 1.0,
+    "trigger": true
+  },
+  "loras": {
+    "a015": {
+      "ar": "loras/blend/a0.15/v3instr_a0.15_ar.safetensors",
+      "nar": "loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+    }
+  },
+  "scores": {
+    "hac1": "local_workspace/PACK/hac_01/score.abc",
+    "hac2": "local_workspace/PACK/hac_02/score.abc"
+  },
+  "songs": [
+    {
+      "name": "hac_01",
+      "score": "hac1",
+      "lyrics_file": "local_workspace/hac_01/lyrics.txt",
+      "style_file": "local_workspace/hac_01/style.txt",
+      "seeds": [1212121, 1616161, 1114111, 1117111]
+    },
+    {
+      "name": "hac_02",
+      "score": "hac2",
+      "lyrics_file": "local_workspace/hac_02/lyrics.txt",
+      "style_file": "local_workspace/hac_02/style.txt",
+      "seeds": [3331333, 3337333, 7772777, 7774777]
+    }
+  ]
+}
