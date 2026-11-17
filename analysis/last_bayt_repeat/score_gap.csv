@@ -1,0 +1,5 @@
+manifest,song,n_letters,lyric_lines,lyric_fit_s,lyric_fit_cap,score_s,score_vocal_blocks,score_sung_blocks,score_sung_s,score_total_vocal_s,score_minus_fit_s,sung_blocks_per_lyric_line,score_sung_s_per_letter
+harith_hac_A.json,hac_01,616,23,300,7500,337.24,66,53,285.5,337.2,37.2,2.3,0.463
+harith_hac_A.json,hac_02,616,23,300,7500,350.32,37,31,312.3,350.3,50.3,1.35,0.507
+harith_hac_B.json,hac_01,616,45,300,7500,337.24,66,53,285.5,337.2,37.2,1.18,0.463
+harith_hac_B.json,hac_02,616,46,300,7500,350.32,37,31,312.3,350.3,50.3,0.67,0.507
