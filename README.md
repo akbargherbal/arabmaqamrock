@@ -41,7 +41,9 @@ python3 generate.py manifests/songs.example.json             # the real run  →
 
 The staged adapter pair is the blend `a0.15` pair (v3 × Arabic-instrumental),
 and it is also the built-in default — no `--lora-ar` / `--lora-nar` flags needed.
-See [Generation defaults](docs/generation-defaults.md).
+See [Generation defaults](docs/generation-defaults.md). What gets staged is
+declared in [`plumbing/loras.manifest`](plumbing/loras.manifest): the other arms
+are rows marked `off` there, one flag away (`./plumbing/fetch_loras.sh --only v3`).
 
 `install.sh` stages `audiocpp_cli` for your GPU's arch — from this project's GCS
 prefix when reachable (fast), otherwise by building from source (~20 min cold; no GPU

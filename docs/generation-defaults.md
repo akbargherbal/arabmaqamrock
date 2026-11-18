@@ -43,8 +43,9 @@ Only the axes above were set. Everything else stayed on the runtime defaults:
 
 The built-in adapter pair in `generate.py` and `run_one.sh` is this blend
 `a0.15` pair, and `install.sh` / `setup_colab.sh` stage it (plus the own
-Arabic-instrumental donor pair). A manifest that sets no `lora` therefore gets
-the default pair without CLI flags.
+Arabic-instrumental donor pair), as declared in
+[`plumbing/loras.manifest`](../plumbing/loras.manifest). A manifest that sets no
+`lora` therefore gets the default pair without CLI flags.
 
 ## Copy-paste preset
 

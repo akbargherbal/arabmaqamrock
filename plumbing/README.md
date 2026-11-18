@@ -38,8 +38,8 @@ default: the pass logs a warning and retries next pass (`--include-wav` opts
 into uploading the WAV anyway). Finished transcript song directories are
 archived to `<take>.tar.gz` before upload; incomplete ones are never archived.
 
-The GGUF model and the LoRA are **not** here — they come from Hugging Face and are
-re-downloaded on a fresh VM.
+The GGUF model and the LoRAs are **not** here — they come from Hugging Face and
+are re-downloaded on a fresh VM. Which LoRAs: `plumbing/loras.manifest`.
 
 ## Scripts
 
@@ -49,6 +49,8 @@ re-downloaded on a fresh VM.
 | `arch.sh` | compute capability ⇄ arch tag (`detect_compute_cap`, `arch_tag_for_cc`) |
 | `binary_registry.py` | read every `binaries/<arch>/manifest.json` and print/publish the aggregate `binaries/index.json` register (arch, GPU, build date, CUDA, commit, sha256); flags missing arches |
 | `fetch_binary.sh` | stage `./bin/audiocpp_cli`: fetch the arch prebuilt from GCS, sha256-verify, else build from source; `--publish` uploads a new build |
+| `fetch_loras.sh` | stage the YuE2 LoRA adapters declared in `loras.manifest`; enabled rows by default, `--all` / `--only <set>` for the opt-in ones, `--check` to verify a staged tree offline |
+| `loras.manifest` | the LoRA staging table: one row per file (set, repo, target dir, file, sha256) plus an `on`/`off` column — the single place to add a set or change what the installers fetch |
 | `setup_transcribe.sh` | build the optional repo-local `.venv-sheetsage2` for `./transcribe.sh` (Python 3.11, CPU default; `--cuda` opt-in) |
 | `backup_to_gcp.py` | mirror `./out/` → `runs/` and `./logs/` → `logs/` on a timer (append-only `gsutil rsync`); transcodes finished WAVs to MP3 and archives completed transcript dirs by default |
 | `audio_export.py` | find finished WAVs, keep the MP3 cache outside `out/`, verify each encode; used by `backup_to_gcp.py` |

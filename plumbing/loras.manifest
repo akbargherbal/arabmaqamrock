@@ -1,0 +1,41 @@
+# LoRA staging table — read by plumbing/fetch_loras.sh.
+#
+#   enabled  set     repo  dest  remote-file  sha256
+#
+# Tab-separated. One row per FILE, so a pair is two rows with the same set name.
+# Local path = <repo root>/<dest>/<remote-file>.
+#
+#   on   staged by default (install.sh / setup_colab.sh)
+#   off  opt-in: flip to "on", or stage just it now:
+#          ./plumbing/fetch_loras.sh --only <set>
+#   #    retired / ignored entirely, kept only as a record
+#
+# sha256 pins come from the published model cards. A mismatch is a warning, not
+# a failure: a corrected upstream re-upload should not brick the installer.
+# Use "-" when a repo publishes no pin (the third-party mirrors).
+
+# --- default generation stack ------------------------------------------------
+# Winning arm of the 2026-11-16 listening verdict: docs/generation-defaults.md.
+on	blend-a0.15	akbargherbal/arabmaqamrock-blend-yue2-lora	loras/blend	a0.15/v3instr_a0.15_ar.safetensors	fef2104e13560700e118af92b7be139f7711df59e2a68ddde4691a0e5a5fecc3
+on	blend-a0.15	akbargherbal/arabmaqamrock-blend-yue2-lora	loras/blend	a0.15/v3instr_a0.15_nar.safetensors	e1696863534e330b290ad92fbe16d904b69b8e5eebf208b9ba738778447a1fb7
+# Own Arabic-instrumental pair: the instrumental-only arm and the donor behind
+# the blends (no vocals).
+on	instrumental	akbargherbal/arabic-instrumental-yue2-lora	loras/arabic-instrumental	arabic-instrumental-ar.safetensors	69517eea8bbc9fec2ace47c271f1bde7058881e89eabe9f9c0b10cb91ae97edb
+on	instrumental	akbargherbal/arabic-instrumental-yue2-lora	loras/arabic-instrumental	arabic-instrumental-nar.safetensors	f84fdd4e9332c8be27e2d716fec9048f3d8ea3835c5e7582d6689322b6e0ea2f
+
+# --- opt-in: own sets ---------------------------------------------------------
+# The standalone v3 style/voice pair; blend a0.15 already carries its character.
+off	v3	akbargherbal/arabmaqamrock-yue2-lora	loras	arabmaqamrock-v3-ar.safetensors	3531bb9106d2292eefe58eabe11ec08bb7dddc69554f2b016dc9f13f711fab18
+off	v3	akbargherbal/arabmaqamrock-yue2-lora	loras	arabmaqamrock-v3-nar.safetensors	a7eabcadb22146048bcb5e65d04828ee9454559523ca161bd38c06060deb0cae
+# Conservative and primary blend arms around the default a0.15.
+off	blend-a0.1	akbargherbal/arabmaqamrock-blend-yue2-lora	loras/blend	a0.1/v3instr_a0.1_ar.safetensors	d48109b3117bf7851390ac9d4de86a45c5edd99cc5d17ddb97481e5c77ef64a0
+off	blend-a0.1	akbargherbal/arabmaqamrock-blend-yue2-lora	loras/blend	a0.1/v3instr_a0.1_nar.safetensors	88f00bcb1b60cb7638eff07d7f1a7ff1d19705e987a138bf82e0c36e84ea5b58
+off	blend-a0.2	akbargherbal/arabmaqamrock-blend-yue2-lora	loras/blend	a0.2/v3instr_a0.2_ar.safetensors	820f1ce90ab64965606a5a57451b2dcf255072ab4b9c7be182bc14b80bd86dd6
+off	blend-a0.2	akbargherbal/arabmaqamrock-blend-yue2-lora	loras/blend	a0.2/v3instr_a0.2_nar.safetensors	f9738e214361c02428f6baa01327ba42ce1208236d33868fd6c3d3a7b584225f
+
+# --- opt-in: third-party adapters (rounds 04 / 06) ----------------------------
+# AR-only instrumental adapter used by the fadhl_shaker_instrumental manifests.
+off	instrumental-thirdparty	Mothersuperior/YuE2-instrumental-cot-full-loras	loras/instrumental	ar_lora_inst_v3abc.bf16.safetensors	e408fd3148b75b1165f7ddbf63db575d83bb6402a0b5f876fcb767dbcb2c5414
+# NAR decoder LoRA that pairs with it (real-production timbre); the AR adapter
+# also works with the stock NAR.
+off	nar-v9	Mothersuperior/yue2-mothersuperior-realaudio-tokenizer-v4	loras/nar	nar_lora_joint_v9.bf16.safetensors	ce57f98e9e0e65c724c2a00aa23dea2568952590504a428c588d82f00bc61c55
