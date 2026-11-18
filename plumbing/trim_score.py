@@ -24,8 +24,8 @@ so the printed numbers are in the same units the pipeline uses.
 
 Usage
 -----
-    python3 plumbing/trim_score.py scores/harith_hac/hac_01.abc \
-        --target-s 270 --out scores/harith_hac/hac_01_short270.abc
+    python3 plumbing/trim_score.py scores/harith_hat/hat_01.abc \
+        --target-s 270 --out scores/harith_hat/hat_01_short270.abc
 """
 from __future__ import annotations
 

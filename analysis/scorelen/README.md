@@ -48,8 +48,8 @@ total is under `--target-s`, pads nothing, and appends two rest bars so both
 voices end together.
 
 ```bash
-python3 plumbing/trim_score.py scores/harith_hac/hac_01.abc \
-    --target-s 270 --out scores/harith_hac/hac_01_short270.abc
+python3 plumbing/trim_score.py scores/harith_hat/hat_01.abc \
+    --target-s 270 --out scores/harith_hat/hat_01_short270.abc
 # duration 337.2 -> 269.7 s, sung vocal 285.5 -> 219.3 s, 41 sung blocks (was 53)
 ```
 
