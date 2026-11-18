@@ -1,5 +1,14 @@
 # Next session — GPU analysis only (no generation)
 
+> **Status, 2026-11-18: executed.** Everything below was run on a T4; results are
+> in `REPORT.md` §3.1–§3.2 and `results.csv`. Two things came out differently
+> from this plan and are worth carrying forward: (1) CTC placement looked like a
+> counter but is **not** — calibrated on 15 no-score takes with a known answer of
+> 2 it returns 4–8, so ASR is the arbiter and `ctc_count` is an upper bound;
+> (2) the "we always used an ABC" confound was resolved by measuring 27
+> **existing** `cot=off` takes (mean 1.85 renditions) rather than by a new render.
+> The spec is kept as written for provenance.
+
 **Decision (2026-11-17):** no new renders. A T4 is available for *analysis*: stem
 separation, ASR/CTC and forced alignment. This file is the handoff for that
 session. Generation experiments stay parked (see `REPORT.md` §8) until the
