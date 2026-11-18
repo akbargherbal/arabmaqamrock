@@ -197,3 +197,9 @@ build the expanded text are in `work/ctc/<batch>_<track>.json` and
 **Ephemeral:** the source MP3s exist only in `/tmp/opencode/hacA|hacB` (61 + 62 MB);
 they are re-downloadable from the run directories on GCS. Everything above lives
 under `/content`, so a reboot does not cost a separation run.
+
+**Portable copy:** the same corpus in **16 kHz mono FLAC** — 4.31 GB → **512 MB**
+— plus the karaoke/ASR/CTC metadata and a per-file sha256 manifest is on GCS at
+`gs://akbar-december-2024-backup/arabmaqamrock/datasets/last_bayt_repeat/`.
+Layout and rationale: [`gcs_corpus.md`](gcs_corpus.md); rebuild with
+`python3 analysis/hac_clone/build_gcs_corpus.py`.
