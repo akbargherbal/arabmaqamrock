@@ -60,11 +60,12 @@ Schema (strict: unknown keys are an error)
 
 Per-song controls map 1:1 to audio.cpp `--request-option` names (allowed keys:
 guidance_scale, semantic_temperature, semantic_top_p, semantic_top_k,
-semantic_repetition_penalty, num_inference_steps, abc_temperature, abc_top_p,
-abc_top_k, abc_repetition_penalty, abc_min_tokens, abc_max_tokens) plus the two
-adapter scales. `semantic_max_tokens` stays the `cap` field. abc_* only act in
-the plan stage and are rejected with cot=off or an external score. Setting any
-control key is mutually exclusive with the batch-global EXTRA_REQUEST_OPTS.
+semantic_repetition_penalty, semantic_penalty_window, num_inference_steps,
+abc_temperature, abc_top_p, abc_top_k, abc_repetition_penalty, abc_min_tokens,
+abc_max_tokens) plus the two adapter scales. `semantic_max_tokens` stays the
+`cap` field. abc_* only act in the plan stage and are rejected with cot=off or
+an external score. Setting any control key is mutually exclusive with the
+batch-global EXTRA_REQUEST_OPTS.
 
 Precedence: song field > CLI flag > "defaults" > built-in default. For `lora`
 there is no CLI flag: song > `defaults.lora` > the `--lora-ar`/`--lora-nar` pair
@@ -194,6 +195,7 @@ CONTROL_SPECS = {
     "semantic_top_p":             ("float", 0.0, 1.0,  False, True),
     "semantic_top_k":             ("int",   1,   None, True,  True),
     "semantic_repetition_penalty": ("float", 0.0, None, False, True),
+    "semantic_penalty_window":    ("int",   1,   None, True,  True),
     "num_inference_steps":        ("int",   1,   None, True,  True),
     "abc_temperature":            ("float", 0.0, 5.0,  True,  True),
     "abc_top_p":                  ("float", 0.0, 1.0,  False, True),
@@ -209,6 +211,7 @@ CONTROL_SHORT = {
     "semantic_top_p": "p",
     "semantic_top_k": "k",
     "semantic_repetition_penalty": "rp",
+    "semantic_penalty_window": "rw",
     "num_inference_steps": "steps",
     "abc_temperature": "abc.t",
     "abc_top_p": "abc.p",

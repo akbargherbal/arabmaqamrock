@@ -368,6 +368,7 @@ repo:
 | `semantic_top_p` | 0.95 | (0, 1] | nucleus width |
 | `semantic_top_k` | 100 | ≥ 1 | top-k width |
 | `semantic_repetition_penalty` | 1.2 | > 0 | penalty on tokens seen in the last `penalty_window` (50) |
+| `semantic_penalty_window` | 50 | ≥ 1 | how far back the penalty looks, in semantic frames (25/s); 50 frames = **2 s** |
 | `num_inference_steps` | 8 | ≥ 1 | NAR flow-matching steps; audio detail, not adherence |
 | `abc_temperature` | 0.7 | 0–5 | the **plan** stage only (see §D.2) |
 | `abc_top_p` / `abc_top_k` | 0.9 / 30 | (0,1] / ≥1 | same |
@@ -756,6 +757,13 @@ multiplied (`sampling.py::window_penalty`; same arithmetic in the C++ sampler).
 It suppresses literal loops. Push it too hard and sustained notes, melisma and
 repeated syllables get distorted, because the penalty cannot tell a musical
 repeat from a verbal one.
+
+The window is the part that matters for song-level loops: at 25 semantic
+frames/s, the default 50 frames is **2 seconds**, while a sung line is 8–12 s.
+A repeat that starts after the previous line therefore begins *outside* the
+penalty's memory and is not penalised at all. Raise `semantic_penalty_window`
+to 250–450 (10–18 s) to make the penalty see the previous line; both keys are
+manifest fields (`manifests/controls.example.json`).
 
 ### D.6 `semantic_min_tokens` / `semantic_max_tokens`
 

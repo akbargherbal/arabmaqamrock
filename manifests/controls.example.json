@@ -29,6 +29,12 @@
       "seed": 20261030,
       "lora_ar_scale": 0.7,
       "lora_nar_scale": 0.7
+    },
+    {
+      "name": "ctrl_window300",
+      "lyrics_file": "prompts/example_lyrics.txt",
+      "seed": 20261030,
+      "semantic_penalty_window": 300
     }
   ]
 }
