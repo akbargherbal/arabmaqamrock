@@ -173,3 +173,27 @@ there. At best it terminates the tail.
 2. **Melisma damage.** The penalty cannot tell a verbal repeat from a musical
    one (`docs/suno-generation-controls.md` D.5). `cl_rw450` may flatten the tarab
    ornaments — listen to the *early* verses, not only the ending.
+
+## Assets already on this machine (no re-separation needed)
+
+Demucs was run with `--two-stems vocals`, so every take has **both** halves at
+44.1 kHz stereo with the source duration preserved:
+
+| path | what | size |
+|---|---|---:|
+| `work/stems/{A,B}/htdemucs/<track>/{vocals,no_vocals}.wav` | 16 HAC takes | 1.79 GB |
+| `work/stems/{OFF,WOLF,KURD}/htdemucs/<track>/{vocals,no_vocals}.wav` | 27 control takes (§3.2) | 2.31 GB |
+| `work/karaoke/{A,B}/*.words.json` | karaoke alignment of the 16 takes (copied out of `/tmp` so a reboot cannot lose them) | 460 KB |
+| `work/asr_{A,B}_{small,medium}.csv`, `work/asr_cache/` | ASR counts and word-level caches | ~6 MB |
+| `work/ctc/` | per-take CTC placements, spans, scores | ~1 MB |
+| `/content/hac_01.words.json`, `/content/hac_02.words.json` | the **reference** alignments | 50 KB |
+
+**What is missing:** the lyrics *with the repetitions written out*. The sheets in
+`manifests/harith_hac_{A,B}.json` list the closing bayt twice (correct for the
+reference, wrong for our renders, which sing it 3–7 times). The onsets needed to
+build the expanded text are in `work/ctc/<batch>_<track>.json` and
+`work/asr_{A,B}_small.csv`, but no `*_expanded.txt` exists yet.
+
+**Ephemeral:** the source MP3s exist only in `/tmp/opencode/hacA|hacB` (61 + 62 MB);
+they are re-downloadable from the run directories on GCS. Everything above lives
+under `/content`, so a reboot does not cost a separation run.
