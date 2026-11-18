@@ -373,7 +373,10 @@ analysis/last_bayt_repeat/
 └── REPORT.md                # this file
 ```
 
-Working artifacts from the measurement run (`work/` is untracked, nothing was copied to GCS):
+Working artifacts from the measurement run. The stems below were deleted from
+this VM after publishing the portable 16 kHz mono corpus
+(`gs://…/arabmaqamrock/datasets/last_bayt_repeat/`, 512 MB, see
+`../hac_clone/gcs_corpus.md`); the small metadata files are still in `work/`:
 
 | Path | What |
 |---|---|

@@ -174,7 +174,22 @@ there. At best it terminates the tail.
    one (`docs/suno-generation-controls.md` D.5). `cl_rw450` may flatten the tarab
    ornaments — listen to the *early* verses, not only the ending.
 
-## Assets already on this machine (no re-separation needed)
+## Assets: the corpus on GCS (the local stems were deleted)
+
+The 44.1 kHz WAV stems are **gone from this machine** — they were only ever a
+cache. Everything below is on GCS in 16 kHz mono FLAC (512 MB) and comes back
+with one command:
+
+```bash
+gsutil -m cp -r gs://akbar-december-2024-backup/arabmaqamrock/datasets/last_bayt_repeat/stems16k/* work/stems16k/
+```
+
+`stems16k/<batch>/<track>/{vocals,no_vocals}.flac`; the control folders keep the
+`_<seed>` suffix, the HAC ones already end in it. The small metadata (karaoke
+alignments, ASR counts and caches, CTC placements, reconciled CSVs) is still in
+`work/` locally and is also under the same GCS prefix.
+
+Original note, kept for the record:
 
 Demucs was run with `--two-stems vocals`, so every take has **both** halves at
 44.1 kHz stereo with the source duration preserved:
