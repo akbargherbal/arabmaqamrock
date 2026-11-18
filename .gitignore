@@ -30,3 +30,6 @@ __pycache__/
 /outputs/YT500/generation/collection/tracks/
 /outputs/YT500/generation/collection/.build.json
 /outputs/YT500/generation/collection/rejected.jsonl
+
+# local analysis artifacts (stems, ASR caches, per-take JSON) — 4 GB, never tracked
+/work/
