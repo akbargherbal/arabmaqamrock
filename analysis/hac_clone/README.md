@@ -176,32 +176,29 @@ there. At best it terminates the tail.
 
 ## Assets: the corpus on GCS (the local stems were deleted)
 
-The 44.1 kHz WAV stems are **gone from this machine** — they were only ever a
-cache. Everything below is on GCS in 16 kHz mono FLAC (512 MB) and comes back
-with one command:
+The 44.1 kHz WAV stems were only ever a cache and are **gone from this VM**. The
+portable copy — **16 kHz mono FLAC, 512 MB instead of 4.31 GB** — plus the
+karaoke/ASR/CTC metadata and a per-file sha256 manifest is published at
+
+```
+gs://akbar-december-2024-backup/arabmaqamrock/datasets/last_bayt_repeat/
+```
+
+Layout and rationale: [`gcs_corpus.md`](gcs_corpus.md); rebuild with
+`python3 analysis/hac_clone/build_gcs_corpus.py`.
+
+Fetch the stems back (no GPU, no Demucs):
 
 ```bash
 gsutil -m cp -r gs://akbar-december-2024-backup/arabmaqamrock/datasets/last_bayt_repeat/stems16k/* work/stems16k/
 ```
 
-`stems16k/<batch>/<track>/{vocals,no_vocals}.flac`; the control folders keep the
-`_<seed>` suffix, the HAC ones already end in it. The small metadata (karaoke
-alignments, ASR counts and caches, CTC placements, reconciled CSVs) is still in
-`work/` locally and is also under the same GCS prefix.
+`stems16k/<batch>/<track>/{vocals,no_vocals}.flac`; control folders keep the
+`_<seed>` suffix, the HAC ones already end in it.
 
-Original note, kept for the record:
-
-Demucs was run with `--two-stems vocals`, so every take has **both** halves at
-44.1 kHz stereo with the source duration preserved:
-
-| path | what | size |
-|---|---|---:|
-| `work/stems/{A,B}/htdemucs/<track>/{vocals,no_vocals}.wav` | 16 HAC takes | 1.79 GB |
-| `work/stems/{OFF,WOLF,KURD}/htdemucs/<track>/{vocals,no_vocals}.wav` | 27 control takes (§3.2) | 2.31 GB |
-| `work/karaoke/{A,B}/*.words.json` | karaoke alignment of the 16 takes (copied out of `/tmp` so a reboot cannot lose them) | 460 KB |
-| `work/asr_{A,B}_{small,medium}.csv`, `work/asr_cache/` | ASR counts and word-level caches | ~6 MB |
-| `work/ctc/` | per-take CTC placements, spans, scores | ~1 MB |
-| `/content/hac_01.words.json`, `/content/hac_02.words.json` | the **reference** alignments | 50 KB |
+Still local (2 MB, same content also under the GCS prefix above):
+`work/karaoke/{A,B}/*.words.json`, `work/asr_*.csv` + `work/asr_cache*/`,
+`work/ctc/`, `work/results_*.csv`.
 
 **What is missing:** the lyrics *with the repetitions written out*. The sheets in
 `manifests/harith_hac_{A,B}.json` list the closing bayt twice (correct for the
@@ -209,12 +206,6 @@ reference, wrong for our renders, which sing it 3–7 times). The onsets needed 
 build the expanded text are in `work/ctc/<batch>_<track>.json` and
 `work/asr_{A,B}_small.csv`, but no `*_expanded.txt` exists yet.
 
-**Ephemeral:** the source MP3s exist only in `/tmp/opencode/hacA|hacB` (61 + 62 MB);
-they are re-downloadable from the run directories on GCS. Everything above lives
-under `/content`, so a reboot does not cost a separation run.
-
-**Portable copy:** the same corpus in **16 kHz mono FLAC** — 4.31 GB → **512 MB**
-— plus the karaoke/ASR/CTC metadata and a per-file sha256 manifest is on GCS at
-`gs://akbar-december-2024-backup/arabmaqamrock/datasets/last_bayt_repeat/`.
-Layout and rationale: [`gcs_corpus.md`](gcs_corpus.md); rebuild with
-`python3 analysis/hac_clone/build_gcs_corpus.py`.
+**Not retained:** the source MP3s (they live in the run directories on GCS) and
+the 44.1 kHz stereo stems (regenerable with one Demucs run, ~10 GPU-minutes, if
+anything ever needs full bandwidth again).
