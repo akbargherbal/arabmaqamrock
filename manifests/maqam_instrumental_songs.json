@@ -1,0 +1,77 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "repeat": 1,
+    "lora": "a015",
+    "cot": "off",
+    "quantile": 0.95,
+    "guidance_scale": 1.5,
+    "lora_ar_scale": 0.75,
+    "lora_nar_scale": 1.0,
+    "trigger": false
+  },
+  "loras": {
+    "a015": {
+      "ar": "loras/blend/a0.15/v3instr_a0.15_ar.safetensors",
+      "nar": "loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+    }
+  },
+  "songs": [
+    {
+      "name": "01_hijaz_yearning",
+      "seed": 550527128,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Hijaz, Phrygian Dominant, mood: \"yearning, nostalgic, deeply sorrowful\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "02_hijaz_elegiac",
+      "seed": 156311310,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Hijaz, Phrygian Dominant, mood: \"elegiac, mournful, solemn collective lament\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "03_nahawand_contemplative",
+      "seed": 4053748514,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"calm, contemplative, reflective inner dialogue\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "04_nahawand_serene",
+      "seed": 1223551524,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"serene, introspective, quietly descriptive\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "05_ajam_heroic",
+      "seed": 1631159403,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Ajam, Major Scale (Ionian), mood: \"proud, triumphant, heroic\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "06_ajam_exultant",
+      "seed": 764710490,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Ajam, Major Scale (Ionian), mood: \"exultant, dignified, resolute\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "07_kurd_ominous",
+      "seed": 504982351,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Kurd, Phrygian Mode, mood: \"tense, anticipatory, ominous\"",
+      "lyrics": "[Instrumental]"
+    },
+    {
+      "name": "08_kurd_brooding",
+      "seed": 3475508964,
+      "cap": 7500,
+      "style": "full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, no vocals, no singing, Maqam Kurd, Phrygian Mode, mood: \"brooding, awe-struck, steadfast in the dark night\"",
+      "lyrics": "[Instrumental]"
+    }
+  ]
+}
