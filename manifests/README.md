@@ -48,3 +48,22 @@ Validate any manifest without a GPU:
 ```bash
 python3 generate.py manifests/<name>.json --dry-run
 ```
+
+## Generating maqam instrumental batches
+
+`plumbing/maqam_instrumental_manifests.py` builds a batch from the maqam docs:
+one unique three-mood combination per song, a section plan matching the chosen
+length profile (short 6–7, standard 8, long 9–10), and the `a0.15` instrumental
+recipe. Run it with no flags for the prompts:
+
+```bash
+python3 plumbing/maqam_instrumental_manifests.py
+```
+
+It defaults to the next free `manifests/maqam_instrumental_songs_NN.json`, so
+successive runs stack (03 → 04 → …). For an unattended batch:
+
+```bash
+python3 plumbing/maqam_instrumental_manifests.py --yes \
+  --tracks 12 --repeat 1 --length mixed --cap 8500
+```
