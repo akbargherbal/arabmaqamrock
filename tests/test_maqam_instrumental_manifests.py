@@ -72,14 +72,13 @@ def test_build_style_matches_reference_caption():
     style = gen.build_style(
         base, "Hijaz", ("yearning", "nostalgic", "deeply sorrowful"))
     reference = _load_manifest(REFERENCE)["songs"][0]["style"]
-    assert style == reference
+    expected = reference.replace("no vocals, no singing", "vocalization")
+    assert style == expected
 
 
-def test_build_style_guard_can_be_disabled():
+def test_build_style_preserves_vocalization():
     base = gen.load_base_prompt()
-    style = gen.build_style(
-        base, "Hijaz", ("yearning", "nostalgic", "aching"),
-        keep_vocalization=True)
+    style = gen.build_style(base, "Hijaz", ("yearning", "nostalgic", "aching"))
     assert "vocalization" in style
     assert "no vocals, no singing" not in style
 

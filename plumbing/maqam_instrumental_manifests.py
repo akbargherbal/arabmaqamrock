@@ -160,23 +160,16 @@ def build_style(
     base_prompt: str,
     maqam: str,
     moods: tuple[str, ...],
-    *,
-    keep_vocalization: bool = False,
 ) -> str:
-    """Fill the base-prompt template and make the caption safely instrumental.
+    """Fill the base-prompt template.
 
-    ``instrumental_base_prompt.md`` contains the literal word ``vocalization``;
-    for an instrumental cover it is replaced by ``no vocals, no singing`` (the
-    guard used by ``maqam_instrumental_songs_03.json``). Pass
-    ``keep_vocalization=True`` to leave the document untouched.
+    ``instrumental_base_prompt.md`` carries the literal ``vocalization`` tag;
+    keep it exactly as written so the caption matches the document.
     """
     text = " ".join(base_prompt.replace("**", "").split())
     text = text.replace("[MAQAM]", maqam)
     text = text.replace("[SCALE / MODE]", SCALES.get(maqam, ""))
     text = text.replace("[MOOD]", ", ".join(moods))
-    if not keep_vocalization:
-        text = re.sub(r"\bvocalization\b", "no vocals, no singing", text,
-                      flags=re.IGNORECASE)
     # A maqam without a known Western scale leaves an empty slot: tidy up.
     text = re.sub(r"\s*,\s*,+", ", ", text)
     text = re.sub(r",\s*,", ", ", text)
@@ -245,7 +238,6 @@ def build_songs(
     moods_per_track: int = DEFAULT_MOODS,
     cap: int | None = DEFAULT_CAP,
     seed: int | None = None,
-    keep_vocalization: bool = False,
 ) -> list[dict]:
     """Build the ``songs`` list for the manifest."""
     if tracks_per_maqam < 1:
@@ -291,9 +283,7 @@ def build_songs(
             song: dict = {"name": name}
             if cap is not None:
                 song["cap"] = cap
-            song["style"] = build_style(
-                base_prompt, maqam, moods,
-                keep_vocalization=keep_vocalization)
+            song["style"] = build_style(base_prompt, maqam, moods)
             song["lyrics"] = plan
             songs.append(song)
 
@@ -458,8 +448,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                         help="output manifest (default: next free numbered file)")
     parser.add_argument("--force", action="store_true",
                         help="overwrite --out if it already exists")
-    parser.add_argument("--keep-vocalization", action="store_true",
-                        help="keep the base prompt's 'vocalization' word")
     parser.add_argument("--yes", "-y", action="store_true",
                         help="do not prompt; use flags and defaults")
     return parser.parse_args(argv)
@@ -565,7 +553,6 @@ def main(argv: list[str] | None = None) -> int:
             moods_per_track=args.moods,
             cap=cap,
             seed=seed,
-            keep_vocalization=args.keep_vocalization,
         )
     except ValueError as exc:
         _fail(str(exc))
