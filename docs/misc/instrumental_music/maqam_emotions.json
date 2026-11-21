@@ -1,0 +1,110 @@
+{
+  "maqams": {
+    "Hijaz": {
+      "character": "Longing, yearning, deep romantic ache; elegy, sorrow, parting",
+      "emotions": [
+        "yearning",
+        "longing",
+        "aching",
+        "brooding",
+        "nostalgic",
+        "wistful",
+        "lamenting",
+        "mournful",
+        "heartbroken",
+        "bereaved",
+        "pleading",
+        "desolate",
+        "forlorn",
+        "smoldering",
+        "sensual",
+        "devotional",
+        "supplicating",
+        "yearning-for-return",
+        "ecstatic-sorrow",
+        "haunted",
+        "melancholic",
+        "tender-anguish"
+      ]
+    },
+    "Nahawand": {
+      "character": "Quiet sadness, gentle nostalgia; calm narration, description, inner dialogue",
+      "emotions": [
+        "gentle",
+        "tender",
+        "reflective",
+        "pensive",
+        "nostalgic",
+        "wistful",
+        "bittersweet",
+        "contemplative",
+        "introspective",
+        "soft-hearted",
+        "serene",
+        "tranquil",
+        "resigned",
+        "consoling",
+        "fond",
+        "romantic",
+        "reminiscing",
+        "quietly-sorrowful",
+        "meditative",
+        "lyrical"
+      ]
+    },
+    "Ajam": {
+      "character": "Pride, zeal, triumph; praise, celebration, glad tidings",
+      "emotions": [
+        "triumphant",
+        "proud",
+        "jubilant",
+        "exultant",
+        "celebratory",
+        "joyful",
+        "glorious",
+        "victorious",
+        "radiant",
+        "confident",
+        "heroic",
+        "zealous",
+        "noble",
+        "uplifting",
+        "hopeful",
+        "grateful",
+        "majestic",
+        "commanding",
+        "festive",
+        "boastful",
+        "resolute",
+        "bright"
+      ]
+    },
+    "Kurd": {
+      "character": "Tension, anticipation, warning; mystery, awe, gravity and formality",
+      "emotions": [
+        "tense",
+        "anticipating",
+        "foreboding",
+        "ominous",
+        "solemn",
+        "stately",
+        "regal",
+        "grave",
+        "mysterious",
+        "awestruck",
+        "austere",
+        "brooding",
+        "restless",
+        "vigilant",
+        "somber",
+        "imposing",
+        "tragic-majesty",
+        "unsettled",
+        "reverent",
+        "steely",
+        "dignified",
+        "epic"
+      ]
+    }
+  }
+}
