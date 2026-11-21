@@ -1,0 +1,117 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "repeat": 2,
+    "lora": "a015",
+    "cot": "off",
+    "quantile": 0.95,
+    "guidance_scale": 1.5,
+    "lora_ar_scale": 0.75,
+    "lora_nar_scale": 1.0,
+    "trigger": false
+  },
+  "loras": {
+    "a015": {
+      "ar": "loras/blend/a0.15/v3instr_a0.15_ar.safetensors",
+      "nar": "loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+    }
+  },
+  "songs": [
+    {
+      "name": "01_hijaz_supplicating_forlorn_heartbroken",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Hijaz, Phrygian Dominant, mood: \"supplicating, forlorn, heartbroken\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "02_hijaz_brooding_wistful_yearning",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Hijaz, Phrygian Dominant, mood: \"brooding, wistful, yearning\"",
+      "lyrics": "[intro]\n[verse]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "03_hijaz_wistful_longing_tender-anguish",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Hijaz, Phrygian Dominant, mood: \"wistful, longing, tender-anguish\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[chorus]\n[outro]\n[End]"
+    },
+    {
+      "name": "04_hijaz_melancholic_longing_smoldering",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Hijaz, Phrygian Dominant, mood: \"melancholic, longing, smoldering\"",
+      "lyrics": "[intro]\n[verse]\n[bridge]\n[verse]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "05_nahawand_serene_contemplative_tranquil",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"serene, contemplative, tranquil\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[outro]\n[End]"
+    },
+    {
+      "name": "06_nahawand_quietly-sorrowful_resigned_tranquil",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"quietly-sorrowful, resigned, tranquil\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[outro]\n[End]"
+    },
+    {
+      "name": "07_nahawand_fond_gentle_wistful",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"fond, gentle, wistful\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[outro]\n[End]"
+    },
+    {
+      "name": "08_nahawand_wistful_quietly-sorrowful_tender",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Nahawand, Natural Minor Scale (Aeolian), mood: \"wistful, quietly-sorrowful, tender\"",
+      "lyrics": "[intro]\n[verse]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "09_ajam_proud_triumphant_zealous",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Ajam, Major Scale (Ionian), mood: \"proud, triumphant, zealous\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "10_ajam_glorious_grateful_jubilant",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Ajam, Major Scale (Ionian), mood: \"glorious, grateful, jubilant\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[interlude]\n[verse]\n[chorus]\n[outro]\n[End]"
+    },
+    {
+      "name": "11_ajam_festive_grateful_uplifting",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Ajam, Major Scale (Ionian), mood: \"festive, grateful, uplifting\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[outro]\n[End]"
+    },
+    {
+      "name": "12_ajam_boastful_exultant_uplifting",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Ajam, Major Scale (Ionian), mood: \"boastful, exultant, uplifting\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "13_kurd_brooding_epic_foreboding",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Kurd, Phrygian Mode, mood: \"brooding, epic, foreboding\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "14_kurd_awestruck_ominous_stately",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Kurd, Phrygian Mode, mood: \"awestruck, ominous, stately\"",
+      "lyrics": "[intro]\n[verse]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[outro]\n[End]"
+    },
+    {
+      "name": "15_kurd_vigilant_grave_steely",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Kurd, Phrygian Mode, mood: \"vigilant, grave, steely\"",
+      "lyrics": "[intro]\n[verse]\n[chorus]\n[bridge]\n[verse]\n[chorus]\n[bridge]\n[chorus]\n[outro]\n[End]"
+    },
+    {
+      "name": "16_kurd_tragic-majesty_stately_tense",
+      "cap": 9000,
+      "style": "arabmaqamrock, full instrumental, symphonic cinematic orchestral ballad, hymn-like grand concert hall acoustics, heavy rock instrumentation, stately groove, 110 BPM, audiophile recording, punchy centered mix, forward lead line pulling instrumentation down on sustained phrases then band re-enters between lines, bright presence, clean transients, large dynamic range, natural breath room between phrases, distorted electric guitars, orchestral strings, weighted acoustic rock drums, tight rhythm section, vocalization, Maqam Kurd, Phrygian Mode, mood: \"tragic-majesty, stately, tense\"",
+      "lyrics": "[intro]\n[verse]\n[bridge]\n[verse]\n[bridge]\n[verse]\n[outro]\n[End]"
+    }
+  ]
+}
