@@ -1,7 +1,7 @@
 {
   "base_dir": "..",
   "defaults": {
-    "repeat": 3,
+    "repeat": 5,
     "lora": "a015",
     "cot": "full",
     "guidance_scale": 1.5,
