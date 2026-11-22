@@ -108,7 +108,7 @@ Per-song fields (`strict` — unknown keys are an error):
 | `lyrics` / `lyrics_file` | exactly one — the lyrics |
 | `lyrics_from_score` | `true`: build the lyrics from the score's `% section` comments instead of supplying text (needs `abc_file`/`score`; mutually exclusive with `lyrics`/`lyrics_file`) |
 | `seed` / `seeds` / `repeat` | one seed, an explicit list, or N takes with random seeds (`< 2^32`) |
-| `cap` / `quantile` | `cap`: explicit token cap. `quantile`: the maqamrock lyrics fit (0.90 / 0.95 / 0.975, default 0.95), unchanged and always honoured. A scored song with neither gets `score length + 60 s` |
+| `cap` / `quantile` | `cap`: explicit token cap. `quantile`: the maqamrock lyrics fit (0.90 / 0.95 / 0.975, default 0.95) for **score-free** songs. A scored song gets `score length + 3%`; a `quantile` on a scored song is ignored with a warning, and an explicit `cap` may not exceed that 3% margin |
 | `lora` | optional alias into the top-level `loras` map (see below) |
 | `abc_file` / `score` | optional ABC score: a path, or an alias into the top-level `scores` map (mutually exclusive) |
 | `cot` | `off` (default) / `melody` / `full`; required when a score is given |
@@ -161,21 +161,27 @@ guitar fills) without regenerating the song blind.
 A score requires an explicit `cot` of `melody` or `full`. `cot` is never
 inferred: it changes what the model conditions on, so guessing it would silently
 decide an A/B variable. Inline `abc` is rejected — chord symbols are
-double-quoted, so inline scores would need escaping on every bar.
+double-quoted, so inline scores would need escaping on every bar. The runtime
+dialect requires every music line to end with a plain `|`; **end the score with
+a full-bar rest in both voices** (`Z|`) after the final cadence. `]` is not
+supported by the runtime parser.
 
-**The default cap for a scored song is its length.** No `cap` and no `quantile`
-means `cap = score length + 60 s` in semantic tokens (`25/s`), because the score
-is the length the model is conditioned on. That is the instrumental path: its
-input is a score plus a tag plan, so there is no Arabic text to size it with —
-`quantile` is the *maqamrock* path (lyrics fit on letter count) and is untouched:
-whenever `cap` or `quantile` is set, explicitly or in `defaults`, it behaves
-exactly as before and wins. `--dry-run` prints where each cap came from
-(`from cap` / `from quantile` / `from score`), the parsed length, and the
-headroom.
+**A score is the length contract.** With no `cap`, a scored song gets
+`cap = ceil(score length × 1.03 × 25)` — the score plus a **3% guardrail**.
+`quantile` is the *maqamrock* path (lyrics fit on letter count) for score-free
+songs; on a scored song it is ignored with a warning, so a manifest-wide
+`"quantile": 0.95` cannot silently stretch a score. An explicit `cap` is still a
+manual override, but it may not exceed the same 3% margin; a shorter cap is
+allowed with a warning because it will cut the score. `--dry-run` prints where
+each cap came from (`from cap` / `from quantile` / `from score`), the parsed
+length, and the headroom.
 
-The 60 s is measured, not picked: on `al_qissa_wama_fiha` (319 s score, 16 takes
-over rounds 11–14) finishing takes landed between −79 s and +43 s of the score,
-so the old `need + 10 s` suggestion truncated two of them at full level.
+The 3% is measured, not picked. For the Ibn Zuraiq song the written score is
+243.3 s; the same song without ABC finished at 234.8–237.8 s (−3.5% to −2.3%),
+while the ABC-conditioned takes ran to 280.0 s (+15.2%). A 3% cap leaves room
+for a natural release without allowing a whole extra section. The score still
+needs its own end signal — `]`, a final rest, and a cadence on the tonic — so the
+cap is a safety net, not the musical ending.
 
 `cot=melody|full` **without** a score asks the model to write its own plan, saved
 as `plans/<name>_<seed>/score.abc`; edit it and feed it back with `abc_file`.

@@ -7,6 +7,7 @@ track would be rendered with.
 from __future__ import annotations
 
 import json
+import math
 import os
 import sys
 import tempfile
@@ -19,7 +20,8 @@ sys.path.insert(0, str(REPO_ROOT))
 
 import generate  # noqa: E402
 
-ABC = "X:1\nT:test\nM:4/4\nL:1/4\nK:D\nD E F G|\n"
+ABC = ("X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=240\n"
+       "V: Vocal\nK:D\nD E F G|Z|\nV: Ins\nK:D\nD E F G|Z|\n")
 
 
 def write_assets(tmp: Path) -> None:
@@ -369,65 +371,150 @@ class LyricsFromScore(unittest.TestCase):
 
 
 class CapFollowsTheLength(unittest.TestCase):
-    """The cap follows the length: explicit > score length > lyrics fit."""
+    """A score wins over the lyrics fit; its cap is score length + 3%."""
 
-    # one 4/4 bar at 120 BPM = 2.0 s -> 50 frames
+    # one 4/4 bar at 120 BPM = 2.0 s -> 50 frames; +3% -> 52 frames
     SCORE_S = 2.0
-    SCORED = ("X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nV: Ins\nK:D\n"
-              "D E F G|\n")
+    SCORE_CAP = 52
+    SCORED = ("X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=240\n"
+              "V: Vocal\nK:D\nD E F G|Z|\n"
+              "V: Ins\nK:D\nD E F G|Z|\n")
+    NO_REST = ("X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=240\n"
+               "V: Vocal\nK:D\nD E F G|D E F G|\n"
+               "V: Ins\nK:D\nD E F G|D E F G|\n")
+    NO_REST_MARKER = ("X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=240\n"
+                      "V: Vocal\nK:D\nD E F G|]\n"
+                      "V: Ins\nK:D\nD E F G|]\n")
 
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         write_assets(self.tmp)
         (self.tmp / "scored.abc").write_text(self.SCORED, encoding="utf-8")
 
-    def resolve(self, songs: list[dict], defaults: dict | None = None):
+    def resolve(self, songs: list[dict], defaults: dict | None = None, **kwargs):
         return generate.resolve_songs(
             manifest(songs, defaults or {"style_file": "plain_style.txt",
                                          "cot": "melody"}),
-            self.tmp, cli_trigger=False)
+            self.tmp, cli_trigger=False, **kwargs)
+
+    def test_missing_final_rest_warns_but_still_resolves(self):
+        (self.tmp / "no_end.abc").write_text(self.NO_REST, encoding="utf-8")
+        with mock.patch.object(generate, "warn") as warned:
+            song = self.resolve([{"name": "a", "abc_file": "no_end.abc",
+                                  "lyrics": "[instrumental]"}])[0]
+        self.assertEqual(song.cap, self.SCORE_CAP)
+        self.assertIn("final full-bar rest", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_standard_end_marker_without_final_rest_warns(self):
+        (self.tmp / "no_rest_marker.abc").write_text(
+            self.NO_REST_MARKER, encoding="utf-8")
+        with mock.patch.object(generate, "warn") as warned:
+            self.resolve([{"name": "a", "abc_file": "no_rest_marker.abc",
+                           "lyrics": "[instrumental]"}])
+        self.assertIn("final full-bar rest", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_final_rest_does_not_warn(self):
+        (self.tmp / "final_rest.abc").write_text(
+            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nK:D\n"
+            "V: Vocal\nD E F G|Z|\n"
+            "V: Ins\nD E F G|Z|\n",
+            encoding="utf-8")
+        with mock.patch.object(generate, "warn") as warned:
+            self.resolve([{"name": "a", "abc_file": "final_rest.abc",
+                           "lyrics": "[instrumental]"}])
+        self.assertNotIn("final full-bar rest", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
 
     def test_score_sets_the_cap(self):
         song = self.resolve([{"name": "a", "abc_file": "scored.abc",
                               "lyrics": "[instrumental]"}])[0]
         self.assertAlmostEqual(song.score_s, self.SCORE_S, places=3)
-        self.assertEqual(song.cap, 50 + generate.SCORE_HEADROOM_S * 25)
+        self.assertEqual(song.cap, self.SCORE_CAP)
+        self.assertEqual(song.cap_source, "score")
+
+    def test_score_cap_is_three_percent(self):
+        self.assertEqual(self.SCORE_CAP, math.ceil(
+            self.SCORE_S * (1.0 + generate.SCORE_MARGIN_PCT) * generate.FRAMES_PER_SECOND))
 
     def test_score_cap_needs_no_lyrics_signal(self):
         song = self.resolve([{"name": "a", "abc_file": "scored.abc",
                               "lyrics": "[intro]\n[verse]\n[outro]"}])[0]
         self.assertEqual(song.n_letters, 0)
-        self.assertGreater(song.cap, 1000)   # not the 110 s lyrics floor
+        self.assertEqual(song.cap, self.SCORE_CAP)  # not the 110 s lyrics floor
 
-    def test_explicit_cap_wins_over_the_score(self):
+    def test_explicit_cap_wins_over_the_score_within_the_margin(self):
         song = self.resolve([{"name": "a", "abc_file": "scored.abc",
-                              "lyrics": "[instrumental]", "cap": 123}])[0]
-        self.assertEqual(song.cap, 123)
+                              "lyrics": "[instrumental]", "cap": self.SCORE_CAP}])[0]
+        self.assertEqual(song.cap, self.SCORE_CAP)
 
-    def test_explicit_quantile_still_wins_on_a_scored_song(self):
-        song = self.resolve([{"name": "a", "abc_file": "scored.abc",
-                              "lyrics": "يا ليل يا ليل", "quantile": 0.975}])[0]
-        expected = generate.duration_cap(song.n_letters, 0.975)[2]
-        self.assertEqual(song.cap, expected)
-        self.assertEqual(song.cap_source, "quantile")
+    def test_explicit_cap_above_the_score_margin_is_rejected(self):
+        with self.assertRaises(generate.PlanError):
+            self.resolve([{"name": "a", "abc_file": "scored.abc",
+                           "lyrics": "[instrumental]", "cap": 123}])
 
-    def test_defaults_quantile_still_sizes_a_scored_song(self):
-        song = self.resolve(
-            [{"name": "a", "abc_file": "scored.abc", "lyrics": "يا ليل يا ليل"}],
-            {"style_file": "plain_style.txt", "cot": "melody",
-             "quantile": 0.975})[0]
-        expected = generate.duration_cap(song.n_letters, 0.975)[2]
-        self.assertEqual(song.cap, expected)
+    def test_one_frame_over_the_score_margin_is_rejected(self):
+        with self.assertRaises(generate.PlanError):
+            self.resolve([{"name": "a", "abc_file": "scored.abc",
+                           "lyrics": "[instrumental]",
+                           "cap": self.SCORE_CAP + 1}])
 
-    def test_quantile_without_letters_warns_about_the_floor(self):
-        # the pathological case the score rule exists for: a tag plan has zero
-        # Arabic letters, so an explicit quantile collapses to the 110 s floor.
+    def test_realistic_score_cap_rounds_up(self):
+        # 243.29 s * 1.03 * 25 = 6264.7175 -> 6265
+        self.assertEqual(generate._score_cap(243.29), 6265)
+
+    def test_explicit_cap_below_the_score_warns(self):
+        with mock.patch.object(generate, "warn") as warned:
+            song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                                  "lyrics": "[instrumental]", "cap": 40}])[0]
+        self.assertEqual(song.cap, 40)
+        self.assertIn("below", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_explicit_quantile_is_ignored_on_a_scored_song(self):
+        with mock.patch.object(generate, "warn") as warned:
+            song = self.resolve([{"name": "a", "abc_file": "scored.abc",
+                                  "lyrics": "يا ليل يا ليل",
+                                  "quantile": 0.975}])[0]
+        self.assertEqual(song.cap, self.SCORE_CAP)
+        self.assertEqual(song.cap_source, "score")
+        self.assertIn("quantile is ignored", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_cli_quantile_is_ignored_on_a_scored_song(self):
+        with mock.patch.object(generate, "warn") as warned:
+            song = self.resolve(
+                [{"name": "a", "abc_file": "scored.abc",
+                  "lyrics": "يا ليل يا ليل"}],
+                cli_quantile=0.975)[0]
+        self.assertEqual(song.cap, self.SCORE_CAP)
+        self.assertEqual(song.cap_source, "score")
+        self.assertEqual(song.quantile, generate.DEFAULT_QUANTILE)
+        self.assertIn("quantile is ignored", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_defaults_quantile_is_ignored_on_a_scored_song(self):
+        with mock.patch.object(generate, "warn") as warned:
+            song = self.resolve(
+                [{"name": "a", "abc_file": "scored.abc",
+                  "lyrics": "يا ليل يا ليل"}],
+                {"style_file": "plain_style.txt", "cot": "melody",
+                 "quantile": 0.975})[0]
+        self.assertEqual(song.cap, self.SCORE_CAP)
+        self.assertEqual(song.cap_source, "score")
+        self.assertIn("quantile is ignored", " ".join(
+            str(c.args[0]) for c in warned.call_args_list))
+
+    def test_quantile_is_ignored_even_without_letters(self):
+        # the old pathological case: a tag plan has zero Arabic letters, so an
+        # explicit quantile collapsed to the 110 s floor. A score now wins.
         with mock.patch.object(generate, "warn") as warned:
             song = self.resolve([{"name": "a", "abc_file": "scored.abc",
                                   "lyrics": "[instrumental]",
                                   "quantile": 0.95}])[0]
-        self.assertEqual(song.cap, 2750)
-        self.assertIn("no Arabic letters", " ".join(
+        self.assertEqual(song.cap, self.SCORE_CAP)
+        self.assertIn("quantile is ignored", " ".join(
             str(c.args[0]) for c in warned.call_args_list))
 
     def test_score_sets_the_cap_when_nothing_is_asked(self):
@@ -442,6 +529,14 @@ class CapFollowsTheLength(unittest.TestCase):
         with self.assertRaises(generate.PlanError):
             self.resolve([{"name": "a", "abc_file": "tuplets.abc",
                            "lyrics": "[instrumental]"}])
+
+    def test_unparseable_score_does_not_fall_back_to_quantile(self):
+        (self.tmp / "tuplets.abc").write_text(
+            "X:1\nT:test\nM:4/4\nL:1/4\nQ:1/4=120\nV: Ins\nK:D\n(3D E F G|\n",
+            encoding="utf-8")
+        with self.assertRaises(generate.PlanError):
+            self.resolve([{"name": "a", "abc_file": "tuplets.abc",
+                           "lyrics": "يا ليل يا ليل", "quantile": 0.975}])
 
     def test_unparseable_score_is_fine_with_an_explicit_cap(self):
         (self.tmp / "tuplets.abc").write_text(

@@ -68,12 +68,16 @@ The expected parent directory is `transcripts/<take>/`.
    where possible.
 2. Build a section table for each: section name, start/end bar, bars, seconds.
    Compare against the original's 74 bars at 73 BPM:
-   - intro 4 bars
+   - intro 10 bars (4 instrumental + 6 vocal)
    - verse 1 24 bars
    - chorus 6 bars
    - verse 2 20 bars
    - chorus 6 bars
    - outro 8 bars
+   The transcript's own `%` section names are SheetSage2 texture labels, not
+   lyric sections: take 4 labels 80–210 s (verse 2) as "chorus". Anchor the
+   lyric sections with the karaoke word timings, not the transcript's `%`
+   markers.
 3. Align the original per-bar chord sequence (`Dm`, `Bb`, `Gm`, `C`) with the
    transcript's `chord.lab` / per-bar chords using DTW or a simple
    insert-delete-substitute alignment. Runs of inserted bars show repeats or
@@ -89,7 +93,19 @@ The expected parent directory is `transcripts/<take>/`.
 
 ## Follow-up experiment
 
-After the comparison, test whether the cap alone is the cutter: re-run the same
-score and style with `cap: 7583` (score length + 60 s) or `cap: 8000`. If the
-song ends before the new cap, the cut was the cap; if it still hits the cap,
-the score's slow/dense writing plus the model's pacing need more room.
+The score is the length contract. `generate.py` now derives a scored song's cap
+from the score, not from the lyrics fit: **score length + 3%**. For this score
+that is `ceil(243.3 × 1.03 × 25) = 6265` tokens (251 s); `quantile` is ignored
+when a score is present, and an explicit `cap` above the 3% margin is rejected.
+
+Before re-rendering, the score must end with a **full-bar rest in both voices**
+(`Z|`) after the final tonic cadence. The YuE2 native dialect ends every music
+line with a plain `|`; `]` is not part of it and the runtime parser rejects it.
+The skill's checker enforces the final rest as a hard check.
+
+Re-run the same score and style with `cap: 6265` and the same seed. If the song
+ends before the cap, the cut was the cap; if it still hits 6265, the model is
+vamping past the score — more room will make a longer vamp, not a natural
+ending. The 3% margin (7.3 s) is the guardrail; the natural `cot=off` takes of
+the same song ended at 234.8–237.8 s, while the ABC-conditioned takes ran to
+280.0 s (+15.2%).

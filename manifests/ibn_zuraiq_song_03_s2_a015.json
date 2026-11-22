@@ -4,7 +4,6 @@
     "repeat": 3,
     "lora": "a015",
     "cot": "full",
-    "quantile": 0.95,
     "guidance_scale": 1.5,
     "lora_ar_scale": 0.75,
     "lora_nar_scale": 1.0,

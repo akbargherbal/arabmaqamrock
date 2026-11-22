@@ -80,10 +80,11 @@ prepended to the style when absent, matching every training caption and the
 staged prompts. Set `"trigger": false` (per song or in `defaults`) for base-model
 runs; `--no-trigger` still forces it off for the whole batch.
 
-The cap order is: explicit `cap` > explicit `quantile` (the maqamrock lyrics fit,
-unchanged) > the score's length (+60 s) > the lyrics fit at the default quantile.
-A tag-only lyrics plan carries no length signal, so an instrumental cover with a
-score is sized by the score, not by a fit calibrated on Arabic letters.
+A score is the length contract: an explicit `cap` within the 3% margin wins,
+otherwise the cap is the score's length + 3%. `quantile` is the score-free path
+(the maqamrock lyrics fit); on a scored song it is ignored with a warning. A
+tag-only lyrics plan carries no length signal, so a scored cover is sized by the
+score, not by a fit calibrated on Arabic letters.
 
 Everything lands in out/<YYYYMMDD-HHMMSS>_<label>/:
 
@@ -167,12 +168,12 @@ TRUNC_RE = re.compile(r"truncated\s*[=:]\s*([01])", re.IGNORECASE)
 SEC_PER_TRACK = 389.6  # T4 mean wall/track, measured in this repo
 CHECKPOINT_STEP = 5000
 FRAMES_PER_SECOND = 25  # YuE2 semantic token rate
-# A score fixes the length, so the cap is the score plus one generous margin
-# instead of a lyrics fit. Measured on al_qissa_wama_fiha (319 s score, 16 takes
-# in rounds 11-14): finishing takes ended -79..+43 s around the score, i.e. up to
-# 43 s long; the 49 s overshoot was a runaway. 60 s covers every take that was
-# worth keeping and still bounds the ones that are not.
-SCORE_HEADROOM_S = 60
+# A score fixes the length, so the cap is the score plus a small guardrail, not
+# a lyrics fit. On the Ibn Zuraiq song the score is 243.3 s; cot=off takes of
+# the same lyrics ended at 234.8-237.8 s, while ABC-conditioned takes ran to
+# 280.0 s (+15.2%). 3% allows a natural release and rejects a whole extra
+# section. A score also needs a final full-bar rest; see _score_has_final_rest.
+SCORE_MARGIN_PCT = 0.03  # scored songs may run at most 3% past the score
 COT_MODES = ("off", "melody", "full")
 
 SONG_KEYS = {"name", "style", "style_file", "lyrics", "lyrics_file",
@@ -725,6 +726,41 @@ def _reject_inline_abc(obj: dict, where: str) -> None:
          f"double-quoted (\"Gm\"), so inline scores would need escaping on every bar.")
 
 
+def _score_has_final_rest(text: str) -> bool:
+    """True when the last bar of both voices is a full-bar rest.
+
+    YuE2's native dialect requires a plain ``|`` at the end of each music line;
+    it does not use ``]``. The final rest is the dialect's clean stop signal.
+    """
+    last: dict[str, str] = {}
+    voice: str | None = None
+    for raw_line in text.splitlines():
+        line = raw_line.split("%", 1)[0].strip()
+        if not line or line.startswith("%%"):
+            continue
+        match = re.match(r"^V:\s*(\S+)", line)
+        if match:
+            voice = match.group(1)
+            continue
+        if re.match(r"^[A-Za-z]:", line):
+            continue                      # header or w: lyric line
+        if voice:
+            last[voice] = line
+    if not last:
+        return False
+    for name in ("Vocal", "Ins"):
+        line = last.get(name)
+        if not line:
+            return False
+        bars = [bar.strip() for bar in line.split("|") if bar.strip()]
+        if not bars:
+            return False
+        body = re.sub(r'"[^"]*"', "", bars[-1]).strip()
+        if not re.fullmatch(r"Z[2-4]?|(?:z\d*)+", body):
+            return False
+    return True
+
+
 def _score_ref(raw: dict, defaults: dict, scores: dict, base_dir: Path,
                where: str) -> tuple[str | None, Path | None, str | None]:
     """Resolve a song's ABC score: 'score' alias xor 'abc_file' (song > defaults)."""
@@ -752,6 +788,11 @@ def _score_ref(raw: dict, defaults: dict, scores: dict, base_dir: Path,
     path, alias = got
     text = _read_text(path, f"{where}.abc_file")
     check(text.strip(), f"{where}: ABC score is empty: {path}")
+    if not _score_has_final_rest(text):
+        warn(f"{where}: ABC score has no final full-bar rest; generation will "
+             f"continue, but the model/cap may cut on a note. Add `Z|` after the "
+             f"final cadence in both voices in {path.name}. `]` is not part of "
+             f"the YuE2 native dialect.")
     return text, path, alias
 
 
@@ -794,24 +835,65 @@ def _cot_for(raw: dict, defaults: dict, cli_cot: str | None, has_abc: bool,
     return val
 
 
+def _score_cap(score_s: float) -> int:
+    """The hard cap for a scored song: its length plus the 3% guardrail."""
+    return math.ceil(score_s * (1.0 + SCORE_MARGIN_PCT) * FRAMES_PER_SECOND)
+
+
 def _cap_settings(raw: dict, explicit_q: float | None, n_letters: int,
                   score_s: float | None, has_score: bool,
                   where: str) -> tuple[float, int, str]:
     """Resolve the token cap and say where it came from.
 
-    Order: explicit `cap` > explicit `quantile` (the lyrics fit, untouched) >
-    the score's length > the lyrics fit at the default quantile.
+    A score is the primary length contract. When one is present, the cap comes
+    from the score, not from the lyrics fit:
 
-    `quantile` is the maqamrock path: it sizes a song by how much Arabic text it
-    has. That is meaningless for an instrumental cover, whose input is a score
-    and a tag plan (zero letters -> the fit's 110 s floor), so a scored song with
-    no explicit cap/quantile takes its length from the score instead. Nothing
-    about the fit itself changes; an explicit quantile still wins every time,
-    exactly as it did before.
+        score cap = score length + 3%  (SCORE_MARGIN_PCT)
+
+    `quantile` is the score-free path (lyrics fit on Arabic letter count). On a
+    scored song it is ignored with a warning, so a manifest-wide
+    ``"quantile": 0.95`` cannot silently stretch a score. An explicit ``cap``
+    is still a manual override, but it may not exceed the same 3% guardrail;
+    a shorter cap is allowed (it will cut the score, with a warning).
+
+    If the score's length cannot be parsed, an explicit ``cap`` is the only
+    way through; otherwise the score rule fails closed.
     """
     has_cap = "cap" in raw
     has_q = "quantile" in raw
     check(not (has_cap and has_q), f"{where}: 'cap' and 'quantile' are mutually exclusive")
+
+    if has_score:
+        if score_s is None:
+            if has_cap:
+                cap = raw["cap"]
+                check(_is_pos_int(cap), f"{where}.cap: positive integer required")
+                warn(f"{where}: the score's length could not be parsed; using "
+                     f"explicit cap {cap}")
+                return explicit_q or DEFAULT_QUANTILE, cap, "cap"
+            check(False,
+                  f"{where}: the score's length could not be parsed (tuplets, "
+                  f"[chords] or repeat markers), so the cap cannot come from the "
+                  f"piece — set \"cap\" explicitly")
+        score_cap = _score_cap(score_s)
+        score_frames = math.ceil(score_s * FRAMES_PER_SECOND)
+        if has_cap:
+            cap = raw["cap"]
+            check(_is_pos_int(cap), f"{where}.cap: positive integer required")
+            check(cap <= score_cap,
+                  f"{where}.cap: {cap} exceeds the score cap {score_cap} "
+                  f"({score_s:.1f}s + {SCORE_MARGIN_PCT:.0%}); a scored song may "
+                  f"run at most {SCORE_MARGIN_PCT:.0%} past its score")
+            if cap < score_frames:
+                warn(f"{where}: cap {cap} is below the {score_s:.1f}s score; "
+                     f"it will cut the score")
+            return explicit_q or DEFAULT_QUANTILE, cap, "cap"
+        if has_q or explicit_q is not None:
+            warn(f"{where}: quantile is ignored because a score is present; "
+                 f"using the score cap {score_cap} "
+                 f"({score_s:.1f}s + {SCORE_MARGIN_PCT:.0%})")
+        return DEFAULT_QUANTILE, score_cap, "score"
+
     if has_cap:
         cap = raw["cap"]
         check(_is_pos_int(cap), f"{where}.cap: positive integer required")
@@ -821,13 +903,6 @@ def _cap_settings(raw: dict, explicit_q: float | None, n_letters: int,
         q = raw["quantile"]
     elif explicit_q is not None:
         q = explicit_q
-    elif has_score:
-        check(score_s is not None,
-              f"{where}: the score's length could not be parsed (tuplets, [chords] "
-              f"or repeat markers), so the cap cannot come from the piece — set "
-              f"\"cap\" explicitly")
-        return DEFAULT_QUANTILE, (math.ceil(score_s * FRAMES_PER_SECOND)
-                                  + SCORE_HEADROOM_S * FRAMES_PER_SECOND), "score"
     else:
         q = DEFAULT_QUANTILE
     _, _, cap, _ = duration_cap(n_letters, q)
@@ -1032,12 +1107,9 @@ def resolve_songs(data: dict, base_dir: Path, cli_quantile: float | None = None,
 
         cot = _cot_for(raw, defaults, cli_cot, abc_text is not None, abc_text, where)
         if score_s is not None:
-            need = math.ceil(score_s * FRAMES_PER_SECOND)
-            if cap < need + SCORE_HEADROOM_S * FRAMES_PER_SECOND:
-                warn(f"{where} ('{name}'): cap {cap} leaves "
-                     f"{(cap - need) / FRAMES_PER_SECOND:.0f}s of headroom over the "
-                     f"{score_s:.1f}s score; takes on this score have run 30-50s long. "
-                     f"Suggest \"cap\": {need + SCORE_HEADROOM_S * FRAMES_PER_SECOND}")
+            check(cap <= _score_cap(score_s),
+                  f"{where} ('{name}'): cap {cap} exceeds the 3% score margin "
+                  f"({_score_cap(score_s)} for a {score_s:.1f}s score)")
 
         controls = _controls(raw, defaults, where, cot, abc_text is not None)
         lora_scale = _lora_scale(raw, defaults, where)
