@@ -50,7 +50,22 @@ command -v python3 >/dev/null 2>&1 || { echo "MISSING: python3"; exit 1; }
 if command -v hf >/dev/null 2>&1; then HF=hf
 elif command -v huggingface-cli >/dev/null 2>&1; then HF=huggingface-cli
 else echo "MISSING: the 'hf' CLI — pip install -U 'huggingface_hub[cli]'"; exit 1; fi
-[ -x /usr/bin/time ] || echo "WARN: /usr/bin/time (GNU time) missing — run_one.sh needs it (apt-get install time)"
+# GNU time supplies run_one.sh's wall/RSS metrics; the bash builtin cannot write
+# to a file. Install it when missing instead of only warning, so a fresh Colab
+# box does not fail every track at exit=127.
+if [ -x /usr/bin/time ]; then
+  echo "  [ok] GNU time present"
+else
+  echo "  GNU time missing — installing (run_one.sh needs it)"
+  if [ "$(id -u)" -eq 0 ]; then APT=(apt-get); else APT=(sudo apt-get); fi
+  "${APT[@]}" update -qq || true
+  "${APT[@]}" install -y -qq time >/dev/null 2>&1 || true
+  # Check the file, not apt's exit status: the install can "succeed" without
+  # placing /usr/bin/time. A failure here is non-fatal — run_one.sh falls back
+  # to its own wall-clock metrics.
+  [ -x /usr/bin/time ] && echo "  [ok] GNU time installed" \
+    || echo "  WARN: could not install GNU time (apt-get install time); run_one.sh will use fallback metrics"
+fi
 
 echo "== 1. binary =="
 ./plumbing/fetch_binary.sh "${BIN_ARGS[@]}"

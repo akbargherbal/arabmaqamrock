@@ -1374,7 +1374,6 @@ def preflight(lora_ar: Path, lora_nar: Path,
     checks = [
         (RUN_ONE, "runner"),
         (BIN, "audiocpp_cli binary"),
-        (Path("/usr/bin/time"), "GNU time (apt-get install time)"),
         (MODEL_DIR / MODEL_GGUF, "main GGUF"),
         (MODEL_DIR / VAE_GGUF, "VAE GGUF"),
         (lora_ar, "AR LoRA adapter"),
@@ -1390,6 +1389,9 @@ def preflight(lora_ar: Path, lora_nar: Path,
         problems.append(f"not executable: {BIN}")
     if not (MODEL_DIR / "sidecars").is_dir():
         problems.append(f"missing sidecars dir: {MODEL_DIR / 'sidecars'}")
+    if not Path("/usr/bin/time").is_file():
+        warn("GNU time (/usr/bin/time) missing — run_one.sh will fall back to "
+             "wall-clock metrics; install it with: apt-get install time")
     if problems:
         fail("preflight failed:\n  - " + "\n  - ".join(problems)
              + "\n  run ./install.sh first (builds audiocpp_cli, downloads the GGUF"

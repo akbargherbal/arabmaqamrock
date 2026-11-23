@@ -24,7 +24,8 @@
 # Writes everything under $OUT so each run is self-contained:
 #   $OUT/<Maqam>_<seed>.wav        audio
 #   $OUT/<Maqam>_<seed>.log        CLI --log (TRACE/TIMING, errors)
-#   $OUT/<Maqam>_<seed>_time.txt   /usr/bin/time -v (wall, max RSS, CPU%)
+#   $OUT/<Maqam>_<seed>_time.txt   /usr/bin/time -v (wall, max RSS, CPU%); when
+#                                  GNU time is absent, a wall-clock fallback
 #   $OUT/<Maqam>_<seed>_gpu.csv    1 Hz GPU trace, with a header row:
 #                                  timestamp_utc, elapsed_s, gpu_index,
 #                                  gpu_util_pct, mem_used_mib, power_w, temp_c
@@ -113,24 +114,42 @@ SM=$!
 line="=== START ${M} seed=${S} cap=${CAP} (${CAP_ARG}) cot=${COT} abc=${ABC_FILE:-none} ar_lora=${LORA_AR} nar_lora=${LORA_NAR} $(date -u +%FT%TZ) ==="
 echo "$line"; echo "$line" >> "$status"
 
-/usr/bin/time -v -o "$tfile" \
-  "$BIN" --task gen --family yue2 --model "$MODEL" --backend cuda --threads 8 \
-  --session-option yue2.model_gguf=yue2-3b-bf16.gguf \
-  --session-option yue2.vae_gguf=yue2-vae-f16.gguf \
-  --session-option yue2.ar_lora="$LORA_AR" \
-  --session-option yue2.ar_lora_scale="$LORA_AR_SCALE" \
-  --session-option yue2.nar_lora="$LORA_NAR" \
-  --session-option yue2.nar_lora_scale="$LORA_NAR_SCALE" \
-  --session-option yue2.attention=flash \
-  --lyrics "$(cat "$lyrics")" \
-  --request-option style="$(cat "$style")" \
-  --request-option cot="$COT" \
-  --request-option semantic_max_tokens="$CAP" \
-  "${extra_request[@]}" \
-  --seed "$S" \
-  --out "$wav" \
-  --log > "$log" 2>&1
-rc=$?
+gen_args=(
+  --task gen --family yue2 --model "$MODEL" --backend cuda --threads 8
+  --session-option yue2.model_gguf=yue2-3b-bf16.gguf
+  --session-option yue2.vae_gguf=yue2-vae-f16.gguf
+  --session-option yue2.ar_lora="$LORA_AR"
+  --session-option yue2.ar_lora_scale="$LORA_AR_SCALE"
+  --session-option yue2.nar_lora="$LORA_NAR"
+  --session-option yue2.nar_lora_scale="$LORA_NAR_SCALE"
+  --session-option yue2.attention=flash
+  --lyrics "$(cat "$lyrics")"
+  --request-option style="$(cat "$style")"
+  --request-option cot="$COT"
+  --request-option semantic_max_tokens="$CAP"
+  "${extra_request[@]}"
+  --seed "$S"
+  --out "$wav"
+  --log
+)
+
+if [ -x /usr/bin/time ]; then
+  /usr/bin/time -v -o "$tfile" "$BIN" "${gen_args[@]}" > "$log" 2>&1
+  rc=$?
+else
+  # Fallback for hosts without GNU time (run_one.sh otherwise exits 127 before
+  # the model loads). Keep "Exit status:" so take discovery still recognizes it.
+  t0=$(date +%s)
+  "$BIN" "${gen_args[@]}" > "$log" 2>&1
+  rc=$?
+  elapsed=$(( $(date +%s) - t0 ))
+  {
+    echo "Fallback metrics (GNU time unavailable)"
+    printf 'Elapsed (wall clock) time (h:mm:ss or m:ss): %d:%02d\n' \
+      $((elapsed / 60)) $((elapsed % 60))
+    echo "Exit status: $rc"
+  } > "$tfile"
+fi
 kill $SM 2>/dev/null; wait $SM 2>/dev/null
 
 line="=== END ${M} seed=${S} exit=${rc} cap=${CAP} $(date -u +%FT%TZ) ==="
