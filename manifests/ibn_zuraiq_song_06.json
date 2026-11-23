@@ -1,0 +1,27 @@
+{
+  "base_dir": "..",
+  "defaults": {
+    "lora": "a015",
+    "cot": "full",
+    "guidance_scale": 1.5,
+    "lora_ar_scale": 0.75,
+    "lora_nar_scale": 1.0,
+    "trigger": true,
+    "repeat": 1
+  },
+  "loras": {
+    "a015": {
+      "ar": "loras/blend/a0.15/v3instr_a0.15_ar.safetensors",
+      "nar": "loras/blend/a0.15/v3instr_a0.15_nar.safetensors"
+    }
+  },
+  "songs": [
+    {
+      "name": "03-تجرع-مرارة-البين-ووخز-الندم_s3",
+      "style": "arabmaqamrock, classical arabic, melismatic, microtonal ornaments, belting, tarab, Khaliji, emotive expressive delivery, symphonic metal, powerful operatic performance, rhythm guitar, electric oud, epic, clear enunciation, vocal-forward mix, crisp consonants, audiophile, call and response, backing vocals, rich layered vocal harmonies, massive choir, Maqam Kurd, Phrygian Mode, mood: \"somber, torment, night dread\"",
+      "lyrics": "///***///\n[Intro | single clean guitar | close-mic'd, plate reverb, short decay]\nاعْتَضْتُ مِنْ وَجْهِ خِلِّي بَعْدَ فُرْقَتِهِ كَأْسًا\nيُجَرَّعُ مِنْهَا مَا أُجَرَّعُهُ...\n\n[Verse 1 | dark brooding vocals | muted rhythmic guitars and heavy bass]\nاعْتَضْتُ مِنْ وَجْهِ خِلِّي بَعْدَ فُرْقَتِهِ كَأْسًا\nيُجَرَّعُ مِنْهَا مَا أُجَرَّعُهُ...\nكَمْ قَائِلٍ لِي ذُقْتَ الْبَيْنَ قُلْتُ لَهُ\nالذَّنْبُ وَاللَّهِ ذَنْبِي لَسْتُ أَدْفَعُهُ...\nأَلَا أَقَمْتَ فَكَانَ الرُّشْدُ أَجْمَعُهُ\nلَوْ أَنَّنِي يَوْمَ بَانَ الرُّشْدُ أَتْبَعُهُ...\nلَوْ أَنَّنِي لَمْ تَقَعْ عَيْنِي عَلَى بَلَدٍ\nفِي سَفْرَتِي هَـٰذِهِ إِلَّا وَأَقْطَعُهُ...\nإِنِّي لَأَقْطَعُ أَيَّامِي وَأُنْفِدُهَا\nبِحَسْرَةٍ مِنْهُ فِي قَلْبِي تُقَطِّعُهُ...\n\n[Chorus | anguished powerful vocals | heavy orchestral swell and distorted guitars — Kurd]\nمَا كُنْتُ أَحْسَبُ أَنَّ الدَّهْرَ يَفْجَعُنِي بِهِ\nوَلَا أَنَّ بِي الْأَيَّامَ تَفْجَعُهُ...\n\n[Verse 2]\nبِمَنْ إِذَا هَجَعَ النُّوَّامُ بِتُّ لَهُ\nبِلَوْعَةٍ مِنْهُ لَيْلِي لَسْتُ أَهْجَعُهُ...\nلَا يَطْمَئِنُّ لِجَنْبِي مَضْجَعٌ وَكَذَا\nلَا يَطْمَئِنُّ لَهُ مُذْ بِنْتُ مَضْجَعُهُ...\nحَتَّى جَرَى الْبَيْنُ فِيمَا بَيْنَنَا بِيَدٍ عَسْرَاءَ\nتَمْنَعُنِي حَظِّي وَتَمْنَعُهُ...\nقَدْ كُنْتُ مِنْ رَيْبِ دَهْرِي جَازِعًا فَرِقًا\nفَلَمْ أُوَقَّ ٱلَّذِي قَدْ كُنْتُ أَجْزَعُهُ...\n\n[Chorus]\nمَا كُنْتُ أَحْسَبُ أَنَّ الدَّهْرَ يَفْجَعُنِي بِهِ\nوَلَا أَنَّ بِي الْأَيَّامَ تَفْجَعُهُ...\n\n[Outro | deep male vocals | clean electric guitar]\nقَدْ كُنْتُ مِنْ رَيْبِ دَهْرِي جَازِعًا فَرِقًا\nفَلَمْ أُوَقَّ ٱلَّذِي قَدْ كُنْتُ أَجْزَعُهُ...\n[End]",
+      "abc_file": "scores/llm_score_writer/s3_ibn_zuraiq_song_03/score.abc",
+      "seeds": [1739746421, 1925569421, 340487649, 3443094829, 3635268547, 397261186]
+    }
+  ]
+}
