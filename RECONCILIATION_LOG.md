@@ -108,3 +108,12 @@ and experiment manifests are exempt.
   index, and were left untouched (bygones) — authority: `run_one.sh` lines
   that write the CSV and a real 2026-11-16 trace (max 100 %, 11329 MiB,
   95.52 W, 81 °C, confirming the field order).
+
+## 2026-11-23 — maqam-edit skill removed
+
+The in-house editing skill was deleted; its output contract stays in the prompt
+specs.
+
+- 2026-11-23 — `skills/maqam-edit/` — removed, and the live docs that pointed
+  at it now name the ABC-edit specs and `check_abc.py` instead — authority: user
+  request. Earlier entries in this log are left untouched (append-only).

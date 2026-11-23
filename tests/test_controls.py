@@ -260,7 +260,7 @@ class DefaultLyrics(unittest.TestCase):
             defaults={"style_file": "plain_style.txt", "cot": "off",
                       "lyrics": self.TAGS},
         ))[0]
-        self.assertEqual(song.lyrics_text, self.TAGS)
+        self.assertEqual(song.lyrics_text, self.TAGS + "\n[End]")
 
     def test_song_lyrics_override_defaults(self):
         song = self.resolve(manifest(
@@ -268,7 +268,7 @@ class DefaultLyrics(unittest.TestCase):
             defaults={"style_file": "plain_style.txt", "cot": "off",
                       "lyrics": self.TAGS},
         ))[0]
-        self.assertEqual(song.lyrics_text, "[instrumental]")
+        self.assertEqual(song.lyrics_text, "[instrumental]\n[End]")
 
     def test_defaults_lyrics_file(self):
         (self.tmp / "tags.txt").write_text(self.TAGS, encoding="utf-8")
@@ -277,7 +277,21 @@ class DefaultLyrics(unittest.TestCase):
             defaults={"style_file": "plain_style.txt", "cot": "off",
                       "lyrics_file": "tags.txt"},
         ))[0]
-        self.assertEqual(song.lyrics_text, self.TAGS)
+        self.assertEqual(song.lyrics_text, self.TAGS + "\n[End]")
+
+    def test_end_tag_is_not_duplicated(self):
+        song = self.resolve(manifest(
+            [{"name": "a", "lyrics": "يا ليل\n[End]"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off"},
+        ))[0]
+        self.assertEqual(song.lyrics_text, "يا ليل\n[End]")
+
+    def test_end_tag_is_normalized(self):
+        song = self.resolve(manifest(
+            [{"name": "a", "lyrics": "يا ليل\n[end]\n\n"}],
+            defaults={"style_file": "plain_style.txt", "cot": "off"},
+        ))[0]
+        self.assertEqual(song.lyrics_text, "يا ليل\n[End]")
 
     def test_missing_lyrics_still_errors(self):
         with self.assertRaises(generate.PlanError):
@@ -312,33 +326,33 @@ class LyricsFromScore(unittest.TestCase):
                        "% chorus\nD E F G|\n% outro\nD E F G|\n")
         song = self.plan({"lyrics_from_score": True})
         self.assertEqual(song.lyrics_text,
-                         "[intro]\n[verse]\n[chorus]\n[outro]")
+                         "[intro]\n[verse]\n[chorus]\n[outro]\n[End]")
 
     def test_last_section_becomes_outro(self):
         self.set_score("% intro\nD E F G|\n% verse\nD E F G|\n% chorus\nD E F G|\n")
         self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
-                         "[intro]\n[verse]\n[outro]")
+                         "[intro]\n[verse]\n[outro]\n[End]")
 
     def test_interlude_maps_to_bridge(self):
         self.set_score("% intro\nD E F G|\n% interlude\nD E F G|\n% chorus\nD E F G|\n")
         self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
-                         "[intro]\n[bridge]\n[outro]")
+                         "[intro]\n[bridge]\n[outro]\n[End]")
 
     def test_unknown_comments_are_dropped(self):
         self.set_score("% intro\nD E F G|\n% guitar solo\nD E F G|\n"
                        "% verse\nD E F G|\n% chorus\nD E F G|\n")
         song = self.plan({"lyrics_from_score": True})
-        self.assertEqual(song.lyrics_text, "[intro]\n[verse]\n[outro]")
+        self.assertEqual(song.lyrics_text, "[intro]\n[verse]\n[outro]\n[End]")
 
     def test_single_section_gets_an_intro(self):
         self.set_score("% chorus\nD E F G|\n")
         self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
-                         "[intro]\n[outro]")
+                         "[intro]\n[outro]\n[End]")
 
     def test_repeated_label_in_place_is_one_section(self):
         self.set_score("% intro\nD E F G|\n% verse\nD E F G|\n% verse\nD E F G|\n")
         self.assertEqual(self.plan({"lyrics_from_score": True}).lyrics_text,
-                         "[intro]\n[outro]")
+                         "[intro]\n[outro]\n[End]")
 
     def test_score_without_comments_errors(self):
         self.set_score("D E F G|\n")
@@ -360,14 +374,14 @@ class LyricsFromScore(unittest.TestCase):
         song = self.plan({"lyrics_from_score": True},
                          [{"name": "a", "abc_file": "scored.abc",
                            "lyrics": "[instrumental]"}])
-        self.assertEqual(song.lyrics_text, "[instrumental]")
+        self.assertEqual(song.lyrics_text, "[instrumental]\n[End]")
 
     def test_song_plan_beats_default_lyrics(self):
         self.set_score("% intro\nD E F G|\n% chorus\nD E F G|\n")
         song = self.plan({"lyrics": "[instrumental]"},
                          [{"name": "a", "abc_file": "scored.abc",
                            "lyrics_from_score": True}])
-        self.assertEqual(song.lyrics_text, "[intro]\n[outro]")
+        self.assertEqual(song.lyrics_text, "[intro]\n[outro]\n[End]")
 
 
 class CapFollowsTheLength(unittest.TestCase):

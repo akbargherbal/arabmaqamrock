@@ -82,12 +82,8 @@ path/to/*
 skills/docs-reconciler/SKILL.md :: --from-run
 
 # --- status-marked proposals / target interfaces, not shipped code ----------
-# `skills/maqam-edit` labels the maqam CLI as planned; `analysis/vendor` labels
-# its production modules as not yet in the repo; `docs/suno-generation-controls`
-# labels 7.3 as not implemented (2026-11-15).
-skills/maqam-edit/SKILL.md :: --phrases
-skills/maqam-edit/SKILL.md :: --edit
-skills/maqam-edit/SKILL.md :: --against
+# `analysis/vendor` labels its production modules as not yet in the repo;
+# `docs/suno-generation-controls` labels 7.3 as not implemented (2026-11-15).
 docs/suno-generation-controls.md :: --from-run
 docs/suno-generation-controls.md :: --set
 analysis/vendor/README.md :: analysis/abc_scale.py

@@ -12,7 +12,7 @@ History files are authoritative for what happened, never for what is true now.
 | Generate / resume / output layout | `README.md`, `generate.py` docstring, `run_one.sh` | `--dry-run` is the executable description |
 | Backup / GCS layout | `plumbing/backup_to_gcp.py --help`, `plumbing/README.md` | script flags beat prose |
 | Symbolic transcription | `transcribe.py`, `transcribe.sh`, `docs/transcription.md` | `--dry-run` / `--smoke` are the safe checks |
-| ABC melody edit (output contract) | `prompts/arabmaqamrock_abc_edit_spec.md`, `prompts/arabmaqamrock_abc_spec.md` | `skills/maqam-edit/SKILL.md` owns the process; its `maqam` CLI is planned, not shipped; `check_abc.py` is the tracked validator (needs the local `datasets/five_stars/measure/` parser) |
+| ABC melody edit (output contract) | `prompts/arabmaqamrock_abc_edit_spec.md`, `prompts/arabmaqamrock_abc_spec.md` | the two specs define the output; `check_abc.py` is the tracked validator (needs the local `datasets/five_stars/measure/` parser) |
 | Pronunciation repair (current procedure) | `docs/guides/repair_session_runbook.md`, `docs/guides/fixing_ai_music_mispronunciations.md` | case 002 RUN3 is the reference run, not current authority |
 | Style prompt / trigger | `docs/base-prompt.md` + `manifests/space-stallion.json` | keep the maqam and Western scale names together |
 | Weights, license, provenance | `MODEL_CARD.md` + `README.md` (§License, §Provenance) | weights are non-commercial |

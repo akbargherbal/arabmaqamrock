@@ -86,6 +86,11 @@ otherwise the cap is the score's length + 3%. `quantile` is the score-free path
 tag-only lyrics plan carries no length signal, so a scored cover is sized by the
 score, not by a fit calibrated on Arabic letters.
 
+Every lyrics payload ends with `[End]` on its own line. The tag is appended (or
+canonicalized, if an `[end]` variant is already last) at resolve time, so inline
+lyrics, `lyrics_file` text and `lyrics_from_score` plans all reach the model the
+same way; existing manifests do not need editing.
+
 Everything lands in out/<YYYYMMDD-HHMMSS>_<label>/:
 
     input.json               exact copy of the input
@@ -472,6 +477,24 @@ def _tag_plan(lyrics: str) -> list[str]:
     return tags
 
 
+END_TAG = "[End]"
+
+
+def _with_end_tag(lyrics: str) -> str:
+    """Close every lyrics payload with one `[End]` marker on its own line.
+
+    Manifests are historical records, so the marker is normalized here rather
+    than rewritten into them: inline lyrics, `lyrics_file` text and tag plans
+    read from a score all reach the model the same way.
+    """
+    body = lyrics.rstrip()
+    lines = body.splitlines()
+    if lines and re.fullmatch(r"\[\s*end\s*\]", lines[-1].strip(), re.I):
+        lines[-1] = END_TAG
+        return "\n".join(lines)
+    return f"{body}\n{END_TAG}"
+
+
 def _lyrics_text(raw: dict, defaults: dict, base_dir: Path, where: str,
                  abc_text: str | None) -> str:
     """Explicit lyrics (song > defaults) or a plan read from the score.
@@ -479,6 +502,7 @@ def _lyrics_text(raw: dict, defaults: dict, base_dir: Path, where: str,
     `lyrics_from_score` opts a scope out of hand-written lyrics: the section
     plan comes from the score's own `% label` comments, which is the only form
     that stays correct across 500 different songs without per-song editing.
+    Every result ends with `[End]`.
     """
     def explicit(obj: dict, label: str) -> str | None:
         text, path = _resolve_string(obj, "lyrics", "lyrics_file", base_dir, label)
@@ -502,11 +526,11 @@ def _lyrics_text(raw: dict, defaults: dict, base_dir: Path, where: str,
             check(abc_text is not None,
                   f"{label}.lyrics_from_score needs a score ('score' or 'abc_file')")
             tags = score_section_tags(abc_text, f"{label}.lyrics_from_score")
-            return "\n".join(f"[{t}]" for t in tags)
+            return _with_end_tag("\n".join(f"[{t}]" for t in tags))
         text = explicit(obj, label)
         if text is not None:
             check(text.strip(), f"{where}: lyrics are empty")
-            return text
+            return _with_end_tag(text)
     fail(f"{where}: needs 'lyrics', 'lyrics_file' or 'lyrics_from_score' "
          f"(or input.defaults)")
 

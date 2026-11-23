@@ -49,6 +49,13 @@ Validate any manifest without a GPU:
 python3 generate.py manifests/<name>.json --dry-run
 ```
 
+## Lyrics
+
+Every lyrics payload ends with an `[End]` tag on its own line, whether it comes
+from `lyrics`, `lyrics_file` or `lyrics_from_score`. `generate.py` appends it (or
+canonicalizes a trailing `[end]`) while resolving the manifest, so existing
+manifests need no edit.
+
 ## Generating maqam instrumental batches
 
 `plumbing/maqam_instrumental_manifests.py` builds a batch from the maqam docs:

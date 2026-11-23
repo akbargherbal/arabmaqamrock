@@ -4,9 +4,8 @@ Read this first when resuming. It is the state of play, not a narrative.
 
 **Status:** all three round-2 sheets are checked (§3a–§3c) and the six-track
 render spec is built, dry-run, and pushed as `920b0d9`. The user is rendering in
-Colab. **Next session: listen in trios, decide G1, then distil the three Claude
-chat logs into `skills/maqam-edit/SKILL.md`.** 313 and 101 are clean; 577 is
-verse-only (no chorus cadence) and has one G-ending colour. Round 2 = three
+Colab. **Next session: listen in trios and decide G1.** 313 and 101 are clean;
+577 is verse-only (no chorus cadence) and has one G-ending colour. Round 2 = three
 Claude sessions (spec v3 + calibrated prompt) -> six reference sheets -> six
 renders -> one listening test that decides whether the in-house plan is worth
 building.
@@ -332,7 +331,6 @@ Tracked:
 |---|---|
 | `prompts/arabmaqamrock_abc_edit_spec.md` | **spec v3**, the active brief |
 | `prompts/arabmaqamrock_abc_spec.md` | from-scratch writer spec, kept for v4 training |
-| `skills/maqam-edit/SKILL.md` | in-house agent skill (method + tool contracts) |
 | `docs/plans/inhouse-maqam-editor.md` | agent plan, phases 0–5, gates G0–G3 |
 | `docs/plans/model-and-tool-selection.md` | tool surface + model benchmark protocol |
 | `scores/moon_<seed>_{clean,v1,v2}.abc` | round 1 sheets, 9 files |
@@ -349,9 +347,6 @@ Local only (gitignored):
 | `local_workspace/baghdad_moon_lyrics.txt` | lyrics, 6 sections, 35 lines |
 | `datasets/five_stars/transcripts/` | 177 ABC transcripts (copied out of `/tmp`) |
 | `datasets/five_stars/measure/` | parser (`]` fix), m1, structure |
-
-`skills/maqam-edit` is symlinked from `~/.config/opencode/skills/maqam-edit`, so
-the skill loads in this harness. Single source of truth is the repo file.
 
 ## 7. Open items — Phase 0, still outstanding
 
@@ -418,7 +413,7 @@ Keep the dose differences in view: 313 = 13 notes (5 cadences, 1 chorus); 101 =
 no chorus). If 101 is inaudible and 313 is not, the variable is dose. If 577 is
 the odd one out, the missing chorus is the likely cause.
 
-### 9.2 Second: distil the three Claude chats into `skills/maqam-edit/SKILL.md`
+### 9.2 Second: distil the three Claude chats
 
 The chat exports are still pending. Export all three to
 `local_workspace/claude_chat/round2/` before closing the tabs. They are the
@@ -434,10 +429,7 @@ For each session, extract:
   101's 5/8 bar; 577's no-chorus and G-ending colour; 577's final-note fix;
 - any gap between what CHANGES claims and what the ABC shows.
 
-Then update the skill, preserving its current shape (gate -> phrase table ->
-CLEAN -> choose -> pitch lists -> verify/report):
-
-- Add the traps proven this round:
+- Traps proven this round:
   * a tie continuation still occupies time in the bar; count it in bar sums (the
     parser bug that made 10 bars look incomplete);
   * echo collapse is capped by the 2% note-count rule; the cap outranks "merge
@@ -451,8 +443,7 @@ CLEAN -> choose -> pitch lists -> verify/report):
     §5.1 placement was met;
   * the 4-phrase minimum can force an ascending Eb-F#-G colour ending on G;
     report it as a cadence deviation, not a qarar;
-  * the D#m->Dm rule lives in the calibration prompt, not the spec; decide
-    whether it belongs in the skill;
+  * the D#m->Dm rule lives in the calibration prompt, not the spec;
   * fix the `edit.json` example: `E4, F#4, Eb4, D4` (step in, augmented second
     down, step out to D), not `E4, Eb4, F#4, D4`.
 - Do not overfit: §6 (the corpus is diatonic; no web; no general-maqam-theory

@@ -26,7 +26,7 @@ in FINDINGS §5–§6. Do not extend to seeds 313/577 until t1 replicates.
 ## 1. Why the pivot
 
 The user's brief at the start of the session: *"I want to rethink the whole
-enterprise from scratch."* The maqam-edit thread had produced rounds of sheets
+enterprise from scratch."* The maqam editing thread had produced rounds of sheets
 that passed their own checks and tracks the user did not want. The reason is now
 clear and should not be re-litigated:
 

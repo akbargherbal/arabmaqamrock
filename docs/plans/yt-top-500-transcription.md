@@ -108,7 +108,7 @@ different songs and are not duplicates.
 | | |
 |---|---|
 | **In scope** | Audio → SheetSage2 `--full` transcription: `score.abc` (Vocal + Ins + chord symbols), `transcription.mid`, `melody_vocal.mid`, `melody_instrumental.mid`, `chords.mid`, `events.json`, `*.lab`, `notation/`, `meta.json`. |
-| **Out of scope** | **Music captioning / text description generation**, lyrics/ASR, lyric-to-note alignment, maqam labelling, score editing, re-rendering. The `maqam-edit` workflow is a later, human-driven pass over selected scores. |
+| **Out of scope** | **Music captioning / text description generation**, lyrics/ASR, lyric-to-note alignment, maqam labelling, score editing, re-rendering. The maqam editing workflow is a later, human-driven pass over selected scores. |
 | **Unit of work** | One **unique audio object**. All 495 measured objects are transcribed; `duplicate_of` is a metadata link. Only byte-identical/same-video rows are aliases and skipped. |
 | **Success** | Every one of the 495 tracks has `meta.json.status ∈ {ok, flagged}` and a verified remote archive, or a written exception with a reason. |
 
@@ -847,7 +847,7 @@ Use the existing `abcscore.qc_track()`; do not write a second parser.
 | Chords | `has_chords` true for `--full` | flag; check the `--full` flag reached the model |
 
 `flagged ≠ failed`. Flags travel with the row; downstream decides. Nothing is
-edited in this plan; the `maqam-edit` workflow is a separate, later pass over
+edited in this plan; the maqam editing workflow is a separate, later pass over
 selected scores.
 
 Listening check: 20 tracks, stratified. Answer only:

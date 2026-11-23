@@ -147,7 +147,7 @@ tempo and structure; it has to *invent* the arrangement from the caption.
 
 1. **Clean the score first.** Octave jumps, stray bars and obvious SheetSage2
    artifacts are reproduced faithfully. Fix them without rewriting the melody
-   (the `maqam-edit` CLEAN pass, not the MID edit).
+   (the CLEAN pass, not the MID edit).
 2. **Best-of-N seeds with a tighter sampler.** `semantic_temperature: 0.8` and
    `semantic_top_p: 0.9` make the output tighter and more repeatable
    (`docs/transcription.md`, “Controlling ABC influence”). Render 3 seeds and
