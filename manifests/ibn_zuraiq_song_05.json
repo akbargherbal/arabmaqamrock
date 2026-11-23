@@ -7,7 +7,7 @@
     "lora_ar_scale": 0.75,
     "lora_nar_scale": 1.0,
     "trigger": true,
-    "repeat": 4
+    "repeat": 8
   },
   "loras": {
     "a015": {
